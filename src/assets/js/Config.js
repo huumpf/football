@@ -1,0 +1,22 @@
+export const DRAFT_PLAYERS_PER_PICK = 3;
+// export const DRAFT_COUNT = 16;
+
+// export const DRAFT_AVG_POTENTIAL = 50;
+// export const CLUB_STARTING_MONEY = 50000;
+// export const PLAYER_AGE_MIN = 16;
+// export const PLAYER_AGE_MAX = 34;
+// export const PLAYER_OPTAGE_MIN = 27;
+// export const PLAYER_OPTAGE_MAX = 31;
+// export const PLAYER_GREED_DIFFERENCE = .7;
+// export const AGE_FACTOR = .95;
+// export const POSITION_OFFSET_WING = 25;
+// export const POSITION_GK = 20;
+// export const POSITION_CDM = 60;
+// export const POSITION_CM = 75;
+// export const POSITION_CAM = 85;
+// export const POSITION_CB = 50;
+// export const POSITION_ST = 100;
+// export const POSITION_WB = 50;
+// export const POSITION_WC = 75;
+// export const POSITION_WA = 100;
+// export const PLAYERR_SALARY_FACTOR = 36;

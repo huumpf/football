@@ -1,16 +1,37 @@
 <template>
-  <Test />
+  <div class="draft-wrapper">
+    <DraftPicks class="flex-big"/>
+    <DraftList class="flex-small"/>
+  </div>
 </template>
 
 <script>
-import Test from '@/components/Test.vue'
+import DraftPicks from '@/components/DraftPicks.vue'
+import DraftList from '@/components/DraftList.vue'
 
 export default {
   name: 'Home',
 
   components: {
-    Test
+    DraftPicks,
+    DraftList,
   }
 
 }
 </script>
+
+<style lang="scss" scoped>
+
+  .draft-wrapper {
+    display: flex;
+  }
+
+  .flex-big {
+    width: 70%;
+  }
+
+  .flex-small {
+    flex-grow: 1;
+  }
+
+</style>

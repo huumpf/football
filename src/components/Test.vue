@@ -11,7 +11,7 @@ export default {
 <style lang="scss" scoped>
 
   h1 {
-    color: $myred;
+    color: $col_cta;
   }
 
 </style>

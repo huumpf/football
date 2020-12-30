@@ -1,11 +1,12 @@
 module.exports = {
   css: {
     loaderOptions: {
-      sass: {
-        data: `
-          @import "@/assets/scss/variables.scss";
-        `
-      }
-    }
-  }
+      scss: {
+        additionalData: `
+        @import "@/assets/scss/var-color-base.scss";
+        @import "@/assets/scss/var-color-mapping.scss";
+        `,
+      },
+    },
+  },
 };

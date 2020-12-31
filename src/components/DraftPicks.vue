@@ -18,9 +18,9 @@
       />
     </div>
     <div class="bar bottombar">
-      0/{{ draftAmount }}
+      <span class="number">{{ playersInTeam }}</span> / <span class="number">{{ draftAmount }}</span>
       <div class="completion-bar">
-        <div class="completion-amount"/>
+        <div class="completion-amount" :style="{ width: draftCompleted*100 + '%' }"/>
       </div>
     </div>
   </div>
@@ -41,6 +41,8 @@ export default {
     currentMoney() { return this.$store.state.club.money },
     activeDraftSet() { return this.$store.state.draft.activeDraftSet },
     draftAmount() { return this.$store.state.draft.draftAmount },
+    playersInTeam() { return this.$store.state.team.players.length },
+    draftCompleted() { return this.playersInTeam / this.draftAmount }
   },
 
   mounted() {
@@ -97,10 +99,14 @@ export default {
   }
 
   .completion-amount {
-    width: 40%;
     height: 100%;
     background-color: $col_cta;
     border-radius: 5px;
+    transition: width 0.5s ease-out;
+  }
+
+  .number {
+    width: 20px;
   }
 
 </style>

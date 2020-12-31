@@ -2,11 +2,13 @@
   <div class="draft-list-wrapper">
     <h1>Your squad</h1>
     <div class="player-list">
-      <PlayerListItem
+      <TeamListHeader v-if="team.length > 0"/>
+      <TeamListItem
       v-for="(player, index) in team" 
       :key="index"
       :firstName="player.firstName"
       :lastName="player.lastName"
+      :position="player.position"
       :skill="player.skill"
       :age="player.age"
       />
@@ -15,13 +17,15 @@
 </template>
 
 <script>
-import PlayerListItem from '../components/PlayerListItem.vue';
+import TeamListItem from '../components/TeamListItem.vue';
+import TeamListHeader from '../components/TeamListHeader.vue';
 
 export default {
-  name: 'DraftList',
+  name: 'TeamList',
 
   components: {
-    PlayerListItem,
+    TeamListItem,
+    TeamListHeader,
   },
 
   computed: {
@@ -42,6 +46,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-top: 20px;
 }
 
 .player-list:last-child {

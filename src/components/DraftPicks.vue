@@ -3,11 +3,12 @@
     <h1>Pick a player</h1>
     <p>{{ moneyToStr(currentMoney) }} € remaining</p>
     <div class="player-cards">
-      <PlayerCard
+      <DraftCard
       v-for="(player, index) in activeDraftSet" 
       :key="index"
       :firstName="player.firstName"
       :lastName="player.lastName"
+      :position="player.position"
       :skill="player.skill"
       :age="player.age"
       :salary="player.salary"
@@ -18,14 +19,14 @@
 </template>
 
 <script>
-import PlayerCard from '../components/PlayerCard.vue';
+import DraftCard from '../components/DraftCard.vue';
 const Helpers = require('../assets/js/Helpers.js');
 
 export default {
   name: 'DraftPicks',
   
   components: {
-    PlayerCard,
+    DraftCard,
   },
 
   computed: {
@@ -58,7 +59,7 @@ export default {
   .draft-picks-wrapper {
     height: 100vh;
     padding: 20px;
-    background-color: $col_cta;
+    background-color: $col_page_background_secondary;
   }
 
   .player-cards {

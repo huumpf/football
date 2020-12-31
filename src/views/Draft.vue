@@ -1,20 +1,20 @@
 <template>
   <div class="draft-wrapper">
     <DraftPicks class="flex-big"/>
-    <DraftList class="flex-small"/>
+    <TeamList class="flex-small"/>
   </div>
 </template>
 
 <script>
 import DraftPicks from '@/components/DraftPicks.vue'
-import DraftList from '@/components/DraftList.vue'
+import TeamList from '@/components/TeamList.vue'
 
 export default {
   name: 'Home',
 
   components: {
     DraftPicks,
-    DraftList,
+    TeamList,
   }
 }
 </script>

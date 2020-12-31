@@ -1,6 +1,7 @@
 import { createStore } from 'vuex'
 import { clubModule } from './Club'
 import { teamModule } from './Team'
+import { draftModule } from './Draft'
 
 export default createStore({
   state: {
@@ -15,5 +16,6 @@ export default createStore({
   modules: {
     team: teamModule,
     club: clubModule,
+    draft: draftModule,
   }
 })

@@ -1,5 +1,5 @@
 export const DRAFT_PLAYERS_PER_PICK = 3;
-// export const DRAFT_COUNT = 16;
+export const DRAFT_COUNT = 16;
 
 // export const DRAFT_AVG_POTENTIAL = 50;
 // export const CLUB_STARTING_MONEY = 50000;

@@ -1,13 +1,12 @@
 <template>
-  <div class="nav"/>
+  <div class="nav">Hello</div>
 </template>
 
 <style lang="scss" scoped>
 
   .nav {
-    position: fixed;
-    width: 80px;
-    height: 100vh;
+    width: 100%;
+    line-height: 80px;
     background-color: $col_module_background;
   }
 

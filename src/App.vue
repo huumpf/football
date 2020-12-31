@@ -3,20 +3,22 @@
     <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link>
   </div> -->
-  <Navigation/>
-  <div class="app-content">
-    <router-view/>
+  <div class="app-wrapper">
+    <!-- <Navigation/> -->
+    <div class="app-content">
+      <router-view/>
+    </div>
   </div>
 </template>
 
 <script>
-import Navigation from './components/Navigation.vue'
+// import Navigation from './components/Navigation.vue'
 
 export default {
   name: 'App',
 
   components: {
-    Navigation,
+    // Navigation,
   }
 }
 </script>
@@ -47,8 +49,13 @@ html {
   color: #2c3e50;
 }
 
+.app-wrapper {
+  height: 100vh;
+  display: flex;
+}
+
 .app-content {
-  margin-left: 80px;
+  flex-grow: 1;
 }
 
 </style>

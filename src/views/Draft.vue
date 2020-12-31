@@ -37,6 +37,7 @@ export default {
 <style lang="scss" scoped>
   .draft-wrapper {
     display: flex;
+    height: 100vh;
   }
 
   .flex-big {
@@ -48,7 +49,6 @@ export default {
   }
 
   .my-team-wrapper {
-    height:100vh;
     display: flex;
     flex-direction: column;
   }

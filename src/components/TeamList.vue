@@ -39,6 +39,7 @@ export default {
   height: 100%;
   overflow: scroll;
   background-color: $col_page_background_secondary;
+  border-left: 1px solid $col_divider;
 }
 
 .player-list {

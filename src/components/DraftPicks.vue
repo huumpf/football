@@ -1,7 +1,9 @@
 <template>
   <div class="draft-picks-wrapper">
-    <h1>Pick a player</h1>
-    <p>{{ moneyToStr(currentMoney) }} € remaining</p>
+    <div class="bar topbar">
+      <h1>Draft your team</h1>
+      <p>{{ moneyToStr(currentMoney) }} € remaining</p>
+    </div>
     <div class="player-cards">
       <DraftCard
       v-for="(player, index) in activeDraftSet" 
@@ -14,6 +16,12 @@
       :salary="player.salary"
       @click="addPlayerToTeam(player)"
       />
+    </div>
+    <div class="bar bottombar">
+      0/{{ draftAmount }}
+      <div class="completion-bar">
+        <div class="completion-amount"/>
+      </div>
     </div>
   </div>
 </template>
@@ -32,6 +40,7 @@ export default {
   computed: {
     currentMoney() { return this.$store.state.club.money },
     activeDraftSet() { return this.$store.state.draft.activeDraftSet },
+    draftAmount() { return this.$store.state.draft.draftAmount },
   },
 
   mounted() {
@@ -57,15 +66,41 @@ export default {
 <style lang="scss" scoped>
 
   .draft-picks-wrapper {
-    height: 100vh;
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     background-color: $col_page_background;
+  }
+
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: $col_module_background;
   }
 
   .player-cards {
     width: 100%;
     display: flex;
     justify-content: center;
+  }
+
+  .completion-bar {
+    display: flex;
+    justify-content: left;
+    margin-left: 40px;
+    background-color: $col_page_background_secondary;
+    height: 10px;
+    border-radius: 5px;
+    flex-grow: 1;
+  }
+
+  .completion-amount {
+    width: 40%;
+    height: 100%;
+    background-color: $col_cta;
+    border-radius: 5px;
   }
 
 </style>

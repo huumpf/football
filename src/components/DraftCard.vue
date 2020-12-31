@@ -50,14 +50,15 @@ export default {
   margin: 20px;
   border-radius: 8px;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
-  box-shadow: 0 20px 40px $col_shadow;
+  box-shadow: 0 20px 40px rgba(0,0,0,0);
+  border: 1px solid $col_module_border;
 }
 
 .player:hover {
   scale: 1.05;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
   cursor: pointer;
-  box-shadow: 0 20px 60px $col_shadow_strong;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
 }
 
 .image {

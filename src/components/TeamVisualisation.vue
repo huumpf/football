@@ -1,8 +1,11 @@
 <template>
   <div class="visu-wrapper">
     <div class="left-side">
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.lb }}</div>
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.lm }}</div>
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.lf }}</div>
     </div>
     <div class="center">
@@ -14,8 +17,11 @@
       <div class="counter">{{ positions.st }}</div>
     </div>
     <div class="right-side">
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.rb }}</div>
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.rm }}</div>
+      <div class="counter shifter"></div>
       <div class="counter">{{ positions.rf }}</div>
     </div>
   </div>
@@ -54,10 +60,6 @@ export default {
   margin: 30px 0;
 }
 
-.left-side, .right-side {
-  margin-left: 17.75%;
-}
-
 .counter {
   background-color: $col_module_background;
   height: 40px;
@@ -66,6 +68,10 @@ export default {
   display:flex;
   align-items: center;
   justify-content: center;
+}
+
+.shifter {
+  background-color: transparent;
 }
 
 </style>

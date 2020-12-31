@@ -1,10 +1,12 @@
 const PlayerFactory = require('@/assets/js/PlayerFactory.js');
+const CFG = require('@/assets/js/Config.js');
 
 export const draftModule = {
   namspaced: true,
 
   state: {
     activeDraftSet: [],
+    draftAmount: CFG.DRAFT_COUNT,
   },
 
   mutations: {

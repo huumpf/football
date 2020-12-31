@@ -38,6 +38,10 @@ export default {
   text-align: left;
   justify-content: space-between;
   color: $col_text_secondary;
+  background-color: $col_module_background;
+  position: sticky;
+  top:0;
+  border-bottom: 1px solid $col_module_border;
 }
 
 .card_line {

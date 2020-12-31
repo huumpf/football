@@ -39,7 +39,7 @@ export default {
   text-align: left;
   justify-content: space-between;
   background-color: $col_module_background;
-  border-top: 1px solid $col_module_border;
+  border-bottom: 1px solid $col_module_border;
 }
 
 .card_line {

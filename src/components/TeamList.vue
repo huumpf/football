@@ -1,6 +1,5 @@
 <template>
   <div class="draft-list-wrapper">
-    <h1>Your squad</h1>
     <div class="player-list">
       <TeamListHeader v-if="team.length > 0"/>
       <TeamListItem
@@ -37,20 +36,15 @@ export default {
 <style lang="scss" scoped>
 
 .draft-list-wrapper {
-  height: 100vh;
-  padding: 20px;
+  height: 100%;
   overflow: scroll;
+  background-color: $col_page_background_secondary;
 }
 
 .player-list {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 20px;
-}
-
-.player-list:last-child {
-  margin-bottom: 30px;
 }
 
 </style>

@@ -59,7 +59,7 @@ export default {
   .draft-picks-wrapper {
     height: 100vh;
     padding: 20px;
-    background-color: $col_page_background_secondary;
+    background-color: $col_page_background;
   }
 
   .player-cards {

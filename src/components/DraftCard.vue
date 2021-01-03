@@ -1,45 +1,55 @@
 <template>
   <div class="player">
-    <div class="image"><img src="../assets/img/player.svg" /></div>
-    <div class="name"><h3>{{ firstName }} {{ lastName }}</h3></div>
-    <div class="card_line">
-      <div class="position"><h2>{{ position }}</h2>Pos</div>
-      <div class="skill"><h2>{{ skill }}</h2>Skill</div>
-      <div class="age"><h2>{{ age }}</h2>Age</div>
+    <div class="position-wrapper">
+      <PositionVisualisation :positions="positions" :small="true"/>
     </div>
-    <div class="salary">{{ salaryStr }} €</div>
+    <div class="details-wrapper">
+      <div class="name"><h3>{{ firstName }} {{ lastName }}</h3></div>
+      <div class="card_line">
+        <div class="position"><h2>{{ position }}</h2>Pos</div>
+        <div class="skill"><h2>{{ skill }}</h2>Skill</div>
+        <div class="age"><h2>{{ age }}</h2>Age</div>
+      </div>
+      <div class="salary">{{ salaryStr }} €</div>
+    </div>
   </div>
 </template>
 
 <script>
-
+import PositionVisualisation from '@/components/PositionVisualisation.vue';
 const HLP = require('../assets/js/Helpers.js');
 
 export default {
   name: 'PlayerCard',
 
+  components: {
+    PositionVisualisation,
+  },
+
   props: {
     firstName: String,
     lastName: String,
-    position: String,
+    positions: Object,
     skill: Number,
     age: Number,
     salary: Number,
   },
 
   computed: {
-    fullName() {
-      return this.firstName + " " + this.lastName;
-    },
-    salaryStr() {
-      return HLP.moneyStr(this.salary);
-    }
+    fullName() { return this.firstName + " " + this.lastName; },
+    position() { return this.positions.position; },
+    salaryStr() { return HLP.moneyStr(this.salary); },
   },
 
 }
 </script>
 
 <style lang="scss" scoped>
+
+.position-wrapper {
+  width: 100%;
+  border-radius: 8px;
+}
 
 .player {
   display: flex;
@@ -50,7 +60,7 @@ export default {
   margin: 20px;
   border-radius: 8px;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
-  box-shadow: 0 20px 40px rgba(0,0,0,0);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
   border: 1px solid $col_module_border;
 }
 
@@ -58,7 +68,7 @@ export default {
   scale: 1.05;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
   cursor: pointer;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
 }
 
 .image {

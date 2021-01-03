@@ -29,48 +29,62 @@ function makePlayer() {
   // Position
   player.pos_vertical = Math.floor(Math.random() * 100);
   player.pos_horizontal = Math.floor(Math.random() * 100);
-  player.position = get_pos(player.pos_vertical, player.pos_horizontal);
+  player.positions = get_pos(player.pos_vertical, player.pos_horizontal);
 
   return player;
 }
 
 function get_pos(vert, hor) {
 
-  let position = "";
+  let positions = { 
+    position: String,
+    gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0 
+  };
 
   if (vert <= CFG.POSITION_GK) {
-    position = "GK";
-    return position;
+    positions.position = "GK";
+    positions.gk = 1;
+  } else {
+    // Left side
+    if (hor < CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_WB) {
+      positions.position = "LB";
+      positions.gk = 1;
+    } else if (hor < CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WB && vert <= CFG.POSITION_WC) {
+      positions.position = "LM";
+      positions.lb = 1;
+    } else if (hor < CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WC && vert <= CFG.POSITION_WA) {
+      positions.position = "LF";
+      positions.lf = 1;
+    }
+    // Right side
+    else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_WB) {
+      positions.position = "RB";
+      positions.rb = 1;
+    } else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WB && vert <= CFG.POSITION_WC) {
+      positions.position = "RM";
+      positions.rm = 1;
+    } else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WC && vert <= CFG.POSITION_WA) {
+      positions.position = "RF";
+      positions.rf = 1;
+    }
+    // Center
+    else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_CB) {
+      positions.position = "CB";
+      positions.cb = 1;
+    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CB && vert <= CFG.POSITION_CDM) {
+      positions.position = "CDM";
+      positions.cdm = 1;
+    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CDM && vert <= CFG.POSITION_CM) {
+      positions.position = "CM";
+      positions.cm = 1;
+    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CM && vert <= CFG.POSITION_CAM) {
+      positions.position = "CAM";
+      positions.cam = 1;
+    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CAM && vert <= CFG.POSITION_ST) {
+      positions.position = "ST";
+      positions.st = 1;
+    }
   }
 
-  if (hor <= 0 + CFG.POSITION_OFFSET_WING) {
-    position = "L";
-  } else if (hor > 100 - CFG.POSITION_OFFSET_WING) {
-    position = "R";
-  } else {
-    position = "C";
-  }
-
-  if (position == "C") {
-    if (vert > CFG.POSITION_GK && vert <= CFG.POSITION_CB) {
-      position += "B";
-    } else if (vert > CFG.POSITION_CB && vert <= CFG.POSITION_CDM) {
-      position += "DM";
-    } else if (vert > CFG.POSITION_CDM && vert <= CFG.POSITION_CM) {
-      position += "M";
-    } else if (vert > CFG.POSITION_CM && vert <= CFG.POSITION_CAM) {
-      position += "AM";
-    } else if (vert > CFG.POSITION_CAM && vert <= CFG.POSITION_ST) {
-      position = "ST";
-    }
-  } else {
-    if (vert > CFG.POSITION_GK && vert <= CFG.POSITION_WB) {
-      position += "B";
-    } else if (vert > CFG.POSITION_WB && vert <= CFG.POSITION_WC) {
-      position += "M";
-    } else if (vert > CFG.POSITION_WC && vert <= CFG.POSITION_WA) {
-      position += "F";
-    }
-  }
-  return position;
+  return positions;
 }

@@ -17,13 +17,14 @@ export default {
   props: {
     firstName: String,
     lastName: String,
-    position: String,
+    positions: Object,
     skill: Number,
     age: Number,
   },
 
   computed: {
     fullName() { return this.firstName + " " + this.lastName; },
+    position() { return this.positions.position },
   },
 
 }

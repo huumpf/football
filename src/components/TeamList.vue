@@ -7,7 +7,7 @@
       :key="index"
       :firstName="player.firstName"
       :lastName="player.lastName"
-      :position="player.position"
+      :positions="player.positions"
       :skill="player.skill"
       :age="player.age"
       />
@@ -35,12 +35,17 @@ export default {
 
 <style lang="scss" scoped>
 
+
 .draft-list-wrapper {
   height: 100%;
   overflow: scroll;
   background-color: $col_page_background_secondary;
-  border-left: 1px solid $col_divider;
+  border-left: 1px solid $col_module_border;
 }
+  @media screen and (max-width:1200px) {
+  .draft-list-wrapper {
+    background-color: $col_page_background_secondary;
+  }}
 
 .player-list {
   display: flex;

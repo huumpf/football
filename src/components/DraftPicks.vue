@@ -4,13 +4,13 @@
       <h1>Draft your team</h1>
       <p>{{ moneyToStr(currentMoney) }} € remaining</p>
     </div>
-    <div class="player-cards">
+    <div class="player-cards-wrapper">
       <DraftCard
       v-for="(player, index) in activeDraftSet" 
       :key="index"
       :firstName="player.firstName"
       :lastName="player.lastName"
-      :position="player.position"
+      :positions="player.positions"
       :skill="player.skill"
       :age="player.age"
       :salary="player.salary"
@@ -18,7 +18,7 @@
       />
     </div>
     <div class="bar bottombar">
-      <span class="number">{{ playersInTeam }}</span> / <span class="number">{{ draftAmount }}</span>
+      <span class="number left">{{ playersInTeam }}</span>/<span class="number right">{{ draftAmount }}</span>
       <div class="completion-bar">
         <div class="completion-amount" :style="{ width: draftCompleted*100 + '%' }"/>
       </div>
@@ -72,27 +72,60 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     background-color: $col_page_background;
+    background-image: url('../assets/img/grass.png');
   }
 
   .bar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    background-color: $col_module_background;
   }
 
-  .player-cards {
+  .topbar {
+    border-bottom: 1px solid $col_module_border;
+    padding: 30px 30px 0;
+    align-items: flex-start;
+  }
+  @media screen and (max-width: $breakpoint_tablet) {
+    .topbar {
+      flex-direction: column;
+      border-bottom: 1px solid $col_module_border;
+      padding: 30px 30px 0;
+      align-items: center;
+    }}
+
+
+  .topbar > * {
+    background-color: $col_module_background;
+    padding: 0 20px;
+  }
+
+  .bottombar {
+    border-top: 1px solid $col_module_border;
+    background-color: $col_module_background;
+    padding: 20px 40px;
+    align-items: center;
+  }
+
+  .player-cards-wrapper {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: center; 
   }
+  @media screen and (max-width: $breakpoint_tablet) {
+  .player-cards-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+  }}
 
   .completion-bar {
     display: flex;
     justify-content: left;
     margin-left: 40px;
-    background-color: $col_page_background_secondary;
+    background-color: $col_1200;
     height: 10px;
     border-radius: 5px;
     flex-grow: 1;
@@ -107,6 +140,16 @@ export default {
 
   .number {
     width: 20px;
+  }
+  
+  .left {
+    text-align: right;
+    margin-right: 10px;
+  }
+
+  .right {
+    text-align: left;
+    margin-left: 10px;
   }
 
 </style>

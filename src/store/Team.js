@@ -30,7 +30,7 @@ function _getTeamPositionCount(players) {
   }
 
   for (let i=0; i < players.length; i++) {
-    switch (players[i].position) {
+    switch (players[i].positions.position) {
       case "GK": positions.gk += 1; break;
       case "CB": positions.cb += 1; break;
       case "CDM": positions.cdm += 1; break;

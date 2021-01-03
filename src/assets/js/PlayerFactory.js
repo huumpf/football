@@ -17,8 +17,6 @@ function makePlayer() {
     age: Number,
     skill: Number,
     salary: Number,
-    pos_horizontal: String,
-    pos_vertical: Number,
     positions: Object,
     skills: Object,
   };
@@ -41,24 +39,10 @@ function makePlayer() {
   let pos_horizontal = Math.floor(Math.random() * 100);
 
   player.skills = get_skills(pos_vertical, player.skill);
-
-  // Positions: Goalkeeper
-  if (pos_vertical <= CFG.POSITION_GK) { 
-    player.positions.position = "GK";
-  // Positions: LEFT
-  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal < CFG.POSITION_OFFSET_WING) {
-    player.positions.position = "L";
-  // Positions: RIGHT
-  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
-    player.positions.position = "R";
-  // Positions: CENTER
-  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal < CFG.POSITION_OFFSET_WING && pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
-    player.positions.position = "C";
-  }
   
-  player.positions = get_pos(pos_vertical, pos_horizontal);
+  player.positions = get_pos(player, pos_vertical, pos_horizontal);
 
-console.log(player);
+  console.log(player);
 
   return player;
 }
@@ -91,55 +75,52 @@ function get_skills(pos_vertical, skill) {
   return skills;
 }
 
-function get_pos(vert, hor) {
+function get_pos(player, pos_vertical, pos_horizontal) {
 
   let positions = { 
-    position: String,
+    position: "",
     gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0 
   };
-
-  if (vert <= CFG.POSITION_GK) {
+// Positions: Goalkeeper
+  if (pos_vertical <= CFG.POSITION_GK) {
     positions.position = "GK";
     positions.gk = 1;
-  } else {
-    // Left side
-    if (hor < CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_WB) {
-      positions.position = "LB";
-      positions.gk = 1;
-    } else if (hor < CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WB && vert <= CFG.POSITION_WC) {
-      positions.position = "LM";
-      positions.lb = 1;
-    } else if (hor < CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WC && vert <= CFG.POSITION_WA) {
-      positions.position = "LF";
-      positions.lf = 1;
-    }
-    // Right side
-    else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_WB) {
-      positions.position = "RB";
-      positions.rb = 1;
-    } else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WB && vert <= CFG.POSITION_WC) {
-      positions.position = "RM";
-      positions.rm = 1;
-    } else if (hor > 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_WC && vert <= CFG.POSITION_WA) {
-      positions.position = "RF";
-      positions.rf = 1;
-    }
-    // Center
-    else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert <= CFG.POSITION_CB) {
-      positions.position = "CB";
-      positions.cb = 1;
-    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CB && vert <= CFG.POSITION_CDM) {
-      positions.position = "CDM";
-      positions.cdm = 1;
-    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CDM && vert <= CFG.POSITION_CM) {
-      positions.position = "CM";
-      positions.cm = 1;
-    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CM && vert <= CFG.POSITION_CAM) {
-      positions.position = "CAM";
-      positions.cam = 1;
-    } else if (hor >= CFG.POSITION_OFFSET_WING && hor <= 100 - CFG.POSITION_OFFSET_WING && vert > CFG.POSITION_CAM && vert <= CFG.POSITION_ST) {
-      positions.position = "ST";
-      positions.st = 1;
+  }
+
+  if (player.skills.goalkeeping === 0) {
+    if (player.skills.defense !== 0 && player.skills.progression !== 0 && player.skills.shot !== 0) {
+      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
+        positions.position = "LM";
+        positions.lm = 1;
+      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
+        positions.position = "RM";
+        positions.rm = 1;
+      } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
+        positions.position = "CM";
+        positions.cm = 1;
+      }
+    } else if (player.skills.shot === 0) {
+      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
+        positions.position = "LB";
+        positions.lb = 1;
+      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
+        positions.position = "RB";
+        positions.rb = 1;
+      } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
+        positions.position = "CB";
+        positions.cb = 1;
+      }
+    } else if (player.skills.defense === 0) {
+      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
+        positions.position = "LF";
+        positions.lf = 1;
+      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
+        positions.position = "RF";
+        positions.rf = 1;
+      } else {
+        positions.position = "ST";
+        positions.st = 1;
+      }
     }
   }
 

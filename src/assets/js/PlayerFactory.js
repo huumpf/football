@@ -11,7 +11,17 @@ export function makeDraftSet() {
 }
 
 function makePlayer() {
-  let player = {};
+  let player = {
+    firstName: String,
+    lastName: String,
+    age: Number,
+    skill: Number,
+    salary: Number,
+    pos_horizontal: String,
+    pos_vertical: Number,
+    positions: Object,
+    skills: Object,
+  };
 
   // Name
   player.firstName = Names.firstNames[Math.floor(Math.random() * Names.firstNames.length)];
@@ -26,12 +36,59 @@ function makePlayer() {
   // Salary
   player.salary = player.skill * 1000;
 
-  // Position
-  player.pos_vertical = Math.floor(Math.random() * 100);
-  player.pos_horizontal = Math.floor(Math.random() * 100);
-  player.positions = get_pos(player.pos_vertical, player.pos_horizontal);
+  // Positions: Initial Roll
+  let pos_vertical = Math.floor(Math.random() * 100);
+  let pos_horizontal = Math.floor(Math.random() * 100);
+
+  player.skills = get_skills(pos_vertical, player.skill);
+
+  // Positions: Goalkeeper
+  if (pos_vertical <= CFG.POSITION_GK) { 
+    player.positions.position = "GK";
+  // Positions: LEFT
+  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal < CFG.POSITION_OFFSET_WING) {
+    player.positions.position = "L";
+  // Positions: RIGHT
+  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
+    player.positions.position = "R";
+  // Positions: CENTER
+  } else if (pos_vertical > CFG.POSITION_GK && pos_horizontal < CFG.POSITION_OFFSET_WING && pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
+    player.positions.position = "C";
+  }
+  
+  player.positions = get_pos(pos_vertical, pos_horizontal);
+
+console.log(player);
 
   return player;
+}
+
+function get_skills(pos_vertical, skill) {
+  let skills = {
+    goalkeeping: 0,
+    defense: 0,
+    progression: 0,
+    shot: 0,
+  };
+
+  if (pos_vertical <= CFG.POSITION_GK) {
+    skills.goalkeeping = skill;
+  } else {
+    skills.defense = Math.floor(Math.random() * skill * 0.8);
+    if (skills.defense > skill / 2) {
+      skills.progression = skill - skills.defense;
+    } else {
+      let rem = skill - skills.defense;
+      skills.progression = Math.floor(Math.random() * rem);
+      skills.shot = skill - skills.progression - skills.shot;
+      if (skills.shot > skill / 2) {
+        skills.progression += skills.defense;
+        skills.defense = 0;
+      }
+    }
+  }
+
+  return skills;
 }
 
 function get_pos(vert, hor) {

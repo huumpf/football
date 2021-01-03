@@ -4,12 +4,14 @@ export const teamModule = {
   state: {
     players: [],
     positionCount: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0, },
+    skillCount: { goalkeeping: 0, defense: 0, progression: 0, shot: 0, },
   },
 
   mutations: {
     ADD_TO_TEAM(state, player) {
       state.players.push(player);
       state.positionCount = _getTeamPositionCount(state.players);
+      state.skillCount = _getTeamSkillsCount(state.players);
     },
   },
 
@@ -24,26 +26,43 @@ export const teamModule = {
   }
 }
 
-function _getTeamPositionCount(players) {
-  let positions = {
-    gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0,
+function _getTeamSkillsCount(players) {
+
+  console.log(players);
+
+  let skills = {
+    goalkeeping: 0,
+    defense: 0,
+    progression: 0,
+    shot: 0,
   }
 
   for (let i=0; i < players.length; i++) {
-    switch (players[i].positions.position) {
-      case "GK": positions.gk += 1; break;
-      case "CB": positions.cb += 1; break;
-      case "CDM": positions.cdm += 1; break;
-      case "CM": positions.cm += 1; break;
-      case "CAM": positions.cam += 1; break;
-      case "ST": positions.st += 1; break;
-      case "LB": positions.lb += 1; break;
-      case "LM": positions.lm += 1; break;
-      case "LF": positions.lf += 1; break;
-      case "RB": positions.rb += 1; break;
-      case "RM": positions.rm += 1; break;
-      case "RF": positions.rf += 1; break;
-    }
+    skills.goalkeeping += players[i].skills.goalkeeping;
+    skills.defense += players[i].skills.defense;
+    skills.progression += players[i].skills.progression;
+    skills.shot += players[i].skills.shot;
+  }
+  console.log(skills);
+  return skills;
+}
+
+function _getTeamPositionCount(players) {
+  let positions = {
+    gk: 0, cb: 0, cm: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0,
+  }
+
+  for (let i=0; i < players.length; i++) {
+    positions.gk += players[i].positions.gk;
+    positions.rb += players[i].positions.rb;
+    positions.rm += players[i].positions.rm;
+    positions.rf += players[i].positions.rf;
+    positions.cb += players[i].positions.cb;
+    positions.cm += players[i].positions.cm;
+    positions.st += players[i].positions.st;
+    positions.lb += players[i].positions.lb;
+    positions.lm += players[i].positions.lm;
+    positions.lf += players[i].positions.lf;
   }
 
   return positions;

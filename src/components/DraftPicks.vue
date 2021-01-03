@@ -12,6 +12,7 @@
       :lastName="player.lastName"
       :positions="player.positions"
       :skill="player.skill"
+      :skills="player.skills"
       :age="player.age"
       :salary="player.salary"
       @click="addPlayerToTeam(player)"

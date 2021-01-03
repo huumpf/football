@@ -34,20 +34,16 @@ function makePlayer() {
   // Salary
   player.salary = player.skill * 1000;
 
-  // Positions: Initial Roll
+  // Skills
   let pos_vertical = Math.floor(Math.random() * 100);
   let pos_horizontal = Math.floor(Math.random() * 100);
-
-  player.skills = get_skills(pos_vertical, player.skill);
-  
+  player.skills = get_skills(pos_horizontal, player.skill);
   player.positions = get_pos(player, pos_vertical, pos_horizontal);
-
-  console.log(player);
 
   return player;
 }
 
-function get_skills(pos_vertical, skill) {
+function get_skills(pos_horizontal, skill) {
   let skills = {
     goalkeeping: 0,
     defense: 0,
@@ -55,9 +51,10 @@ function get_skills(pos_vertical, skill) {
     shot: 0,
   };
 
-  if (pos_vertical <= CFG.POSITION_GK) {
+  if (pos_horizontal <= CFG.POSITION_GK) {
     skills.goalkeeping = skill;
-  } else {
+    return skills;
+  } else if (pos_horizontal > CFG.POSITION_GK) {
     skills.defense = Math.floor(Math.random() * skill * 0.8);
     if (skills.defense > skill / 2) {
       skills.progression = skill - skills.defense;
@@ -70,9 +67,9 @@ function get_skills(pos_vertical, skill) {
         skills.defense = 0;
       }
     }
+    return skills;
   }
 
-  return skills;
 }
 
 function get_pos(player, pos_vertical, pos_horizontal) {
@@ -81,45 +78,57 @@ function get_pos(player, pos_vertical, pos_horizontal) {
     position: "",
     gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0 
   };
-// Positions: Goalkeeper
-  if (pos_vertical <= CFG.POSITION_GK) {
+  // Positions: Goalkeeper
+  if (pos_horizontal <= CFG.POSITION_GK) {
     positions.position = "GK";
-    positions.gk = 1;
+    positions.gk += player.skill;
   }
 
   if (player.skills.goalkeeping === 0) {
-    if (player.skills.defense !== 0 && player.skills.progression !== 0 && player.skills.shot !== 0) {
+    if (player.skills.defense !== 0 && player.skills.progression !== 0 && player.skills.shot !== 0 || player.skills.defense === 0 && player.skills.shot <= player.skills.progression) {
       if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
         positions.position = "LM";
-        positions.lm = 1;
+        positions.lb += player.skills.defense;
+        positions.lm += player.skills.progression;
+        positions.lf += player.skills.shot;
       } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
         positions.position = "RM";
-        positions.rm = 1;
+        positions.rb += player.skills.defense;
+        positions.rm += player.skills.progression;
+        positions.rf += player.skills.shot;
       } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
         positions.position = "CM";
-        positions.cm = 1;
+        positions.cb += player.skills.defense;
+        positions.cm += player.skills.progression;
+        positions.st += player.skills.shot;
       }
     } else if (player.skills.shot === 0) {
       if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
         positions.position = "LB";
-        positions.lb = 1;
+        positions.lb += player.skills.defense;
+        positions.lm += player.skills.progression;
       } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
         positions.position = "RB";
-        positions.rb = 1;
+        positions.rb += player.skills.defense;
+        positions.rm += player.skills.progression;
       } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
         positions.position = "CB";
-        positions.cb = 1;
+        positions.cb += player.skills.defense;
+        positions.cm += player.skills.progression;
       }
-    } else if (player.skills.defense === 0) {
+    } else if (player.skills.defense === 0 && player.skills.shot > player.skills.progression) {
       if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
         positions.position = "LF";
-        positions.lf = 1;
+        positions.lf += player.skills.shot;
+        positions.lm += player.skills.progression;
       } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
         positions.position = "RF";
-        positions.rf = 1;
+        positions.rf += player.skills.shot;
+        positions.rm += player.skills.progression;
       } else {
         positions.position = "ST";
-        positions.st = 1;
+        positions.st += player.skills.shot;
+        positions.cm += player.skills.progression;
       }
     }
   }

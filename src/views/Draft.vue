@@ -3,6 +3,7 @@
     <DraftPicks class="flex-big"/>
     <div class="my-team-wrapper flex-small">
       <PositionVisualisation :positions="positions"/>
+      <SkillsVisualisation :skills="skills"/>
       <TeamList class="flex-grow"/>
     </div>
   </div>
@@ -11,6 +12,7 @@
 <script>
 import DraftPicks from '@/components/DraftPicks.vue'
 import PositionVisualisation from '@/components/PositionVisualisation.vue'
+import SkillsVisualisation from '@/components/SkillsVisualisation.vue'
 import TeamList from '@/components/TeamList.vue'
 
 export default {
@@ -19,11 +21,13 @@ export default {
   components: {
     DraftPicks,
     PositionVisualisation,
+    SkillsVisualisation,
     TeamList,
   },
 
   computed: {
     positions() { return this.$store.state.team.positionCount },
+    skills() { return this.$store.state.team.skillCount },
   },
 }
 </script>

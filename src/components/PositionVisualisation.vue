@@ -1,6 +1,6 @@
 <template>
   <div class="aspect-wrapper">
-    <div class="aspect-wrapper-inside" v-bind:class="{ containerMargin: small }">
+    <div class="aspect-wrapper-inside" v-bind:class="{ smallContainerMargin: small }">
       <div class="visu-wrapper">
         <div class="field-img">
           <img class="field-end-left" src="../assets/img/field-end.svg"/>
@@ -9,45 +9,39 @@
         </div>
         <div class="field-arrow"><img src="../assets/img/field-arrow.svg"/></div>
         <div class="left-side">
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.lb" :key="index"/>
+          <div class="counter">
+            <div class="tile defense" v-for="index in positions.lb" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.lm" :key="index"/>
+          <div class="counter">
+            <div class="tile midfield" v-for="index in positions.lm" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.lf" :key="index"/>
+          <div class="counter">
+            <div class="tile offense" v-for="index in positions.lf" :key="index"/>
           </div>
         </div>
         <div class="center">
-          <div class="counter counter-gk" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.gk" :key="index"/>
+          <div class="counter counter-gk">
+            <div class="tile goalkeeper" v-for="index in positions.gk" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.cb" :key="index"/>
+          <div class="counter">
+            <div class="tile defense" v-for="index in positions.cb" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.cdm" :key="index"/>
+          <div class="counter">
+            <div class="tile midfield" v-for="index in positions.cm" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.cm" :key="index"/>
-          </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.cam" :key="index"/>
-          </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.st" :key="index"/>
+          <div class="counter">
+            <div class="tile offense" v-for="index in positions.st" :key="index"/>
           </div>
         </div>
         <div class="right-side">
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.rb" :key="index"/>
+          <div class="counter">
+            <div class="tile defense" v-for="index in positions.rb" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.rm" :key="index"/>
+          <div class="counter">
+            <div class="tile midfield" v-for="index in positions.rm" :key="index"/>
           </div>
-          <div class="counter" v-bind:class="{ smallBlur: small }">
-            <div class="tile" v-for="index in positions.rf" :key="index"/>
+          <div class="counter">
+            <div class="tile offense" v-for="index in positions.rf" :key="index"/>
           </div>
         </div>
       </div>
@@ -83,7 +77,7 @@ export default {
   right: 0;
 }
 
-.containerMargin {
+.smallContainerMargin {
   margin: 10px 10px 0;
 }
 
@@ -94,7 +88,7 @@ export default {
   flex-direction: column;
   background-color: $col_1700;
   position: relative;
-  padding: 10px 50px 10px 10px;
+  padding: 5% 13% 5% 3%;
 
   .field-arrow {
   position: absolute;
@@ -161,11 +155,11 @@ export default {
   // filter: blur(25px);
 }
 .smallBlur {
-  filter: blur(9px);
+  filter: blur(0);
 }
 
 .counter-gk {
-  max-width: 40px;
+  max-width: 12%;
 }
 
 .left-side, .right-side {
@@ -177,12 +171,28 @@ export default {
 }
 
 .tile {
-  background-color: rgba(0, 255, 0, 0.5);
   position: absolute;
   top: 0;
   width: 100%;
   left: 0;
   bottom: 0;
+  opacity: .01;
+}
+
+.defense {
+  background-color: $col_defense;
+}
+
+.midfield {
+  background-color: $col_progression;
+}
+
+.offense {
+  background-color: $col_shot;
+}
+
+.goalkeeper {
+  background-color: $col_goalkeeping;
 }
 
 </style>

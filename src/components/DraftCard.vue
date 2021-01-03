@@ -10,7 +10,7 @@
         <div class="skill"><h2>{{ skill }}</h2>Skill</div>
         <div class="age"><h2>{{ age }}</h2>Age</div>
       </div>
-      <div class="salary">{{ salaryStr }} €</div>
+      <!-- <div class="salary">{{ salaryStr }} €</div> -->
     </div>
   </div>
 </template>

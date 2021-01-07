@@ -78,7 +78,7 @@ export default {
 }
 
 .smallContainerMargin {
-  margin: 10px 10px 0;
+  margin: 0;
 }
 
 .visu-wrapper {
@@ -86,7 +86,7 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: $col_1700;
+  background-color: $col_1900;
   position: relative;
   padding: 5% 13% 5% 3%;
 

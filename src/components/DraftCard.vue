@@ -61,10 +61,10 @@ export default {
   width: 280px;
   background-color: $col_module_background;
   margin: 20px;
-  border-radius: 8px;
+  // border-radius: 8px;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
   box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-  border: 1px solid $col_module_border;
+  // border: 1px solid $col_module_border;
 }
 
 .player:hover {
@@ -78,7 +78,7 @@ export default {
   height: 140px;
   width:100%;
   background-color: $col_module_section;
-  border-radius: 8px 8px 0 0;
+  // border-radius: 8px 8px 0 0;
 }
 
 .image > img {

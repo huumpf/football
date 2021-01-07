@@ -12,6 +12,7 @@ export const teamModule = {
       state.players.push(player);
       state.positionCount = _getTeamPositionCount(state.players);
       state.skillCount = _getTeamSkillsCount(state.players);
+      state.players.sort(function (a, b) { return a.positions.sort - b.positions.sort || b.skill - a.skill; });
     },
   },
 
@@ -27,8 +28,6 @@ export const teamModule = {
 }
 
 function _getTeamSkillsCount(players) {
-
-  console.log(players);
 
   let skills = {
     goalkeeping: 0,

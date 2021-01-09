@@ -42,7 +42,6 @@ function _getTeamSkillsCount(players) {
     skills.progression += players[i].skills.progression;
     skills.shot += players[i].skills.shot;
   }
-  console.log(skills);
   return skills;
 }
 

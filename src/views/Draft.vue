@@ -28,7 +28,14 @@ export default {
   computed: {
     positions() { return this.$store.state.team.positionCount },
     skills() { return this.$store.state.team.skillCount },
+    draftIsCompleted() { return this.$store.state.team.players.length === this.$store.state.draft.draftAmount }
   },
+
+  watch: {
+    draftIsCompleted: function () {
+      this.$router.push({ name: "Team" });
+    }
+  }
 }
 </script>
 

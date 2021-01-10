@@ -1,33 +1,27 @@
 <template>
   <div class="player">
-    <div class="position-wrapper">
-      <PositionVisualisation :positions="positions" :small="true"/>
-      <!-- <SkillsVisualisation :skills="skills"/> -->
-    </div>
-    <div class="details-wrapper">
-      <div class="name"><h3>{{ firstName }} {{ lastName }}</h3></div>
-      <div class="card_line">
-        <div class="position"><h2>{{ position }}</h2>Pos</div>
-        <div class="skill"><h2>{{ skill }}</h2>Skill</div>
-        <div class="age"><h2>{{ age }}</h2>Age</div>
+    <div class="name">{{ firstName }} {{ lastName }}</div>
+    <div class="stats">
+      <div class="stats-numbers">
+        <div class="number">{{ position }}</div>
+        <div class="number">{{ skill }}</div>
+        <div class="number">{{ age }}</div>
       </div>
-      <div class="salary">{{ salaryStr }} €</div>
+      <div class="stats-refs">
+        <div class="reference">Pos</div>
+        <div class="reference">Skill</div>
+        <div class="reference">Age</div>
+      </div>
     </div>
+    <div class="salary">{{ salaryStr }} €</div>
   </div>
 </template>
 
 <script>
-import PositionVisualisation from '@/components/PositionVisualisation.vue';
-// import SkillsVisualisation from '@/components/SkillsVisualisation.vue';
 const HLP = require('../assets/js/Helpers.js');
 
 export default {
   name: 'PlayerCard',
-
-  components: {
-    PositionVisualisation,
-    // SkillsVisualisation,
-  },
 
   props: {
     firstName: String,
@@ -55,48 +49,61 @@ export default {
 }
 
 .player {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
   text-align: center;
-  width: 280px;
+  margin: 10px 0;
+  padding: 20px 30px;
   background-color: $col_module_background;
-  margin: 20px;
-  // border-radius: 8px;
+  border-radius: 8px;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
   box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-  // border: 1px solid $col_module_border;
+  font-size: 30px;
+  line-height: 34px;
+
+  .name {
+    flex-grow: 3;
+    width: 50%;
+    text-align: left;
+  }
+
+  .stats {
+    flex-grow: 3;
+    display: flex;
+    flex-direction: column;
+
+    .stats-numbers, .stats-refs {
+      display: flex;
+      text-align: center;
+      justify-content: space-around;
+
+      .number, .reference {
+        margin: 0 10px;
+      }
+    }
+
+    .stats-refs {
+      font-size: 16px;
+      line-height: 18px;
+      margin-top: 5px;
+      color: rgba(255,255,255,.5);
+    }
+  }
+
+  .salary {
+    flex-grow: 1;
+    text-align: right;
+    min-width: 90px;
+  }
 }
 
 .player:hover {
-  scale: 1.05;
+  scale: 1.01;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
   cursor: pointer;
   box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-}
-
-.image {
-  height: 140px;
-  width:100%;
-  background-color: $col_module_section;
-  // border-radius: 8px 8px 0 0;
-}
-
-.image > img {
-  height:140px;
-}
-
-.card_line {
-  display:flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  border-bottom: 1px solid $col_module_border;
-  border-top: 1px solid $col_module_border;
-  padding: 20px 0;
-}
-
-.name, .salary {
-  padding: 20px;
-  flex-grow: 1;
 }
 
 </style>

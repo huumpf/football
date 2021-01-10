@@ -81,14 +81,12 @@ export default {
   }
 
   .topbar {
-    border-bottom: 1px solid $col_module_border;
     padding: 30px 30px 0;
     align-items: flex-start;
   }
   @media screen and (max-width: $breakpoint_tablet) {
     .topbar {
       flex-direction: column;
-      border-bottom: 1px solid $col_module_border;
       padding: 30px 30px 0;
       align-items: center;
     }}
@@ -108,18 +106,12 @@ export default {
 
   .player-cards-wrapper {
     width: 100%;
+    padding: 40px;
     display: flex;
-    justify-content: center; 
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
   }
-  @media screen and (max-width: $breakpoint_tablet) {
-  .player-cards-wrapper {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-  }}
 
   .completion-bar {
     display: flex;

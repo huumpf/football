@@ -10,21 +10,8 @@
 </template>
 
 <script>
-
 export default {
   name: 'TeamListHeader',
-
-  props: {
-    firstName: String,
-    lastName: String,
-    skill: Number,
-    age: Number,
-  },
-
-  computed: {
-    fullName() { return this.firstName + " " + this.lastName; },
-  },
-
 }
 </script>
 
@@ -34,19 +21,15 @@ export default {
   width: 100%;
   padding: 15px 30px;
   display: flex;
-  flex-direction: row;
   text-align: left;
   justify-content: space-between;
   color: $col_text_secondary;
   background-color: $col_module_background;
-  position: sticky;
-  top:0;
   border-bottom: 1px solid $col_module_border;
 }
 
 .card_line {
   display:flex;
-  flex-direction: row;
   text-align: center;
 }
 

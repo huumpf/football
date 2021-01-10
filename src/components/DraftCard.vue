@@ -2,7 +2,7 @@
   <div class="player">
     <div class="position-wrapper">
       <PositionVisualisation :positions="positions" :small="true"/>
-      <SkillsVisualisation :skills="skills"/>
+      <!-- <SkillsVisualisation :skills="skills"/> -->
     </div>
     <div class="details-wrapper">
       <div class="name"><h3>{{ firstName }} {{ lastName }}</h3></div>
@@ -18,7 +18,7 @@
 
 <script>
 import PositionVisualisation from '@/components/PositionVisualisation.vue';
-import SkillsVisualisation from '@/components/SkillsVisualisation.vue';
+// import SkillsVisualisation from '@/components/SkillsVisualisation.vue';
 const HLP = require('../assets/js/Helpers.js');
 
 export default {
@@ -26,7 +26,7 @@ export default {
 
   components: {
     PositionVisualisation,
-    SkillsVisualisation,
+    // SkillsVisualisation,
   },
 
   props: {

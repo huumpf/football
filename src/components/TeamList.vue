@@ -1,7 +1,7 @@
 <template>
   <div class="draft-list-wrapper">
+    <TeamListHeader v-if="team.length > 0"/>
     <div class="player-list">
-      <TeamListHeader v-if="team.length > 0"/>
       <TeamListItem
       v-for="(player, index) in team" 
       :key="index"
@@ -51,6 +51,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: scroll;
 }
 
 </style>

@@ -2,7 +2,7 @@ export const clubModule = {
   namspaced: true,
 
   state: {
-    money: 800000,
+    money: 300000,
   },
 
   mutations: {

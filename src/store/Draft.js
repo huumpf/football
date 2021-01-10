@@ -12,6 +12,9 @@ export const draftModule = {
   mutations: {
     MAKE_DRAFT_SET(state) {
       state.activeDraftSet = PlayerFactory.makeDraftSet();
+      for (let player of state.activeDraftSet) {
+        console.table(`${player.skills.goalkeeping} ${player.skills.defense} ${player.skills.progression} ${player.skills.shot}`);
+      }
     }
   },
 

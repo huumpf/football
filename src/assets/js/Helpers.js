@@ -8,7 +8,7 @@ export function getBiasedRnd (min, max, bias, influence, mixfactor) {
   return rnd * (1 - mix) + bias * mix;
 }
 
-export function map(n, start1, stop1, start2, stop2, withinBounds) {
+export function remap(n, start1, stop1, start2, stop2, withinBounds) {
   var newval = ((n - start1)/(stop1 - start1)) * (stop2 - start2) + start2;
   if (!withinBounds) {
     return newval;

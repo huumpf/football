@@ -10,9 +10,9 @@ export const teamModule = {
   mutations: {
     ADD_TO_TEAM(state, player) {
       state.players.push(player);
-      state.positionCount = _getTeamPositionCount(state.players);
-      state.skillCount = _getTeamSkillsCount(state.players);
-      state.players.sort(function (a, b) { return a.positions.sort - b.positions.sort || b.skill - a.skill; });
+      state.positionCount = getTeamPositionCount(state.players);
+      state.skillCount = getTeamSkillsCount(state.players);
+      state.players.sort((a, b) => a.positions.sort - b.positions.sort || b.skill - a.skill);
     },
   },
 
@@ -27,7 +27,7 @@ export const teamModule = {
   }
 }
 
-function _getTeamSkillsCount(players) {
+function getTeamSkillsCount(players) {
 
   let skills = {
     goalkeeping: 0,
@@ -45,7 +45,7 @@ function _getTeamSkillsCount(players) {
   return skills;
 }
 
-function _getTeamPositionCount(players) {
+function getTeamPositionCount(players) {
   let positions = {
     gk: 0, cb: 0, cm: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0,
   }

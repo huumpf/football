@@ -73,7 +73,6 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     background-color: $col_page_background;
-    background-image: url('../assets/img/grass.png');
   }
 
   .bar {
@@ -126,7 +125,7 @@ export default {
     display: flex;
     justify-content: left;
     margin-left: 40px;
-    background-color: $col_1200;
+    background-color: $col_110;
     height: 10px;
     border-radius: 5px;
     flex-grow: 1;

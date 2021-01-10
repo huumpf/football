@@ -57,7 +57,6 @@ export default {
     positions: Object,
     small: Boolean,
   },
-
 }
 </script>
 
@@ -86,7 +85,7 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: $col_1900;
+  background: $col_field_background;
   position: relative;
   padding: 5% 13% 5% 3%;
 
@@ -152,7 +151,7 @@ export default {
   flex-grow: 1;
   position: relative;
   // border: 1px solid $col_module_border;
-  // filter: blur(25px);
+  // filter: blur(15px);
 }
 .smallBlur {
   filter: blur(0);

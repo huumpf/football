@@ -57,9 +57,7 @@ export default {
   padding: 20px 30px;
   border-radius: 8px;
   font-size: 30px;
-  line-height: 34px;
   background-color: $col_module_background;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
   transition: scale 0.1s ease-out, box-shadow 0.4s;
 
   .stat {
@@ -86,7 +84,6 @@ export default {
 @media screen and (max-width: $breakpoint_tablet) {
     .player {
       font-size: 20px;
-      line-height: 24px;
     }
 }
 
@@ -94,7 +91,6 @@ export default {
   scale: 1.01;
   cursor: pointer;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
 }
 
 </style>

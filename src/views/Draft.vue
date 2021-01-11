@@ -46,6 +46,7 @@ export default {
   .draft-wrapper {
     display: flex;
     flex-direction: column;
+    height: auto;
   }
 }
 

@@ -67,6 +67,7 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     background-color: $col_page_background;
+    min-height: 95vh;
   }
 
   .bar {

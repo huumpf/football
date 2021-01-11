@@ -1,21 +1,25 @@
 <template>
   <div class="player">
-    <div class="stat name">{{ fullName }}</div>
-    <div class="stat">
-      <div class="number">{{ position }}</div>
-      <div class="reference">Pos</div>
-    </div>
-    <div class="stat">
-      <div class="number">{{ skill }}</div>
-      <div class="reference">Skill</div>
-    </div>
-    <div class="stat">
-      <div class="number">{{ age }}</div>
-      <div class="reference">Age</div>
-    </div>
-    <div class="stat salary">
-      <div class="number">{{ salaryStr }} €</div>
-      <div class="reference">per Season</div>
+    <div class="name">{{ fullName }}</div>
+    <div class="stats">
+      <div class="stat-numbers">
+        <div class="stat">
+          <div class="number">{{ position }}</div>
+          <div class="reference">Pos</div>
+        </div>
+        <div class="stat">
+          <div class="number">{{ skill }}</div>
+          <div class="reference">Skill</div>
+        </div>
+        <div class="stat">
+          <div class="number">{{ age }}</div>
+          <div class="reference">Age</div>
+        </div>
+      </div>
+      <div class="stat salary">
+        <div class="number">{{ salaryStr }} €</div>
+        <div class="reference">Salary</div>
+      </div>
     </div>
   </div>
 </template>
@@ -43,10 +47,6 @@ export default {
 
 <style lang="scss" scoped>
 
-.position-wrapper {
-  width: 100%;
-}
-
 .player {
   width: 100%;
   display: flex;
@@ -59,32 +59,52 @@ export default {
   font-size: 30px;
   background-color: $col_module_background;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
-
-  .stat {
-    display: flex;
+}
+@media screen and (max-width: $breakpoint_tablet) {
+  .player {
+    font-size: 20px;
+    padding: 10px 20px;
     flex-direction: column;
-
-    .reference {
-      font-size: 16px;
-      opacity: .5;
-      letter-spacing: 1px;
-    }
   }
-
   .name {
-    text-align: left;
-    min-width: 45%;
+    width: 100%;
+    margin-bottom: 10px;
   }
-
-  .salary {
-      text-align: right;
+  .stats {
+    width: 100%;
   }
 }
 
-@media screen and (max-width: $breakpoint_tablet) {
-    .player {
-      font-size: 20px;
-    }
+.name {
+  text-align: left;
+  flex-grow: 2;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.stat-numbers {
+  display: flex;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.reference {
+  font-size: 16px;
+  opacity: .5;
+}
+
+.salary {
+  text-align: right;
+  flex-grow: 1;
 }
 
 .player:hover {

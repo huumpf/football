@@ -60,24 +60,10 @@ export default {
   background-color: $col_module_background;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
 }
-@media screen and (max-width: $breakpoint_tablet) {
-  .player {
-    font-size: 20px;
-    padding: 10px 20px;
-    flex-direction: column;
-  }
-  .name {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-  .stats {
-    width: 100%;
-  }
-}
 
 .name {
   text-align: left;
-  flex-grow: 2;
+  width: 50%;
 }
 
 .stats {
@@ -105,12 +91,19 @@ export default {
 .salary {
   text-align: right;
   flex-grow: 1;
+  max-width: 150px;
 }
 
 .player:hover {
   scale: 1.01;
   cursor: pointer;
   transition: scale 0.1s ease-out, box-shadow 0.4s;
+}
+
+@media screen and (max-width: $breakpoint_tablet) {
+  .player {
+    font-size: 20px;
+  }
 }
 
 </style>

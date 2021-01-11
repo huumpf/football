@@ -66,13 +66,24 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center;
     background-color: $col_page_background;
     min-height: 95vh;
+  }
+
+  .player-cards-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    padding: 30px;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .bar {
     display: flex;
     justify-content: space-between;
+    width: 100%;
   }
 
   .topbar {
@@ -97,15 +108,6 @@ export default {
     background-color: $col_module_background;
     padding: 20px 40px;
     align-items: center;
-  }
-
-  .player-cards-wrapper {
-    width: 100%;
-    padding: 40px;
-    display: flex;
-    flex-grow: 1;
-    flex-direction: column;
-    justify-content: center;
   }
 
   .completion-bar {

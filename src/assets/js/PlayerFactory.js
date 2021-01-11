@@ -59,7 +59,7 @@ function makePlayer() {
 
   // Salary
   player.salary = Math.round(player.skill * CFG.PLAYER_SALARY_FACTOR * player.greed) / 1000;
-  player.salary = player.salary.toFixed(1) * 10000;
+  player.salary = Math.round(player.salary.toFixed(2) * 10000);
 
   return player;
 

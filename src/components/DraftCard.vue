@@ -1,19 +1,22 @@
 <template>
   <div class="player">
-    <div class="name">{{ firstName }} {{ lastName }}</div>
-    <div class="stats">
-      <div class="stats-numbers">
-        <div class="number">{{ position }}</div>
-        <div class="number">{{ skill }}</div>
-        <div class="number">{{ age }}</div>
-      </div>
-      <div class="stats-refs">
-        <div class="reference">Pos</div>
-        <div class="reference">Skill</div>
-        <div class="reference">Age</div>
-      </div>
+    <div class="stat name">{{ fullName }}</div>
+    <div class="stat">
+      <div class="number">{{ position }}</div>
+      <div class="reference">Pos</div>
     </div>
-    <div class="salary">{{ salaryStr }} €</div>
+    <div class="stat">
+      <div class="number">{{ skill }}</div>
+      <div class="reference">Skill</div>
+    </div>
+    <div class="stat">
+      <div class="number">{{ age }}</div>
+      <div class="reference">Age</div>
+    </div>
+    <div class="stat salary">
+      <div class="number">{{ salaryStr }} €</div>
+      <div class="reference">per Season</div>
+    </div>
   </div>
 </template>
 
@@ -24,19 +27,15 @@ export default {
   name: 'PlayerCard',
 
   props: {
-    firstName: String,
-    lastName: String,
-    positions: Object,
-    skill: Number,
-    skills: Object,
-    age: Number,
-    salary: Number,
+    player: Object,
   },
 
   computed: {
-    fullName() { return this.firstName + " " + this.lastName; },
-    position() { return this.positions.position; },
-    salaryStr() { return HLP.moneyStr(this.salary); },
+    fullName() { return this.player.firstName + " " + this.player.lastName; },
+    position() { return this.player.positions.position; },
+    age() { return this.player.age; },
+    skill() { return this.player.skill; },
+    salaryStr() { return HLP.moneyStr(this.player.salary); },
   },
 
 }
@@ -56,53 +55,45 @@ export default {
   text-align: center;
   margin: 10px 0;
   padding: 20px 30px;
-  background-color: $col_module_background;
   border-radius: 8px;
-  transition: scale 0.1s ease-out, box-shadow 0.4s;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
   font-size: 30px;
   line-height: 34px;
+  background-color: $col_module_background;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  transition: scale 0.1s ease-out, box-shadow 0.4s;
 
-  .name {
-    flex-grow: 3;
-    width: 50%;
-    text-align: left;
-  }
-
-  .stats {
-    flex-grow: 3;
+  .stat {
     display: flex;
     flex-direction: column;
 
-    .stats-numbers, .stats-refs {
-      display: flex;
-      text-align: center;
-      justify-content: space-around;
-
-      .number, .reference {
-        margin: 0 10px;
-      }
-    }
-
-    .stats-refs {
+    .reference {
       font-size: 16px;
-      line-height: 18px;
-      margin-top: 5px;
-      color: rgba(255,255,255,.5);
+      opacity: .5;
+      letter-spacing: 1px;
     }
+  }
+
+  .name {
+    text-align: left;
+    min-width: 45%;
   }
 
   .salary {
-    flex-grow: 1;
-    text-align: right;
-    min-width: 90px;
+      text-align: right;
   }
+}
+
+@media screen and (max-width: $breakpoint_tablet) {
+    .player {
+      font-size: 20px;
+      line-height: 24px;
+    }
 }
 
 .player:hover {
   scale: 1.01;
-  transition: scale 0.1s ease-out, box-shadow 0.4s;
   cursor: pointer;
+  transition: scale 0.1s ease-out, box-shadow 0.4s;
   box-shadow: 0 20px 60px rgba(0,0,0,0.08);
 }
 

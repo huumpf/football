@@ -8,13 +8,7 @@
       <DraftCard
       v-for="(player, index) in activeDraftSet" 
       :key="index"
-      :firstName="player.firstName"
-      :lastName="player.lastName"
-      :positions="player.positions"
-      :skill="player.skill"
-      :skills="player.skills"
-      :age="player.age"
-      :salary="player.salary"
+      :player="player"
       @click="addPlayerToTeam(player)"
       />
     </div>

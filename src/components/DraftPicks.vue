@@ -95,7 +95,11 @@ export default {
       flex-direction: column;
       padding: 30px 30px 0;
       align-items: center;
-    }}
+    }
+    .player-cards-wrapper {
+      padding: 20px;
+    }
+  }
 
 
   .topbar > * {

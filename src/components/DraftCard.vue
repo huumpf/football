@@ -58,7 +58,12 @@ export default {
   border-radius: 8px;
   font-size: 30px;
   background-color: $col_module_background;
-  transition: scale 0.1s ease-out, box-shadow 0.4s;
+  transition: transform 0.1s ease-out;
+}
+
+.player:hover {
+  transform: scale(1.01);
+  cursor: pointer;
 }
 
 .name {
@@ -92,12 +97,6 @@ export default {
   text-align: right;
   flex-grow: 1;
   max-width: 150px;
-}
-
-.player:hover {
-  scale: 1.01;
-  cursor: pointer;
-  transition: scale 0.1s ease-out, box-shadow 0.4s;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {

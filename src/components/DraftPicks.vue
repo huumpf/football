@@ -4,14 +4,19 @@
       <h1>Draft your team</h1>
       <p>{{ moneyToStr(currentMoney) }} € remaining</p>
     </div>
-    <div class="player-cards-wrapper">
-      <DraftCard
-      v-for="(player, index) in activeDraftSet" 
-      :key="index"
-      :player="player"
-      @click="addPlayerToTeam(player)"
-      />
+
+    <div class="player-cards-wrapper" tag="div" name="appear" mode="out-in">
+      <transition name="appear" mode="out-in">
+        <DraftCard :key="activeDraftSet[0].lastName" :player="activeDraftSet[0]" @click="addPlayerToTeam(activeDraftSet[0])"/>
+      </transition>
+      <transition name="appear" mode="out-in">
+        <DraftCard :key="activeDraftSet[1].lastName" :player="activeDraftSet[1]" @click="addPlayerToTeam(activeDraftSet[1])"/>
+      </transition>
+      <transition name="appear" mode="out-in">
+        <DraftCard :key="activeDraftSet[2].lastName" :player="activeDraftSet[2]" @click="addPlayerToTeam(activeDraftSet[2])"/>
+      </transition>
     </div>
+
     <div class="bar bottombar">
       <span class="number left">{{ playersInTeam }}</span>/<span class="number right">{{ draftAmount }}</span>
       <div class="completion-bar">
@@ -40,7 +45,7 @@ export default {
     draftCompleted() { return this.playersInTeam / this.draftAmount }
   },
 
-  mounted() {
+  created() {
     this.$store.dispatch('makeDraftSet');
   },
 
@@ -144,5 +149,18 @@ export default {
     text-align: left;
     margin-left: 10px;
   }
+
+  .appear-enter-active,
+  .appear-leave-active {
+    &, &.appear-enter-to:hover, &.appear-leave-to:hover{
+    transition: all 1s ease;
+}
+  }
+  .appear-enter-from,
+  .appear-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
 
 </style>

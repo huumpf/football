@@ -2,7 +2,7 @@
   <div class="draft-wrapper">
     <DraftPicks class="flex-big"/>
     <div class="my-team-wrapper flex-small">
-      <PositionVisualisation :positions="positions"/>
+      <PositionVisualisation :positions="skillsPerPosition" :positionCount="countPerPosition"/>
       <TeamList class="flex-grow"/>
     </div>
   </div>
@@ -23,7 +23,8 @@ export default {
   },
 
   computed: {
-    positions() { return this.$store.state.team.positionCount },
+    skillsPerPosition() { return this.$store.state.team.positionStats },
+    countPerPosition() { return this.$store.state.team.positionCount },
     skills() { return this.$store.state.team.skillCount },
     draftIsCompleted() { return this.$store.state.team.players.length === this.$store.state.draft.draftAmount }
   },

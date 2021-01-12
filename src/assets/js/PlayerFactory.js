@@ -49,7 +49,6 @@ function makePlayer() {
   // Greed
   let skill_factor = Math.pow(player.skill / CFG.DRAFT_AVG_POTENTIAL, 2);
   player.greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE/2) * skill_factor) + 1;
-  console.log(player.greed);
 
   // Skills
   let pos_vertical = Math.floor(Math.random() * 100);
@@ -78,8 +77,8 @@ function get_skills(pos_horizontal, skill) {
     return skills;
   } else {
 
-    skills.defense = Math.floor(HLP.getBiasedRnd(0, skill, skill/3, 1, 0.3));
-    skills.progression = Math.floor(HLP.getBiasedRnd(0, skill - skills.defense, (skill - skills.defense)/2, 1, 0.3));
+    skills.defense = Math.floor(HLP.getBiasedRnd(0, skill, skill/3, 1, 0.5));
+    skills.progression = Math.floor(HLP.getBiasedRnd(0, skill - skills.defense, (skill - skills.defense)/2, 1, 0.5));
     skills.shot = skill - skills.defense - skills.progression;
 
     if (skills.defense >= skills.progression && skills.defense >= skills.shot) {

@@ -153,13 +153,13 @@ export default {
   .appear-enter-active,
   .appear-leave-active {
     &, &.appear-enter-to:hover, &.appear-leave-to:hover{
-    transition: all 1s ease;
+    transition: all .7s ease;
 }
   }
   .appear-enter-from,
   .appear-leave-to {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(10px);
   }
 
 

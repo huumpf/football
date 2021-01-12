@@ -77,8 +77,8 @@ function get_skills(pos_horizontal, skill) {
     return skills;
   } else {
 
-    skills.defense = Math.floor(HLP.getBiasedRnd(0, skill, skill/3, 1, 0.5));
-    skills.progression = Math.floor(HLP.getBiasedRnd(0, skill - skills.defense, (skill - skills.defense)/2, 1, 0.5));
+    skills.defense = Math.floor(HLP.getBiasedRnd(0, skill, skill/3, 1, 0.7));
+    skills.progression = Math.floor(HLP.getBiasedRnd(0, skill - skills.defense, (skill - skills.defense)/2, 1, 0.7));
     skills.shot = skill - skills.defense - skills.progression;
 
     if (skills.defense >= skills.progression && skills.defense >= skills.shot) {

@@ -12,6 +12,7 @@ export const AGE_FACTOR = .95;
 
 // Player Positions
 export const POSITION_OFFSET_WING = 30;
+export const POSITION_GK = 13;
 export const PLAYER_SALARY_FACTOR = 36;
 
 export const formations = [

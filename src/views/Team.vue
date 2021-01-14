@@ -6,16 +6,23 @@
     </select>
   </div>
 
+  <Lineup />
+
 </template>
 
 <script>
 const CFG = require('../assets/js/Config.js');
+import Lineup from '@/components/Lineup.vue'
 
 export default {
   name: "Team",
   
   computed: {
     formations() { return CFG.formations },
+  },
+
+  components: {
+    Lineup,
   }
 }
 </script>

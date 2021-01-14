@@ -85,10 +85,6 @@ export default {
   }
 }
 
-.smallContainerMargin {
-  margin: 0;
-}
-
 .visu-wrapper {
   width: 100%;
   height: 100%;
@@ -96,7 +92,6 @@ export default {
   flex-direction: column;
   background: $col_field_background;
   position: relative;
-  // padding: 5% 13% 5% 3%;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
 }
 

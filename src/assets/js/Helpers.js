@@ -22,6 +22,8 @@ export function getFormationsWithPlayers (players) {
 
   for (const formation of formations) {
     formation.players = { ...formation.positions };
+    formation.skillSum = 0;
+
     for (let key in formation.players) {
       formation.players[key] = [];
     }
@@ -34,6 +36,7 @@ export function getFormationsWithPlayers (players) {
         formation.players[position] = [];
         for (const player of playersOnThisPos) {
           formation.players[position].push(player);
+          formation.skillSum += player.skill;
         }
       }
     }
@@ -43,27 +46,12 @@ export function getFormationsWithPlayers (players) {
 
 export function getRecommendedFormation (players) {
   
-  let recommendedFormation = Object;
-  let totalSkill = 0;
-
   const formations = getFormationsWithPlayers(players);
-  console.log(formations);
+  let recommendedFormation = formations[0];
 
   for (const formation of formations) {
-    let sum = 0;
-    
-    for (const position in formation.players) {
-      for (const player of position) {
-        if (position[player]) {
-          sum += position[player].skill;
-        }
-      }
-    }
-
-    if (sum >= totalSkill) {
-      totalSkill = sum;
-      recommendedFormation = formation;
-    }
+    if (formation.skillSum >= recommendedFormation.skillSum)
+    recommendedFormation = formation;
   }
   
   return recommendedFormation;

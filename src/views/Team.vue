@@ -3,7 +3,7 @@
     <div class="bar topbar">
       <h1>Choose a formation</h1>
       <select v-model="selectedFormation" class="selectFormation">
-        <option v-for="(formation, index) in formations" :key="index" :value="formation">{{ formation.name }}</option>
+        <option v-for="(formation, index) in formations" :key="index" :value="formation">{{ formation.name }} ({{ formation.skillSum }})     </option>
       </select>
       <p>We recommend {{ recommendedFormation.name }}</p>
     </div>

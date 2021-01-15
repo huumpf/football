@@ -128,11 +128,11 @@ function get_pos(player, pos_vertical, pos_horizontal) {
         positions.cm += player.skills.progression;
         positions.st += player.skills.shot;
         if (player.skills.progression / player.skills.defense <= 1.3 && player.skills.progression / player.skills.shot >= 1.3) {
-          positions.position = "CDM";
-          positions.sort = 4;
+          positions.position = "CM"; // CDM
+          positions.sort = 5; // 4 for CDM
         } else if (player.skills.progression / player.skills.shot <= 1.3 && player.skills.progression / player.skills.defense >= 1.3) {
-          positions.position = "CAM";
-          positions.sort = 6;
+          positions.position = "CM"; // CAM
+          positions.sort = 5; // 6 for CAM
         } else {
           positions.position = "CM";
           positions.sort = 5;

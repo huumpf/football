@@ -1,9 +1,9 @@
 <template>
   <div class="player">
-    <p>{{ position }}</p>
-    <p v-if="player">{{ player.lastName }}</p>
-    <p v-if="player">50</p>
-    <p v-if="!player">No player available</p>
+    <p class="position">{{ position }}</p>
+    <p v-if="player" class="name">{{ player.lastName }}</p>
+    <p v-if="player" class="skill">{{ player.skill }}</p>
+    <p v-if="!player" class="noPlayer">No player available</p>
   </div>
 </template>
 
@@ -37,6 +37,19 @@ export default {
   .player {
     padding: 10px 20px;
   }
+}
+
+.name {
+  flex-grow: 3;
+}
+
+.position, .skill {
+  flex-grow: 1;
+}
+
+.noPlayer {
+  flex-grow: 4;
+  color: $col_text_secondary;
 }
 
 </style>

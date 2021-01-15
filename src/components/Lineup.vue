@@ -7,24 +7,24 @@
       <div class="aspect-wrapper-inside">
         <div class="lineup">
           <div class="goalkeeper">
-            <LineupItem :position="'GK'"/>
+            <LineupItem v-for="index in formation.positions.gk" :key="index" :position="'GK'" :player="formation.players.gk[index-1]"/>
           </div>
           <div class="defense">
-            <LineupItem v-for="index in formation.positions.lb" :key="index" :position="'LB'" :player="player"/>
-            <LineupItem v-for="index in formation.positions.cb" :key="index" :position="'CB'"/>
-            <LineupItem v-for="index in formation.positions.rb" :key="index" :position="'RB'"/>
+            <LineupItem v-for="index in formation.positions.lb" :key="index" :position="'LB'" :player="formation.players.lb[index-1]"/>
+            <LineupItem v-for="index in formation.positions.cb" :key="index" :position="'CB'" :player="formation.players.cb[index-1]"/>
+            <LineupItem v-for="index in formation.positions.rb" :key="index" :position="'RB'" :player="formation.players.rb[index-1]"/>
           </div>
           <div class="midfield">
-            <LineupItem v-for="index in formation.positions.lm" :key="index" :position="'LM'"/>
-            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'"/>
-            <LineupItem v-for="index in formation.positions.cm" :key="index" :position="'CM'"/>
-            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'"/>
-            <LineupItem v-for="index in formation.positions.rm" :key="index" :position="'RM'"/>
+            <LineupItem v-for="index in formation.positions.lm" :key="index" :position="'LM'" :player="formation.players.lm[index-1]"/>
+            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'" :player="formation.players.cdm[index-1]"/>
+            <LineupItem v-for="index in formation.positions.cm" :key="index" :position="'CM'" :player="formation.players.cm[index-1]"/>
+            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'" :player="formation.players.cam[index-1]"/>
+            <LineupItem v-for="index in formation.positions.rm" :key="index" :position="'RM'" :player="formation.players.rm[index-1]"/>
           </div>
           <div class="offense">
-            <LineupItem v-for="index in formation.positions.lf" :key="index" :position="'LF'"/>
-            <LineupItem v-for="index in formation.positions.st" :key="index" :position="'ST'"/>
-            <LineupItem v-for="index in formation.positions.rf" :key="index" :position="'RF'"/>
+            <LineupItem v-for="index in formation.positions.lf" :key="index" :position="'LF'" :player="formation.players.lf[index-1]"/>
+            <LineupItem v-for="index in formation.positions.st" :key="index" :position="'ST'" :player="formation.players.st[index-1]"/>
+            <LineupItem v-for="index in formation.positions.rf" :key="index" :position="'RF'" :player="formation.players.rf[index-1]"/>
           </div>
         </div>
       </div>

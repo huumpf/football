@@ -19,6 +19,7 @@ export const formations = [
   {
     name: "5-4-1",
     positions: {
+      gk: 1,
       lb: 1,
       cb: 3,
       rb: 1,
@@ -32,6 +33,7 @@ export const formations = [
   },{
     name: "4-5-1",
     positions: {
+      gk: 1,
       lb: 1,
       cb: 2,
       rb: 1,
@@ -45,6 +47,7 @@ export const formations = [
   },{
     name: "4-4-2",
     positions: {
+      gk: 1,
       lb: 1,
       cb: 2,
       rb: 1,
@@ -58,6 +61,7 @@ export const formations = [
   },{
     name: "4-3-3",
     positions: {
+      gk: 1,
       lb: 1,
       cb: 2,
       rb: 1,

@@ -1,1 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 71.05 200"><defs><style>.cls-1,.cls-2{fill:none;stroke:#fff;stroke-miterlimit:10;}.cls-1{stroke-width:2px;}</style></defs><g id="Ebene_2" data-name="Ebene 2"><g id="Ebene_2-2" data-name="Ebene 2"><line class="cls-1" x1="15.29" x2="15.29" y2="200"/><polyline class="cls-1" points="15.29 83.06 1 83.06 1 113.88 15.29 113.88"/><polyline class="cls-1" points="15.29 56.6 61.61 56.6 61.61 143.4 15.29 143.4"/><circle class="cls-2" cx="49.71" cy="100" r="0.5"/><path class="cls-1" d="M61.61,119.79a27.42,27.42,0,0,0,0-39.58"/><polyline class="cls-1" points="15.29 78.66 32.17 78.66 32.17 118.27 15.29 118.27"/></g></g></svg>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 71.1 200" style="enable-background:new 0 0 71.1 200;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;stroke:#FFFFFF;stroke-miterlimit:10;}
+</style>
+<g id="Ebene_2_1_">
+	<g id="Ebene_2-2">
+		<polyline shape-rendering="crispEdges" vector-effect="non-scaling-stroke" class="st0" points="15.3,56.6 61.6,56.6 61.6,143.4 15.3,143.4 		"/>
+		<circle vector-effect="non-scaling-stroke" class="st0" cx="49.7" cy="100" r="0.5"/>
+		<path vector-effect="non-scaling-stroke" class="st0" d="M61.6,119.8C72.5,109.3,72.9,92,62.4,81c-0.3-0.3-0.5-0.5-0.8-0.8"/>
+		<polyline shape-rendering="crispEdges" vector-effect="non-scaling-stroke" class="st0" points="15.3,78.7 32.2,78.7 32.2,118.3 15.3,118.3 		"/>
+	</g>
+</g>
+</svg>

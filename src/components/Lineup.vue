@@ -1,36 +1,69 @@
 <template>
+
   <div class="lineup-wrapper">
-    <div class="aspect-wrapper">
+    <Field/>
+
+    <div class="aspect">
       <div class="aspect-wrapper-inside">
-        <div class="visu-wrapper">
-          <div class="field-img">
-            <img class="field-end-left" src="../assets/img/field-end.svg"/>
-            <img src="../assets/img/field-mid.svg"/>
-            <img class="field-end-right" src="../assets/img/field-end.svg"/>
+        <div class="lineup">
+          <div class="goalkeeper">
+            <LineupItem :position="'GK'"/>
+          </div>
+          <div class="defense">
+            <LineupItem v-for="index in formation.positions.lb" :key="index" :position="'LB'" :player="player"/>
+            <LineupItem v-for="index in formation.positions.cb" :key="index" :position="'CB'"/>
+            <LineupItem v-for="index in formation.positions.rb" :key="index" :position="'RB'"/>
+          </div>
+          <div class="midfield">
+            <LineupItem v-for="index in formation.positions.lm" :key="index" :position="'LM'"/>
+            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'"/>
+            <LineupItem v-for="index in formation.positions.cm" :key="index" :position="'CM'"/>
+            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'"/>
+            <LineupItem v-for="index in formation.positions.rm" :key="index" :position="'RM'"/>
+          </div>
+          <div class="offense">
+            <LineupItem v-for="index in formation.positions.lf" :key="index" :position="'LF'"/>
+            <LineupItem v-for="index in formation.positions.st" :key="index" :position="'ST'"/>
+            <LineupItem v-for="index in formation.positions.rf" :key="index" :position="'RF'"/>
           </div>
         </div>
       </div>
     </div>
   </div>
+
 </template>
 
 <script>
+import Field from '@/components/Field.vue'
+import LineupItem from '@/components/LineupItem.vue'
+
 export default {
   name: 'Lineup',
+
+  props: {
+    formation: Object,
+  },
+
+  computed: {
+    player() { return this.$store.state.team.players[0] },
+  },
+
+  components: {
+    Field,
+    LineupItem,
+  },
 }
 </script>
 
 <style lang="scss" scoped>
 
-.lineup-wrapper {
-  min-width: 800px;
-}
-
-.aspect-wrapper {
+.aspect {
   width: 100%;
-  padding-top: 50%;
+  padding-top: 60%;
+  margin-top: -60%;
+  margin-left: -60px;
   position: relative;
-  margin: 30px;
+  z-index: 100000;
 
   .aspect-wrapper-inside {
     position: absolute;
@@ -41,54 +74,19 @@ export default {
   }
 }
 
-.visu-wrapper {
+.lineup {
   width: 100%;
   height: 100%;
-  overflow: auto;
+  display: flex;
+}
+
+.goalkeeper, .defense, .midfield, .offense {
+  flex-grow: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  background: $col_field_background;
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
-}
-
-.field-img {
-  position: absolute;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  text-align: left;
-  z-index: 100000;
-  overflow: hidden;
-}
-
-.field-img > img {
-  min-height: 100%;
-  opacity: .4;
-}
-
-.field-img > .field-end-left {
-  margin-left: -5%;
-}
-
-.field-img > .field-end-right {
-  margin-right: -5%;
-  transform: rotate(180deg);
-}
-
-.visu-wrapper > .left-side, .center, .right-side {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-grow: 2;
-  justify-content: space-between;
-}
-
-.visu-wrapper > .center {
-  flex-grow: 3;
+  justify-content: space-around;
+  padding: 30px;
 }
 
 </style>

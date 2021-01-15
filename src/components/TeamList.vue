@@ -1,5 +1,5 @@
 <template>
-  <div class="draft-list-wrapper">
+  <div class="team-list-wrapper">
     <TeamListHeader v-if="team.length > 0"/>
     <div class="player-list">
       <TeamListItem
@@ -36,7 +36,7 @@ export default {
 <style lang="scss" scoped>
 
 
-.draft-list-wrapper {
+.team-list-wrapper {
   height: 100%;
   overflow: scroll;
   background-color: $col_page_background_secondary;

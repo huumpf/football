@@ -6,15 +6,15 @@
     </div>
 
     <div class="player-cards-wrapper" tag="div" name="appear" mode="out-in">
-      <transition name="appear" mode="out-in">
+      <!-- <transition name="appear" mode="out-in"> -->
         <DraftCard :key="activeDraftSet[0].lastName" :player="activeDraftSet[0]" @click="addPlayerToTeam(activeDraftSet[0])"/>
-      </transition>
-      <transition name="appear" mode="out-in">
+      <!-- </transition> -->
+      <!-- <transition name="appear" mode="out-in"> -->
         <DraftCard :key="activeDraftSet[1].lastName" :player="activeDraftSet[1]" @click="addPlayerToTeam(activeDraftSet[1])"/>
-      </transition>
-      <transition name="appear" mode="out-in">
+      <!-- </transition> -->
+      <!-- <transition name="appear" mode="out-in"> -->
         <DraftCard :key="activeDraftSet[2].lastName" :player="activeDraftSet[2]" @click="addPlayerToTeam(activeDraftSet[2])"/>
-      </transition>
+      <!-- </transition> -->
     </div>
 
     <div class="bar bottombar">

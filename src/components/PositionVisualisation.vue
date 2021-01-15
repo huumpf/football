@@ -1,24 +1,24 @@
 <template>
-  <div class="aspect-wrapper">
+
+<div class="wrapper">
+
+  <Field/>
+
+  <div class="aspect">
     <div class="aspect-wrapper-inside">
-      <div class="visu-wrapper">
-        <div class="field-img">
-          <img class="field-end-left" src="../assets/img/field-end.svg"/>
-          <img src="../assets/img/field-mid.svg"/>
-          <img class="field-end-right" src="../assets/img/field-end.svg"/>
-        </div>
+      <div class="visualisation">
         <div class="left-side">
           <div class="counter">
             <p>{{ positionCount.lb }}</p>
-            <div class="tile defense" v-for="index in positions.lb" :key="index"/>
+            <div class="tile" v-for="index in positions.lb" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.lm }}</p>
-            <div class="tile midfield" v-for="index in positions.lm" :key="index"/>
+            <div class="tile" v-for="index in positions.lm" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.lf }}</p>
-            <div class="tile offense" v-for="index in positions.lf" :key="index"/>
+            <div class="tile" v-for="index in positions.lf" :key="index"/>
           </div>
         </div>
         <div class="center">
@@ -28,37 +28,40 @@
           </div>
           <div class="counter">
             <p>{{ positionCount.cb }}</p>
-            <div class="tile defense" v-for="index in positions.cb" :key="index"/>
+            <div class="tile" v-for="index in positions.cb" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.cm }}</p>
-            <div class="tile midfield" v-for="index in positions.cm" :key="index"/>
+            <div class="tile" v-for="index in positions.cm" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.st }}</p>
-            <div class="tile offense" v-for="index in positions.st" :key="index"/>
+            <div class="tile" v-for="index in positions.st" :key="index"/>
           </div>
         </div>
         <div class="right-side">
           <div class="counter">
             <p>{{ positionCount.rb }}</p>
-            <div class="tile defense" v-for="index in positions.rb" :key="index"/>
+            <div class="tile" v-for="index in positions.rb" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.rm }}</p>
-            <div class="tile midfield" v-for="index in positions.rm" :key="index"/>
+            <div class="tile" v-for="index in positions.rm" :key="index"/>
           </div>
           <div class="counter">
             <p>{{ positionCount.rf }}</p>
-            <div class="tile offense" v-for="index in positions.rf" :key="index"/>
+            <div class="tile" v-for="index in positions.rf" :key="index"/>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script>
+import Field from '@/components/Field.vue'
+
 export default {
   name: 'PositionVisualisation',
 
@@ -66,15 +69,24 @@ export default {
     positions: Object,
     positionCount: Object,
   },
+
+  components: {
+    Field,
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 
-.aspect-wrapper {
-  padding-top: 50%;
-  position: relative;
+.wrapper {
   margin: 30px;
+}
+
+.aspect {
+  width: 100%;
+  padding-top: 60%;
+  margin-top: -60%;
+  position: relative;
 
   .aspect-wrapper-inside {
     position: absolute;
@@ -85,62 +97,30 @@ export default {
   }
 }
 
-.visu-wrapper {
+.visualisation {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: $col_field_background;
-  position: relative;
-  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  z-index: 2;
 }
 
-.field-img {
-  position: absolute;
+.left-side, .center, .right-side {
   display: flex;
-  justify-content: space-between;
-  width: 100%;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  text-align: left;
-  z-index: 100000;
-  overflow: hidden;
+  flex-grow: 1;
 }
 
-.field-img > img {
-  min-height: 100%;
-  opacity: .4;
-}
-
-.field-img > .field-end-left {
-  margin-left: -5%;
-}
-
-.field-img > .field-end-right {
-  margin-right: -5%;
-  transform: rotate(180deg);
-}
-
-.visu-wrapper > .left-side, .center, .right-side {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-grow: 2;
-  justify-content: space-between;
-}
-
-.visu-wrapper > .center {
-  flex-grow: 3;
+.left-side, .right-side {
+  margin-left: 9%;
 }
 
 .counter {
+  position: relative;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-grow: 1;
-  position: relative;
   // filter: blur(1em);
 }
 
@@ -148,18 +128,11 @@ export default {
   color: $col_text_inverted;
   font-weight: bold;
   z-index: 100000;
+  width: 50px;
 }
 
 .counter-gk {
   max-width: 9%;
-}
-
-.left-side, .right-side {
-  margin-left: 9%;
-}
-
-.shifter {
-  background-color: transparent;
 }
 
 .tile {
@@ -169,23 +142,8 @@ export default {
   left: 0;
   bottom: 0;
   opacity: .01;
+  background-color: $col_visualisation;
   // filter: blur(1em);
-}
-
-.defense {
-  background-color: $col_defense;
-}
-
-.midfield {
-  background-color: $col_progression;
-}
-
-.offense {
-  background-color: $col_shot;
-}
-
-.goalkeeper {
-  background-color: $col_goalkeeping;
 }
 
 </style>

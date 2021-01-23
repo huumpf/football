@@ -11,7 +11,7 @@ export function makeDraftSet() {
   return draftSet;
 }
 
-function makePlayer() {
+export function makePlayer() {
   let player = {
     firstName: String,
     lastName: String,

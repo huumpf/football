@@ -14,7 +14,7 @@ export function remap(n, start1, stop1, start2, stop2, withinBounds) {
     return newval;
   }
   return this.constrain(newval, start2, stop2);
-}
+}  
 
 export function getFormationsWithPlayers (players) {
   const CFG = require('./Config.js');

@@ -12,7 +12,6 @@
 import DraftPicks from '@/components/DraftPicks.vue'
 import PositionVisualisation from '@/components/PositionVisualisation.vue'
 import TeamList from '@/components/TeamList.vue'
-const ClubF = require('../assets/js/ClubFactory.js');
 
 export default {
   name: 'Home',
@@ -23,16 +22,8 @@ export default {
     TeamList,
   },
 
-  mounted() {
-    let clubs = [];
-    for (let i = 0; i < 18; i++) {
-      clubs.push(ClubF.makeClub());
-    }
-    clubs.sort((a,b) => a.formation.skillSum - b.formation.skillSum);
-    for (let club of clubs) {
-      console.log(`${club.name} ${club.formation.skillSum}`);
-      console.log(club);
-    }
+  created() {
+    this.$store.dispatch('makeLeague');
   },
 
   computed: {

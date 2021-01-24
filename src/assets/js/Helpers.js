@@ -18,9 +18,10 @@ export function remap(n, start1, stop1, start2, stop2, withinBounds) {
 
 export function getFormationsWithPlayers (players) {
   const CFG = require('./Config.js');
-  let formations = Array.from(CFG.formations);
 
-  for (const formation of formations) {
+  let formations = JSON.parse(JSON.stringify(CFG.formations));
+
+  for (let formation of formations) {
     formation.players = { ...formation.positions };
     formation.skillSum = 0;
 
@@ -45,13 +46,12 @@ export function getFormationsWithPlayers (players) {
 }
 
 export function getRecommendedFormation (players) {
-  
+
   const formations = getFormationsWithPlayers(players);
   let recommendedFormation = formations[0];
 
-  for (const formation of formations) {
-    if (formation.skillSum >= recommendedFormation.skillSum)
-    recommendedFormation = formation;
+  for (let i = 1; i < formations.length; i++) {
+    if (formations[i].skillSum >= recommendedFormation.skillSum) recommendedFormation = formations[i];
   }
   
   return recommendedFormation;

@@ -15,6 +15,8 @@ export const POSITION_OFFSET_WING = 30;
 export const POSITION_GK = 13;
 export const PLAYER_SALARY_FACTOR = 36;
 
+export const CLUBS_PER_LEAGUE = 8;
+
 export const formations = [
   {
     name: "5-4-1",

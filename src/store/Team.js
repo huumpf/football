@@ -3,8 +3,8 @@ export const teamModule = {
 
   state: {
     players: [],
-    positionStats: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0, },
-    positionCount: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0, },
+    positionStats: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0, rf: 0 },
+    positionCount: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0, rf: 0 },
     skillCount: { goalkeeping: 0, defense: 0, progression: 0, shot: 0, },
   },
 
@@ -24,9 +24,9 @@ export const teamModule = {
     },
   },
 
-  modules: {
+  getters: {
     
-  }
+  },
 }
 
 function getTeamSkillsCount(players) {

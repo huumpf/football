@@ -1,25 +1,21 @@
 const Names = require('./Names.js');
 const PlayerFactory = require('./PlayerFactory.js');
-const HLP = require('./Helpers.js');
 
-export function makeClub() {
+const getClubName = () => {
+  const city = Names.cityNames[Math.floor(Math.random() * Names.cityNames.length)];
+  const addition = Math.random() < 0.2
+    ? Names.clubNameAdditions[Math.floor(Math.random() * Names.clubNameAdditions.length)]
+    : '';
 
-  let club = {
-    name: String,
-    players: Array,
-    formation: Object,
-  }
+  return [city, addition].filter(s => s).join(' ');
+};
 
-  club.name = Names.cityNames[Math.floor(Math.random() * Names.cityNames.length)];
-  if (Math.random() < 0.2) { club.name += " " + Names.clubNameAdditions[Math.floor(Math.random() * Names.clubNameAdditions.length)] }
-  
-  club.players = [];
-  for (let i = 0; i < 30; i++) {
-    let player = PlayerFactory.makePlayer();
-    club.players.push(player);
-  }
+const getClubPlayers = (amount) => (new Array(amount))
+  .fill(null)
+  .map(() => PlayerFactory.makePlayer());
 
-  club.formation = HLP.getRecommendedFormation(club.players);
-
-  return club;
-}
+export const makeClub = () => ({
+  id: Math.random() + '',
+  name: getClubName(),
+  players: getClubPlayers(30),
+});

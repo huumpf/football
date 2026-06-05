@@ -1,6 +1,4 @@
 export const teamModule = {
-  namspaced: true,
-
   state: {
     players: [],
     positionStats: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0,rf: 0, },

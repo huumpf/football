@@ -1,6 +1,4 @@
 export const clubModule = {
-  namspaced: true,
-
   state: {
     money: 300000,
   },

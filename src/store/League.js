@@ -2,8 +2,6 @@ import * as clubFactory from '@/assets/js/ClubFactory.js';
 import * as CFG from '@/assets/js/Config.js';
 
 export const leagueModule = {
-  namspaced: true,
-
   state: {
     clubs: [],
   },

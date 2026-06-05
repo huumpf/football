@@ -9,15 +9,14 @@
     </div>
 
     <div class="field-wrapper">
-      <Lineup :formation="selectedFormation"/>
+      <Lineup v-if="selectedFormation" :formation="selectedFormation"/>
     </div>
   </div>
 
 </template>
 
 <script>
-const CFG = require('../assets/js/Config.js');
-const HLP = require('../assets/js/Helpers.js');
+import * as HLP from '../assets/js/Helpers.js';
 import Lineup from '@/components/Lineup.vue';
 
 export default {
@@ -25,8 +24,12 @@ export default {
 
   data:() => {
     return {
-      selectedFormation: CFG.formations[0],
+      selectedFormation: null,
     }
+  },
+
+  created() {
+    this.selectedFormation = this.recommendedFormation;
   },
 
   computed: {

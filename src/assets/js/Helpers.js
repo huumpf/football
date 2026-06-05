@@ -1,3 +1,5 @@
+import * as CFG from './Config.js';
+
 export function moneyStr(amount) {
   return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
@@ -17,8 +19,6 @@ export function remap(n, start1, stop1, start2, stop2, withinBounds) {
 }  
 
 export function getFormationsWithPlayers (players) {
-  const CFG = require('./Config.js');
-
   let formations = JSON.parse(JSON.stringify(CFG.formations));
 
   for (let formation of formations) {

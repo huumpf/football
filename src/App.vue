@@ -52,5 +52,4 @@ html {
 .app-content {
   flex-grow: 1;
 }
-
 </style>

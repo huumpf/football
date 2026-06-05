@@ -1,5 +1,5 @@
-const PlayerFactory = require('@/assets/js/PlayerFactory.js');
-const CFG = require('@/assets/js/Config.js');
+import * as PlayerFactory from '@/assets/js/PlayerFactory.js';
+import * as CFG from '@/assets/js/Config.js';
 
 export const draftModule = {
   namspaced: true,

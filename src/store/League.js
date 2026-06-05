@@ -1,5 +1,5 @@
-const clubFactory = require('@/assets/js/ClubFactory.js');
-const CFG = require('@/assets/js/Config.js');
+import * as clubFactory from '@/assets/js/ClubFactory.js';
+import * as CFG from '@/assets/js/Config.js';
 
 export const leagueModule = {
   namspaced: true,

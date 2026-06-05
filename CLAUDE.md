@@ -12,7 +12,7 @@ npm run preview    # preview the production build locally
 node server.js     # serve dist/ in production (Express, forces HTTPS, SPA history fallback, PORT env)
 ```
 
-There is no test runner, linter, or formatter configured. `npm run lint` documented in the README no longer exists (it referenced the removed Vue CLI). `vue.config.js` and `babel.config.js` are leftover from the Vue CLI → Vite 5 migration and are unused by the Vite build.
+There is no test runner, linter, or formatter configured. `vue.config.js` and `babel.config.js` are leftover from the Vue CLI → Vite 5 migration and are unused by the Vite build.
 
 ## Architecture
 

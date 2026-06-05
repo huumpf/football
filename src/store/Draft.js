@@ -2,8 +2,6 @@ import * as PlayerFactory from '@/assets/js/PlayerFactory.js';
 import * as CFG from '@/assets/js/Config.js';
 
 export const draftModule = {
-  namspaced: true,
-
   state: {
     activeDraftSet: [],
     draftAmount: CFG.DRAFT_COUNT,

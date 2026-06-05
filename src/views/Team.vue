@@ -16,8 +16,8 @@
 </template>
 
 <script>
-const CFG = require('../assets/js/Config.js');
-const HLP = require('../assets/js/Helpers.js');
+import * as CFG from '../assets/js/Config.js';
+import * as HLP from '../assets/js/Helpers.js';
 import Lineup from '@/components/Lineup.vue';
 
 export default {

@@ -25,7 +25,7 @@
 </template>
 
 <script>
-const HLP = require('../assets/js/Helpers.js');
+import * as HLP from '../assets/js/Helpers.js';
 
 export default {
   name: 'PlayerCard',

@@ -1,6 +1,6 @@
-const Names = require('./Names.js');
-const PlayerFactory = require('./PlayerFactory.js');
-const HLP = require('./Helpers.js');
+import * as Names from './Names.js';
+import * as PlayerFactory from './PlayerFactory.js';
+import * as HLP from './Helpers.js';
 
 export function makeClub() {
 

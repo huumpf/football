@@ -28,7 +28,7 @@
 
 <script>
 import DraftCard from '../components/DraftCard.vue';
-const Helpers = require('../assets/js/Helpers.js');
+import * as Helpers from '../assets/js/Helpers.js';
 
 export default {
   name: 'DraftPicks',

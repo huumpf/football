@@ -1,13 +1,11 @@
 module.exports = {
   css: {
     loaderOptions: {
-      scss: {
-        additionalData: `
-        @import "@/assets/scss/var-color-base.scss";
-        @import "@/assets/scss/var-color-mapping.scss";
-        @import "@/assets/scss/var-breakpoints.scss";
-        `,
-      },
-    },
-  },
+      sass: {
+        additionalData: `@import "@/assets/scss/var-color-base.scss";
+@import "@/assets/scss/var-color-mapping.scss";
+@import "@/assets/scss/var-breakpoints.scss";`
+      }
+    }
+  }
 };

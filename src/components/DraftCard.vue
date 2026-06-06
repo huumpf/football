@@ -76,13 +76,13 @@ export default {
 
 .name {
   text-align: left;
-  width: 42%;
+  width: 40%;
 }
 
 // Fixed columns so Pos / Skill / Age / Salary line up vertically across cards.
 .stats {
   display: grid;
-  grid-template-columns: 1fr 56px 56px 150px;
+  grid-template-columns: 1fr 50px 50px 150px;
   align-items: center;
   flex-grow: 1;
 }
@@ -92,15 +92,13 @@ export default {
   flex-direction: column;
 }
 
-// Equal height for every value so the reference labels share one baseline,
-// even when the position value uses a smaller font.
+// Equal height for every value so the reference labels share one baseline.
 .number {
   height: 40px;
   line-height: 40px;
 }
 
 .positions .number {
-  font-size: 22px;
   white-space: nowrap;
 }
 
@@ -129,9 +127,6 @@ export default {
   .number {
     height: 28px;
     line-height: 28px;
-  }
-  .positions .number {
-    font-size: 15px;
   }
 }
 

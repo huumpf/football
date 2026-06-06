@@ -4,7 +4,7 @@
     <div class="stats">
       <div class="stat-numbers">
         <div class="stat">
-          <div class="number">{{ position }}</div>
+          <div class="number">{{ primaryPositions }}<span v-if="secondaryPositions" class="secondary-pos">{{ secondaryPositions }}</span></div>
           <div class="reference">Pos</div>
         </div>
         <div class="stat">
@@ -36,7 +36,14 @@ export default {
 
   computed: {
     fullName() { return this.player.firstName + " " + this.player.lastName; },
-    position() { return HLP.formatPositions(this.player.positions); },
+    primaryPositions() {
+      const p = this.player.positions;
+      return (p.primary || [p.position]).join("/");
+    },
+    secondaryPositions() {
+      const s = this.player.positions.secondary || [];
+      return s.length ? "(" + s.join("/") + ")" : "";
+    },
     age() { return this.player.age; },
     skill() { return this.player.skill; },
     salaryStr() { return HLP.moneyStr(this.player.salary); },
@@ -91,6 +98,11 @@ export default {
 .reference {
   font-size: 16px;
   opacity: .5;
+}
+
+.secondary-pos {
+  margin-left: 0.35em;
+  color: $col_text_faded;
 }
 
 .salary {

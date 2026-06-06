@@ -41,14 +41,6 @@ export function effectiveSkill(player, position) {
   return 0;
 }
 
-export function formatPositions(positions) {
-  const primary = positions.primary || [positions.position];
-  const secondary = positions.secondary || [];
-  let str = primary.join("/");
-  if (secondary.length) str += " (" + secondary.join("/") + ")";
-  return str;
-}
-
 // Optimally fills a formation's slots with the available players, maximising the
 // summed effective skill. Each player takes at most one slot, considering every
 // position they can play (primary at full skill, secondary penalised). Solved as

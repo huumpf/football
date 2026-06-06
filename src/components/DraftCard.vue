@@ -2,19 +2,22 @@
   <div class="player">
     <div class="name">{{ fullName }}</div>
     <div class="stats">
-      <div class="stat-numbers">
-        <div class="stat">
-          <div class="number">{{ primaryPositions }}<span v-if="secondaryPositions" class="secondary-pos">{{ secondaryPositions }}</span></div>
-          <div class="reference">Pos</div>
-        </div>
-        <div class="stat">
-          <div class="number">{{ skill }}</div>
-          <div class="reference">Skill</div>
-        </div>
-        <div class="stat">
-          <div class="number">{{ age }}</div>
-          <div class="reference">Age</div>
-        </div>
+      <div class="stat positions">
+        <div class="number"><span
+          v-for="pos in positionsList"
+          :key="pos.label"
+          class="pos"
+          :class="{ 'secondary-pos': pos.secondary }"
+        >{{ pos.label }}</span></div>
+        <div class="reference">Pos</div>
+      </div>
+      <div class="stat">
+        <div class="number">{{ skill }}</div>
+        <div class="reference">Skill</div>
+      </div>
+      <div class="stat">
+        <div class="number">{{ age }}</div>
+        <div class="reference">Age</div>
       </div>
       <div class="stat salary">
         <div class="number">{{ salaryStr }} €</div>
@@ -36,13 +39,11 @@ export default {
 
   computed: {
     fullName() { return this.player.firstName + " " + this.player.lastName; },
-    primaryPositions() {
+    positionsList() {
       const p = this.player.positions;
-      return (p.primary || [p.position]).join("/");
-    },
-    secondaryPositions() {
-      const s = this.player.positions.secondary || [];
-      return s.length ? "(" + s.join("/") + ")" : "";
+      const primary = (p.primary || [p.position]).map(label => ({ label, secondary: false }));
+      const secondary = (p.secondary || []).map(label => ({ label, secondary: true }));
+      return [...primary, ...secondary];
     },
     age() { return this.player.age; },
     skill() { return this.player.skill; },
@@ -75,18 +76,14 @@ export default {
 
 .name {
   text-align: left;
-  width: 50%;
+  width: 42%;
 }
 
+// Fixed columns so Pos / Skill / Age / Salary line up vertically across cards.
 .stats {
-  display: flex;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.stat-numbers {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 56px 56px 150px;
+  align-items: center;
   flex-grow: 1;
 }
 
@@ -95,25 +92,46 @@ export default {
   flex-direction: column;
 }
 
+// Equal height for every value so the reference labels share one baseline,
+// even when the position value uses a smaller font.
+.number {
+  height: 40px;
+  line-height: 40px;
+}
+
+.positions .number {
+  font-size: 22px;
+  white-space: nowrap;
+}
+
 .reference {
   font-size: 16px;
   opacity: .5;
 }
 
+// Separate positions by spacing only; secondary ones are faded.
+.pos + .pos {
+  margin-left: 0.4em;
+}
+
 .secondary-pos {
-  margin-left: 0.35em;
   color: $col_text_faded;
 }
 
 .salary {
   text-align: right;
-  flex-grow: 1;
-  max-width: 150px;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {
   .player {
     font-size: 20px;
+  }
+  .number {
+    height: 28px;
+    line-height: 28px;
+  }
+  .positions .number {
+    font-size: 15px;
   }
 }
 

@@ -35,39 +35,46 @@ export default {
 
 <style lang="scss" scoped>
 
+// Team-overview box: a compact vertical card (position · name · skill) so six
+// columns fit side by side and up to five boxes still stack in one column.
 .player {
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   text-align: center;
-  margin: 10px 0;
-  padding: 20px 30px;
+  gap: 1px;
+  margin: 4px 0;
+  padding: 7px 8px;
   border-radius: 8px;
-  font-size: 20px;
   background-color: $col_module_background;
 }
-@media screen and (max-width: $breakpoint_tablet) {
-  .player {
-    padding: 10px 20px;
-  }
+
+.position {
+  font-size: 12px;
+  font-weight: 600;
+  color: $col_text_secondary;
 }
 
 .name {
-  flex-grow: 3;
+  font-size: 15px;
+  font-weight: 600;
+  word-break: break-word;
 }
 
-.position, .skill {
-  flex-grow: 1;
+.skill {
+  font-size: 13px;
 }
 
 .noPlayer {
-  flex-grow: 4;
+  font-size: 12px;
   color: $col_text_secondary;
 }
 
 // Compact box for the draft squad preview: position (grey) next to the skill value.
 .player.skill-only {
+  flex-direction: row;
   justify-content: center;
   gap: 6px;
   margin: 3px auto;
@@ -79,12 +86,14 @@ export default {
 
 .player.skill-only .position {
   flex-grow: 0;
+  font-size: 17px;
   color: $col_text_secondary;
 }
 
 .player.skill-only .skill,
 .player.skill-only .noPlayer {
   flex-grow: 0;
+  font-size: 17px;
 }
 
 </style>

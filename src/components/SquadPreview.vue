@@ -36,7 +36,7 @@ import Lineup from '@/components/Lineup.vue';
 // so each box can show how many drafted players play that position.
 const OVERVIEW_FORMATION = {
   name: 'Overview',
-  positions: { gk: 1, lb: 1, cb: 1, rb: 1, lm: 1, cdm: 0, cm: 1, cam: 0, rm: 1, lf: 1, st: 1, rf: 1 },
+  positions: { gk: 1, lb: 1, cb: 1, rb: 1, lm: 1, cdm: 1, cm: 1, cam: 1, rm: 1, lf: 1, st: 1, rf: 1 },
   players: { gk: [], lb: [], cb: [], rb: [], lm: [], cdm: [], cm: [], cam: [], rm: [], lf: [], st: [], rf: [] },
 };
 

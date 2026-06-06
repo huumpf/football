@@ -36,7 +36,7 @@ export default {
 
   computed: {
     fullName() { return this.player.firstName + " " + this.player.lastName; },
-    position() { return this.player.positions.position; },
+    position() { return HLP.formatPositions(this.player.positions); },
     age() { return this.player.age; },
     skill() { return this.player.skill; },
     salaryStr() { return HLP.moneyStr(this.player.salary); },

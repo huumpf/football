@@ -2,7 +2,7 @@
   <div class="draft-wrapper">
     <DraftPicks class="flex-big"/>
     <div class="my-team-wrapper flex-small">
-      <PositionVisualisation :positions="skillsPerPosition" :positionCount="countPerPosition"/>
+      <SquadPreview/>
       <TeamList class="flex-grow"/>
     </div>
   </div>
@@ -10,7 +10,7 @@
 
 <script>
 import DraftPicks from '@/components/DraftPicks.vue'
-import PositionVisualisation from '@/components/PositionVisualisation.vue'
+import SquadPreview from '@/components/SquadPreview.vue'
 import TeamList from '@/components/TeamList.vue'
 
 export default {
@@ -18,7 +18,7 @@ export default {
 
   components: {
     DraftPicks,
-    PositionVisualisation,
+    SquadPreview,
     TeamList,
   },
 
@@ -27,9 +27,6 @@ export default {
   },
 
   computed: {
-    skillsPerPosition() { return this.$store.state.team.positionStats },
-    countPerPosition() { return this.$store.state.team.positionCount },
-    skills() { return this.$store.state.team.skillCount },
     draftIsCompleted() { return this.$store.state.team.players.length === this.$store.state.draft.draftAmount }
   },
 
@@ -64,7 +61,7 @@ export default {
 }}
 
 .flex-small {
-  width: 400px;
+  width: 500px;
   // flex-grow: 1;
 }
 @media screen and (max-width: $breakpoint_tablet) {

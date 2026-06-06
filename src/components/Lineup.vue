@@ -14,12 +14,16 @@
             <LineupItem v-for="index in formation.positions.cb" :key="index" :position="'CB'" :player="formation.players.cb[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cb"/>
             <LineupItem v-for="index in formation.positions.rb" :key="index" :position="'RB'" :player="formation.players.rb[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.rb"/>
           </div>
+          <div v-if="formation.positions.cdm" class="cdm">
+            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'" :player="formation.players.cdm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cdm"/>
+          </div>
           <div class="midfield">
             <LineupItem v-for="index in formation.positions.lm" :key="index" :position="'LM'" :player="formation.players.lm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.lm"/>
-            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'" :player="formation.players.cdm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cdm"/>
             <LineupItem v-for="index in formation.positions.cm" :key="index" :position="'CM'" :player="formation.players.cm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cm"/>
-            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'" :player="formation.players.cam[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cam"/>
             <LineupItem v-for="index in formation.positions.rm" :key="index" :position="'RM'" :player="formation.players.rm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.rm"/>
+          </div>
+          <div v-if="formation.positions.cam" class="cam">
+            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'" :player="formation.players.cam[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cam"/>
           </div>
           <div class="offense">
             <LineupItem v-for="index in formation.positions.lf" :key="index" :position="'LF'" :player="formation.players.lf[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.lf"/>
@@ -69,7 +73,6 @@ export default {
   width: 100%;
   padding-top: 60%;
   margin-top: -60%;
-  margin-left: -60px;
   position: relative;
   z-index: 100000;
 
@@ -88,20 +91,18 @@ export default {
   display: flex;
 }
 
-.goalkeeper, .defense, .midfield, .offense {
+.goalkeeper, .defense, .cdm, .midfield, .cam, .offense {
   flex-grow: 1;
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  padding: 30px;
+  padding: 10px 8px;
 }
 
-// Compact preview (draft sidebar): drop the Team-view left offset and tighten spacing.
+// Compact preview (draft sidebar): tighten spacing.
 .aspect-compact {
-  margin-left: 0;
-
-  .goalkeeper, .defense, .midfield, .offense {
+  .goalkeeper, .defense, .cdm, .midfield, .cam, .offense {
     padding: 6px 2px;
   }
 }

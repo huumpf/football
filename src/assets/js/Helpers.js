@@ -22,27 +22,124 @@ export function getFormationsWithPlayers (players) {
   let formations = JSON.parse(JSON.stringify(CFG.formations));
 
   for (let formation of formations) {
-    formation.players = { ...formation.positions };
-    formation.skillSum = 0;
-
-    for (let key in formation.players) {
-      formation.players[key] = [];
-    }
-    for (const [position, count] of Object.entries(formation.positions)) {
-      let playersOnThisPos = players.filter(player => player.positions.position === position.toUpperCase());
-      if (playersOnThisPos.length > count) {
-        playersOnThisPos.length = count;
-      }
-      if (playersOnThisPos.length > 0) {
-        formation.players[position] = [];
-        for (const player of playersOnThisPos) {
-          formation.players[position].push(player);
-          formation.skillSum += player.skill;
-        }
-      }
-    }
+    const { assigned, skillSum } = assignPlayersToFormation(players, formation.positions);
+    formation.players = assigned;
+    formation.skillSum = skillSum;
   }
   return formations;
+}
+
+// The effective skill a player brings to a given position: full skill on a
+// primary position, penalised on a secondary one, 0 if they can't play it.
+export function effectiveSkill(player, position) {
+  const primary = player.positions.primary || [player.positions.position];
+  const secondary = player.positions.secondary || [];
+  if (primary.includes(position)) return player.skill;
+  if (secondary.includes(position)) {
+    return Math.round(player.skill * (1 - CFG.SECONDARY_POSITION_PENALTY));
+  }
+  return 0;
+}
+
+// Optimally fills a formation's slots with the available players, maximising the
+// summed effective skill. Each player takes at most one slot, considering every
+// position they can play (primary at full skill, secondary penalised). Solved as
+// a max-weight bipartite assignment so a player isn't greedily locked into a slot
+// where another player could not be replaced.
+function assignPlayersToFormation(players, positionCounts) {
+  const assigned = {};
+  for (const pos of Object.keys(positionCounts)) assigned[pos] = [];
+
+  // Expand the formation into individual slots (one entry per opening).
+  const slots = [];
+  for (const [pos, count] of Object.entries(positionCounts)) {
+    for (let i = 0; i < count; i++) slots.push(pos.toUpperCase());
+  }
+
+  if (slots.length === 0 || players.length === 0) {
+    return { assigned, skillSum: 0 };
+  }
+
+  // Weight matrix: slots (rows) x players (cols).
+  const weight = slots.map(pos => players.map(p => effectiveSkill(p, pos)));
+
+  const slotToPlayer = maxWeightAssignment(weight);
+
+  let skillSum = 0;
+  for (let s = 0; s < slots.length; s++) {
+    const playerIndex = slotToPlayer[s];
+    if (playerIndex < 0) continue;
+    const eff = weight[s][playerIndex];
+    if (eff <= 0) continue; // player can't actually play this slot
+    const key = slots[s].toLowerCase();
+    assigned[key].push({ ...players[playerIndex], skill: eff });
+    skillSum += eff;
+  }
+
+  return { assigned, skillSum };
+}
+
+// Max-weight bipartite matching (Hungarian / Kuhn-Munkres) on a rows x cols
+// weight matrix. Returns an array mapping each row to its assigned column index,
+// or -1 if unassigned. Pads to a square cost matrix and minimises BIG - weight.
+function maxWeightAssignment(weight) {
+  const rows = weight.length;
+  const cols = weight[0].length;
+  const n = Math.max(rows, cols);
+  const BIG = 1e6;
+
+  // Square cost matrix; padding cells and ineligible pairs cost BIG (weight 0).
+  const cost = [];
+  for (let i = 0; i < n; i++) {
+    const row = [];
+    for (let j = 0; j < n; j++) {
+      const w = (i < rows && j < cols) ? weight[i][j] : 0;
+      row.push(BIG - w);
+    }
+    cost.push(row);
+  }
+
+  const INF = Infinity;
+  const u = new Array(n + 1).fill(0);
+  const v = new Array(n + 1).fill(0);
+  const p = new Array(n + 1).fill(0); // p[j] = row matched to column j (1-indexed)
+  const way = new Array(n + 1).fill(0);
+
+  for (let i = 1; i <= n; i++) {
+    p[0] = i;
+    let j0 = 0;
+    const minv = new Array(n + 1).fill(INF);
+    const used = new Array(n + 1).fill(false);
+    do {
+      used[j0] = true;
+      const i0 = p[j0];
+      let delta = INF;
+      let j1 = 0;
+      for (let j = 1; j <= n; j++) {
+        if (used[j]) continue;
+        const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+        if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+      }
+      for (let j = 0; j <= n; j++) {
+        if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+        else { minv[j] -= delta; }
+      }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do {
+      const j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0 !== 0);
+  }
+
+  const rowToCol = new Array(rows).fill(-1);
+  for (let j = 1; j <= n; j++) {
+    const row = p[j] - 1;
+    if (row >= 0 && row < rows && j - 1 < cols) rowToCol[row] = j - 1;
+  }
+  return rowToCol;
 }
 
 export function getRecommendedFormation (players) {

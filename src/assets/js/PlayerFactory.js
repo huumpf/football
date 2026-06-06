@@ -56,12 +56,55 @@ export function makePlayer() {
   player.skills = get_skills(pos_horizontal, player.skill);
   player.positions = get_pos(player, pos_vertical, pos_horizontal);
 
+  // Additional positions (primary/secondary) the player can play.
+  assign_extra_positions(player.positions);
+
   // Salary
   player.salary = Math.round(player.skill * CFG.PLAYER_SALARY_FACTOR * player.greed) / 1000;
   player.salary = Math.round(player.salary.toFixed(2) * 10000);
+  player.salary = Math.round(player.salary * position_salary_factor(player.positions));
 
   return player;
 
+}
+
+// Rolls for extra positions and records them on `positions` as `primary` and
+// `secondary` arrays. The original position is kept as the first primary.
+function assign_extra_positions(positions) {
+  const original = positions.position;
+  const pool = [...(CFG.POSITION_ALTERNATIVES[original] || [])];
+  const primary = [original];
+  const secondary = [];
+
+  const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+
+  // Two 25% rolls for secondary positions.
+  for (let i = 0; i < CFG.SECONDARY_POSITION_ROLLS; i++) {
+    if (pool.length === 0) break;
+    if (Math.random() < CFG.SECONDARY_POSITION_CHANCE) secondary.push(take());
+  }
+
+  // If not already at the max, a single 15% roll for a second primary position.
+  if (primary.length + secondary.length < CFG.MAX_TOTAL_POSITIONS && pool.length > 0) {
+    if (Math.random() < CFG.EXTRA_PRIMARY_CHANCE) primary.push(take());
+  }
+
+  positions.primary = primary;
+  positions.secondary = secondary;
+}
+
+// Salary multiplier from extra positions: each additional primary adds 15-25 %,
+// each secondary adds 10-20 %.
+function position_salary_factor(positions) {
+  let factor = 1;
+  const rnd = (min, max) => Math.random() * (max - min) + min;
+  for (let i = 1; i < positions.primary.length; i++) {
+    factor += rnd(CFG.EXTRA_PRIMARY_SALARY_MIN, CFG.EXTRA_PRIMARY_SALARY_MAX);
+  }
+  for (let i = 0; i < positions.secondary.length; i++) {
+    factor += rnd(CFG.SECONDARY_SALARY_MIN, CFG.SECONDARY_SALARY_MAX);
+  }
+  return factor;
 }
 
 function get_skills(pos_horizontal, skill) {
@@ -125,17 +168,19 @@ function get_pos(player, pos_vertical, pos_horizontal) {
         positions.rf += player.skills.shot;
       } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
         positions.cb += player.skills.defense;
-        positions.cm += player.skills.progression;
         positions.st += player.skills.shot;
         if (player.skills.progression / player.skills.defense <= 1.3 && player.skills.progression / player.skills.shot >= 1.3) {
-          positions.position = "CM"; // CDM
-          positions.sort = 5; // 4 for CDM
+          positions.position = "CDM";
+          positions.sort = 4;
+          positions.cdm += player.skills.progression;
         } else if (player.skills.progression / player.skills.shot <= 1.3 && player.skills.progression / player.skills.defense >= 1.3) {
-          positions.position = "CM"; // CAM
-          positions.sort = 5; // 6 for CAM
+          positions.position = "CAM";
+          positions.sort = 6;
+          positions.cam += player.skills.progression;
         } else {
           positions.position = "CM";
           positions.sort = 5;
+          positions.cm += player.skills.progression;
         }
       }
     } else if (player.skills.shot === 0) {

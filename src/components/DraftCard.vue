@@ -2,19 +2,22 @@
   <div class="player">
     <div class="name">{{ fullName }}</div>
     <div class="stats">
-      <div class="stat-numbers">
-        <div class="stat">
-          <div class="number">{{ position }}</div>
-          <div class="reference">Pos</div>
-        </div>
-        <div class="stat">
-          <div class="number">{{ skill }}</div>
-          <div class="reference">Skill</div>
-        </div>
-        <div class="stat">
-          <div class="number">{{ age }}</div>
-          <div class="reference">Age</div>
-        </div>
+      <div class="stat positions">
+        <div class="number"><span
+          v-for="pos in positionsList"
+          :key="pos.label"
+          class="pos"
+          :class="{ 'secondary-pos': pos.secondary }"
+        >{{ pos.label }}</span></div>
+        <div class="reference">Pos</div>
+      </div>
+      <div class="stat">
+        <div class="number">{{ skill }}</div>
+        <div class="reference">Skill</div>
+      </div>
+      <div class="stat">
+        <div class="number">{{ age }}</div>
+        <div class="reference">Age</div>
       </div>
       <div class="stat salary">
         <div class="number">{{ salaryStr }} €</div>
@@ -36,7 +39,12 @@ export default {
 
   computed: {
     fullName() { return this.player.firstName + " " + this.player.lastName; },
-    position() { return this.player.positions.position; },
+    positionsList() {
+      const p = this.player.positions;
+      const primary = (p.primary || [p.position]).map(label => ({ label, secondary: false }));
+      const secondary = (p.secondary || []).map(label => ({ label, secondary: true }));
+      return [...primary, ...secondary];
+    },
     age() { return this.player.age; },
     skill() { return this.player.skill; },
     salaryStr() { return HLP.moneyStr(this.player.salary); },
@@ -68,18 +76,16 @@ export default {
 
 .name {
   text-align: left;
-  width: 50%;
+  width: 40%;
 }
 
+// Four equal columns so the centered values keep a consistent gap and line up
+// vertically across cards. minmax(0, 1fr) keeps the columns equal even when a
+// three-position value is wider than the column (it overflows into the slack).
 .stats {
-  display: flex;
-  justify-content: space-between;
-  flex-grow: 1;
-}
-
-.stat-numbers {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
   flex-grow: 1;
 }
 
@@ -88,20 +94,37 @@ export default {
   flex-direction: column;
 }
 
+// Equal height for every value so the reference labels share one baseline.
+.number {
+  height: 40px;
+  line-height: 40px;
+}
+
+.positions .number {
+  white-space: nowrap;
+}
+
 .reference {
   font-size: 16px;
   opacity: .5;
 }
 
-.salary {
-  text-align: right;
-  flex-grow: 1;
-  max-width: 150px;
+// Separate positions by spacing only; secondary ones are faded.
+.pos + .pos {
+  margin-left: 0.4em;
+}
+
+.secondary-pos {
+  color: $col_text_faded;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {
   .player {
     font-size: 20px;
+  }
+  .number {
+    height: 28px;
+    line-height: 28px;
   }
 }
 

@@ -79,21 +79,19 @@ export default {
   width: 40%;
 }
 
-// Fixed columns so Pos / Skill / Age / Salary line up vertically across cards.
-// Values are right-aligned with a uniform column-gap, so the spacing between
-// Pos, Skill and Age stays consistent regardless of the Pos column's width.
+// Four equal columns so the centered values keep a consistent gap and line up
+// vertically across cards. minmax(0, 1fr) keeps the columns equal even when a
+// three-position value is wider than the column (it overflows into the slack).
 .stats {
   display: grid;
-  grid-template-columns: 1fr 50px 50px 150px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
-  column-gap: 10px;
   flex-grow: 1;
 }
 
 .stat {
   display: flex;
   flex-direction: column;
-  text-align: right;
 }
 
 // Equal height for every value so the reference labels share one baseline.

@@ -80,16 +80,20 @@ export default {
 }
 
 // Fixed columns so Pos / Skill / Age / Salary line up vertically across cards.
+// Values are right-aligned with a uniform column-gap, so the spacing between
+// Pos, Skill and Age stays consistent regardless of the Pos column's width.
 .stats {
   display: grid;
   grid-template-columns: 1fr 50px 50px 150px;
   align-items: center;
+  column-gap: 10px;
   flex-grow: 1;
 }
 
 .stat {
   display: flex;
   flex-direction: column;
+  text-align: right;
 }
 
 // Equal height for every value so the reference labels share one baseline.
@@ -114,10 +118,6 @@ export default {
 
 .secondary-pos {
   color: $col_text_faded;
-}
-
-.salary {
-  text-align: right;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {

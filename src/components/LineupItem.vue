@@ -7,10 +7,12 @@
       <p v-else class="noPlayer">–</p>
     </template>
     <template v-else>
-      <p class="position">{{ position }}</p>
-      <p v-if="player" class="name">{{ player.lastName }}</p>
+      <div class="info">
+        <p class="position">{{ position }}</p>
+        <p v-if="player" class="name">{{ playerName }}</p>
+        <p v-else class="noPlayer">No player available</p>
+      </div>
       <p v-if="player" class="skill">{{ player.skill }}</p>
-      <p v-if="!player" class="noPlayer">No player available</p>
     </template>
   </div>
 </template>
@@ -28,6 +30,14 @@ export default {
     // Count mode (Overview): show a plain count value instead of a player's skill.
     countMode: Boolean,
     count: [Number, String],
+  },
+
+  computed: {
+    // Design shows the name as first-initial + last name, e.g. "P. Robinson".
+    playerName() {
+      if (!this.player) return '';
+      return `${this.player.firstName.charAt(0)}. ${this.player.lastName}`;
+    },
   },
 
 }
@@ -70,6 +80,58 @@ export default {
 .noPlayer {
   font-size: 12px;
   color: $col_text_secondary;
+}
+
+// Team-overview box (Figma): a white pill with the player name on the left and
+// their skill value in a fixed column on the right.
+.player:not(.skill-only) {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 160px;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: $col_module_background;
+
+  .info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .position {
+    flex-shrink: 0;
+    width: 25px;
+    font-size: 16px;
+    font-weight: 500;
+    color: $col_text;
+    opacity: 0.5;
+  }
+
+  .name {
+    font-size: 16px;
+    font-weight: 600;
+    color: $col_text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .skill {
+    flex-shrink: 0;
+    width: 25px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: $col_text;
+  }
+
+  .noPlayer {
+    font-size: 13px;
+    color: $col_text_secondary;
+  }
 }
 
 // Compact box for the draft squad preview: position (grey) next to the skill value.

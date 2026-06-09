@@ -9,7 +9,14 @@ const routes = [
   {
     path: '/team',
     name: 'Team',
+    meta: { showNav: true },
     component: () => import(/* webpackChunkName: "team" */ '../views/Team.vue')
+  },
+  {
+    path: '/players',
+    name: 'Players',
+    meta: { showNav: true },
+    component: () => import(/* webpackChunkName: "players" */ '../views/Players.vue')
   }
 ]
 

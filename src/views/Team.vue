@@ -3,9 +3,6 @@
     <div class="bar topbar">
       <h1 class="title">Choose a formation</h1>
 
-      <!-- TODO: temporary — remove once a proper game-flow reset exists -->
-      <button class="restart-btn" @click="restartGame">↻ Restart</button>
-
       <div class="formation-control">
         <div class="select-wrapper">
           <select v-model="selectedFormation" class="selectFormation">
@@ -43,13 +40,6 @@ export default {
     this.selectedFormation = this.recommendedFormation;
   },
 
-  methods: {
-    // TODO: temporary — full reload wipes the in-memory store and starts a fresh draft
-    restartGame() {
-      window.location.assign('/');
-    },
-  },
-
   computed: {
     formations() { return HLP.getFormationsWithPlayers(this.$store.state.team.players) },
     players() { return this.$store.state.team.players },
@@ -69,7 +59,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
+  min-height: 100%;
   max-width: 100vw;
   overflow: hidden;
 }
@@ -101,25 +91,6 @@ export default {
   border-radius: 8px;
   color: $col_text;
   white-space: nowrap;
-}
-
-.restart-btn {
-  background-color: $col_text;
-  color: $col_module_background;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: transform 0.1s ease-out, opacity 0.15s ease;
-}
-
-.restart-btn:hover {
-  transform: scale(1.03);
-  opacity: 0.9;
 }
 
 .formation-control {

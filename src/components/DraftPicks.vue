@@ -72,7 +72,6 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    background-color: $col_page_background;
     min-height: 95vh;
   }
 

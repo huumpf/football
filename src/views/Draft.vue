@@ -1,9 +1,9 @@
 <template>
-  <div class="draft-wrapper">
-    <DraftPicks class="flex-big"/>
-    <div class="my-team-wrapper flex-small">
-      <SquadPreview/>
-      <TeamList class="flex-grow"/>
+  <div class="draft-grid">
+    <DraftPicks class="main-col"/>
+    <div class="side-col">
+      <SquadPreview class="card squad-card"/>
+      <TeamList class="team-card"/>
     </div>
   </div>
 </template>
@@ -40,43 +40,48 @@ export default {
 
 <style lang="scss" scoped>
 
-.draft-wrapper {
-  display: flex;
-  height: 100vh;
-}
-@media screen and (max-width: $breakpoint_tablet) {
-  .draft-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-  }
+// Responsive card grid: the picks column grows, the sidebar takes a fluid
+// fixed-ish track. Both fill the viewport height so the team list scrolls
+// inside its own card.
+.draft-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 26%, 380px);
+  gap: 12px;
+  padding: 12px;
+  height: 100%;
 }
 
-.flex-big {
-  flex-grow: 1;
+.main-col {
+  min-height: 0;
 }
-@media screen and (max-width: $breakpoint_tablet) {
-.flex-big {
-  width: 100%;
-}}
 
-.flex-small {
-  width: 500px;
-  // flex-grow: 1;
-}
-@media screen and (max-width: $breakpoint_tablet) {
-.flex-small {
-  width: 100%;
-}}
-
-.my-team-wrapper {
+.side-col {
   display: flex;
   flex-direction: column;
-  background-color: $col_page_background_secondary;
+  gap: 12px;
+  min-height: 0;
 }
 
-.flex-grow {
-  flex-grow: 1;
+.squad-card {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+// Takes the remaining height; the list scrolls within it.
+.team-card {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+// Stack into a single, naturally-flowing column on narrow screens.
+@media screen and (max-width: $breakpoint_tablet) {
+  .draft-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .team-card {
+    flex: none;
+  }
 }
 
 </style>

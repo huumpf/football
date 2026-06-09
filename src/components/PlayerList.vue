@@ -1,5 +1,5 @@
 <template>
-  <div class="player-list">
+  <div class="player-list" :class="{ compact }">
     <div class="row header">
       <div
         :class="['pos-col', 'sortable', { active: sortKey === 'position' }]"
@@ -30,8 +30,12 @@
       class="row item"
     >
       <div class="pos-col">
-        <span class="primary">{{ primaryPositions(player) }}</span>
-        <span v-if="secondaryPositions(player)" class="secondary">{{ secondaryPositions(player) }}</span>
+        <span
+          v-for="pos in positionList(player)"
+          :key="pos.label"
+          class="pos"
+          :class="{ secondary: pos.secondary }"
+        >{{ pos.label }}</span>
       </div>
       <div class="name">{{ player.firstName }} {{ player.lastName }}</div>
       <div class="metric">{{ player.skill }}</div>
@@ -53,6 +57,8 @@ export default {
     players: { type: Array, required: true },
     // Overview shows salary; the compact draft sidebar hides it.
     showSalary: { type: Boolean, default: false },
+    // Tighter type/columns for the narrow sidebar lists.
+    compact: { type: Boolean, default: false },
   },
 
   data: () => {
@@ -74,14 +80,13 @@ export default {
   },
 
   methods: {
-    // All positions a player can fill. Primary first, then secondary.
-    primaryPositions(player) {
+    // All positions a player can fill as individual entries (primary first,
+    // then secondary) so every position renders with the same spacing.
+    positionList(player) {
       const p = player.positions;
-      return (p.primary || [p.position]).join(' ');
-    },
-
-    secondaryPositions(player) {
-      return (player.positions.secondary || []).join(' ');
+      const primary = (p.primary || [p.position]).map(label => ({ label, secondary: false }));
+      const secondary = (p.secondary || []).map(label => ({ label, secondary: true }));
+      return [...primary, ...secondary];
     },
 
     sortValue(a, b) {
@@ -120,7 +125,6 @@ export default {
 .player-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   font-size: 16px;
   text-align: left;
 }
@@ -129,24 +133,50 @@ export default {
   display: flex;
   align-items: center;
   width: 100%;
+  padding: 6px 12px;
 }
 
-// Each player is a rounded pill on the page background.
-.item {
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: $col_module_background;
+// Zebra striping: rows sit flush and alternate against the card surface.
+.item:nth-of-type(even) {
+  background-color: $col_page_background;
 }
 
-// Column labels sit above the pills, aligned to the same columns.
+// Column labels share the row columns and sit under a hairline divider.
 .header {
-  padding: 0 8px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: $col_text_secondary;
+}
+
+// Compact sidebar variant (draft + team): smaller type, tighter rows.
+.compact {
+  font-size: 12px;
+
+  .row {
+    padding: 4px 8px;
+  }
+
+  // List items get a touch more vertical breathing room.
+  .item {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  // Sidebar lists use no bold — everything medium...
+  .pos-col,
+  .name,
+  .metric {
+    font-weight: 500;
+  }
+
+  // ...except the position values, which render thin.
+  .item .pos-col {
+    font-weight: 300;
+  }
 }
 
 .pos-col {
   display: flex;
-  gap: 2px;
+  gap: 0.3em;
   width: 64px;
   flex-shrink: 0;
   margin-right: 12px;
@@ -182,11 +212,11 @@ export default {
 }
 
 // Position values: primary readable, secondary fainter.
-.item .pos-col .primary {
+.item .pos-col .pos {
   opacity: 0.5;
 }
 
-.item .pos-col .secondary {
+.item .pos-col .pos.secondary {
   opacity: 0.3;
 }
 

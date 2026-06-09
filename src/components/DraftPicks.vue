@@ -1,8 +1,8 @@
 <template>
-  <div class="draft-picks-wrapper">
-    <div class="bar topbar">
+  <div class="draft-picks">
+    <div class="card header-card">
       <h1>Draft your team</h1>
-      <p>{{ moneyToStr(currentMoney) }} € remaining</p>
+      <p class="remaining">{{ moneyToStr(currentMoney) }} € remaining</p>
     </div>
 
     <div class="player-cards-wrapper" tag="div" name="appear" mode="out-in">
@@ -17,7 +17,7 @@
       <!-- </transition> -->
     </div>
 
-    <div class="bar bottombar">
+    <div class="card progress-card">
       <span class="number left">{{ playersInTeam }}</span>/<span class="number right">{{ draftAmount }}</span>
       <div class="completion-bar">
         <div class="completion-amount" :style="{ width: draftCompleted*100 + '%' }"/>
@@ -67,55 +67,53 @@ export default {
 
 <style lang="scss" scoped>
 
-  .draft-picks-wrapper {
+  // Stacked cards that fill the main column of the draft grid.
+  .draft-picks {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 95vh;
+    gap: 12px;
+    min-height: 0;
   }
 
+  // The draft cards grow to fill the space between header and progress.
+  // No gap here: each DraftCard carries its own vertical margin.
+  // Constrained to the pre-rework width and centered in the main column.
   .player-cards-wrapper {
     display: flex;
-    width: 100%;
-    max-width: 800px;
-    padding: 30px;
+    flex: 1 1 auto;
     flex-direction: column;
     justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    align-self: center;
   }
 
-  .bar {
+  .header-card {
     display: flex;
     justify-content: space-between;
-    width: 100%;
-  }
-
-  .topbar {
-    padding: 30px 30px 0;
-    align-items: flex-start;
-  }
-  @media screen and (max-width: $breakpoint_tablet) {
-    .topbar {
-      flex-direction: column;
-      padding: 30px 30px 0;
-      align-items: center;
-    }
-    .player-cards-wrapper {
-      padding: 20px;
-    }
-  }
-
-
-  .topbar > * {
-    background-color: $col_module_background;
-    padding: 0 20px;
-  }
-
-  .bottombar {
-    border-top: 1px solid $col_module_border;
-    background-color: $col_module_background;
-    padding: 20px 40px;
     align-items: center;
+    gap: 20px;
+    padding: 20px 30px;
+  }
+
+  .remaining {
+    font-size: 20px;
+    color: $col_text_secondary;
+    white-space: nowrap;
+  }
+
+  .progress-card {
+    display: flex;
+    align-items: center;
+    padding: 20px 30px;
+  }
+
+  @media screen and (max-width: $breakpoint_tablet) {
+    .header-card {
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
   }
 
   .completion-bar {

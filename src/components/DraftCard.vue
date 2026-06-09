@@ -63,7 +63,9 @@ export default {
   text-align: center;
   margin: 10px 0;
   padding: 20px 30px;
-  border-radius: 8px;
+  border-radius: 12px;
+  // Draft cards keep the condensed display face from the old design.
+  font-family: $font_heading;
   font-size: 30px;
   background-color: $col_module_background;
   transition: transform 0.1s ease-out;

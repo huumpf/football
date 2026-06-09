@@ -1,6 +1,8 @@
 <template>
   <div class="players-wrapper">
-    <PlayerList :players="players" show-salary/>
+    <div class="card list-card">
+      <PlayerList :players="players" show-salary/>
+    </div>
   </div>
 </template>
 
@@ -22,10 +24,13 @@ export default {
 
 <style lang="scss" scoped>
 
+// Full-width, card-based; the list grows with the viewport.
 .players-wrapper {
-  padding: 30px;
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 12px;
+}
+
+.list-card {
+  overflow: hidden;
 }
 
 </style>

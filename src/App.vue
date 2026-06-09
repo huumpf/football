@@ -38,12 +38,17 @@ html {
 }
 
 #app {
-  font-family: 'Saira Extra Condensed', Avenir, Helvetica, Arial, sans-serif;
+  font-family: $font_body;
   font-size: 20px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: $col_text;
+}
+
+// Headlines keep the condensed display face; everything else is body copy.
+h1, h2, h3, .headline {
+  font-family: $font_heading;
 }
 
 .app-wrapper {
@@ -58,5 +63,11 @@ html {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+}
+
+// Shared surface for the card-based, responsive grid layout.
+.card {
+  background-color: $col_module_background;
+  border-radius: 12px;
 }
 </style>

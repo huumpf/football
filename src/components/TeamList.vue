@@ -1,6 +1,6 @@
 <template>
-  <div class="team-list-wrapper">
-    <PlayerList v-if="team.length > 0" :players="team"/>
+  <div class="team-list-wrapper card">
+    <PlayerList v-if="team.length > 0" :players="team" compact/>
   </div>
 </template>
 
@@ -23,16 +23,10 @@ export default {
 <style lang="scss" scoped>
 
 
+// Scroll the list inside the card so the sidebar stays put on wide screens.
 .team-list-wrapper {
-  height: 100%;
-  padding: 12px;
-  overflow: scroll;
-  background-color: $col_page_background;
-  border-left: 1px solid $col_module_border;
+  min-height: 0;
+  overflow: auto;
 }
-  @media screen and (max-width:1200px) {
-  .draft-list-wrapper {
-    background-color: $col_page_background_secondary;
-  }}
 
 </style>

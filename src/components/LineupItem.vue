@@ -63,13 +63,13 @@ export default {
 
 .position {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: $col_text_secondary;
 }
 
 .name {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   word-break: break-word;
 }
 
@@ -104,15 +104,15 @@ export default {
   .position {
     flex-shrink: 0;
     width: 25px;
-    font-size: 16px;
+    font-size: 12px;
     font-weight: 500;
     color: $col_text;
     opacity: 0.5;
   }
 
   .name {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: $col_text;
     white-space: nowrap;
     overflow: hidden;
@@ -123,8 +123,8 @@ export default {
     flex-shrink: 0;
     width: 25px;
     text-align: center;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: $col_text;
   }
 
@@ -138,24 +138,24 @@ export default {
 .player.skill-only {
   flex-direction: row;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   margin: 3px auto;
-  padding: 5px 10px;
+  padding: 4px 8px;
   width: auto;
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .player.skill-only .position {
   flex-grow: 0;
-  font-size: 17px;
+  font-size: 12px;
   color: $col_text_secondary;
 }
 
 .player.skill-only .skill,
 .player.skill-only .noPlayer {
   flex-grow: 0;
-  font-size: 17px;
+  font-size: 12px;
 }
 
 </style>

@@ -31,10 +31,11 @@
 .visu-wrapper {
   width: 100%;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: $col_field_background;
+  border-radius: 8px;
   position: relative;
   box-shadow: 0 20px 60px rgba(0,0,0,.2);
 }

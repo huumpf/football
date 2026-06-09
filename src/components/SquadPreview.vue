@@ -72,11 +72,11 @@ export default {
 <style lang="scss" scoped>
 
 .formation-control {
-  margin: 30px 30px 0;
+  margin: 20px 20px 0;
 }
 
 .lineup-preview {
-  margin: 30px;
+  margin: 16px 20px 20px;
 }
 
 .select-wrapper {

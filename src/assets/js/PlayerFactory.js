@@ -50,11 +50,17 @@ export function makePlayer() {
   let skill_factor = Math.pow(player.skill / CFG.DRAFT_AVG_POTENTIAL, 2);
   player.greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE/2) * skill_factor) + 1;
 
-  // Skills
-  let pos_vertical = Math.floor(Math.random() * 100);
-  let pos_horizontal = Math.floor(Math.random() * 100);
-  player.skills = get_skills(pos_horizontal, player.skill);
-  player.positions = get_pos(player, pos_vertical, pos_horizontal);
+  // Skills & position: with POSITION_FREQUENCY_CHANCE the primary position is
+  // drawn from the formation-slot frequencies and the roll repeats until it
+  // lands there; otherwise a single plain roll stands.
+  let targetPosition = Math.random() < CFG.POSITION_FREQUENCY_CHANCE ? draw_weighted_position() : null;
+  let attempts = 0;
+  do {
+    let pos_vertical = Math.floor(Math.random() * 100);
+    let pos_horizontal = Math.floor(Math.random() * 100);
+    player.skills = get_skills(pos_horizontal, player.skill);
+    player.positions = get_pos(player, pos_vertical, pos_horizontal);
+  } while (targetPosition && player.positions.position !== targetPosition && ++attempts < 1000);
 
   // Additional positions (primary/secondary) the player can play.
   assign_extra_positions(player.positions);
@@ -66,6 +72,18 @@ export function makePlayer() {
 
   return player;
 
+}
+
+// Draws a position from the formation-slot frequencies, so common positions
+// (CB, CM, ST) come up more often than rare ones (LF, RF).
+function draw_weighted_position() {
+  const entries = Object.entries(CFG.POSITION_FREQUENCIES);
+  let roll = Math.random() * entries.reduce((sum, [, weight]) => sum + weight, 0);
+  for (const [position, weight] of entries) {
+    roll -= weight;
+    if (roll < 0) return position;
+  }
+  return entries[entries.length - 1][0];
 }
 
 // Rolls for extra positions and records them on `positions` as `primary` and

@@ -17,6 +17,16 @@ export const POSITION_OFFSET_WING = 30;
 export const POSITION_GK = 13;
 export const PLAYER_SALARY_FACTOR = 36;
 
+// With this probability a generated player's primary position is drawn from
+// the formation-slot frequencies below (how often each position appears
+// across all formations), so the draft supply leans towards what lineups
+// actually need; otherwise the plain random roll stands.
+export const POSITION_FREQUENCY_CHANCE = 1 / 3;
+export const POSITION_FREQUENCIES = {
+  GK: 15, CB: 35, CM: 28, ST: 22, LB: 12, RB: 12,
+  LM: 10, RM: 10, CAM: 9, CDM: 8, LF: 2, RF: 2,
+};
+
 // Multiple positions per player
 export const MAX_TOTAL_POSITIONS = 3;
 export const SECONDARY_POSITION_ROLLS = 2;

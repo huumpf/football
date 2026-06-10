@@ -2,10 +2,14 @@
   <div class="team-grid">
     <div class="card field-card">
       <div class="formation-control">
-        <div class="select-wrapper">
-          <select v-model="selectedFormation" class="selectFormation">
-            <option v-for="(formation, index) in formations" :key="index" :value="formation">{{ formation.name }} · {{ formation.skillSum }}</option>
-          </select>
+        <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
+          <span class="selectFormation">{{ selectedFormation ? `${selectedFormation.name} · ${selectedFormation.skillSum}` : '' }}</span>
+          <DropdownMenu
+            v-if="formationsOpen"
+            :options="formationOptions"
+            @select="selectFormation"
+            @close="formationsOpen = false"
+          />
         </div>
       </div>
 
@@ -31,6 +35,7 @@
 import * as HLP from '../assets/js/Helpers.js';
 import Lineup from '@/components/Lineup.vue';
 import PlayerList from '@/components/PlayerList.vue';
+import DropdownMenu from '@/components/DropdownMenu.vue';
 
 export default {
   name: "Team",
@@ -38,6 +43,7 @@ export default {
   data:() => {
     return {
       selectedFormation: null,
+      formationsOpen: false,
       // Editable lineup for the selected formation: { pos: [player|null, …] }.
       lineup: {},
     }
@@ -60,6 +66,12 @@ export default {
     formations() { return HLP.getFormationsWithPlayers(this.$store.state.team.players) },
     players() { return this.$store.state.team.players },
     recommendedFormation() { return HLP.getRecommendedFormation(this.$store.state.team.players) },
+    // Dropdown rows (Name | Total Skill), strongest formation first.
+    formationOptions() {
+      return [...this.formations]
+        .sort((a, b) => b.skillSum - a.skillSum)
+        .map(f => ({ label: f.name, value: f.skillSum, formation: f }));
+    },
     // Feeds Lineup from the editable assignment rather than the auto one.
     lineupFormation() {
       return this.selectedFormation
@@ -73,6 +85,11 @@ export default {
   },
 
   methods: {
+    selectFormation(option) {
+      this.selectedFormation = option.formation;
+      this.formationsOpen = false;
+    },
+
     initLineup() {
       this.lineup = this.selectedFormation
         ? HLP.assignLineup(this.players, this.selectedFormation.positions)
@@ -95,6 +112,7 @@ export default {
   components: {
     Lineup,
     PlayerList,
+    DropdownMenu,
   }
 }
 </script>
@@ -152,6 +170,9 @@ export default {
   position: relative;
   display: inline-flex;
   align-items: center;
+  cursor: pointer;
+  // Above the lineup boxes so the open panel overlays the field.
+  z-index: 100001;
 }
 
 .select-wrapper::after {
@@ -168,25 +189,12 @@ export default {
 }
 
 .selectFormation {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  border: none;
-  outline: none;
   color: $col_text;
-  font-family: inherit;
   font-size: 16px;
   font-weight: 500;
   text-align: center;
-  text-align-last: center;
   padding: 4px 22px 4px 8px;
-  cursor: pointer;
-}
-
-.selectFormation option {
-  background-color: $col_module_background;
-  color: $col_text;
-  font-size: 14px;
+  white-space: nowrap;
 }
 
 </style>

@@ -19,25 +19,19 @@
     </template>
 
     <!-- Editable lineup: pick any squad player who can fill this position. -->
-    <div v-if="open" class="dropdown" @click.stop>
-      <button
-        v-for="(c, ci) in candidates"
-        :key="ci"
-        type="button"
-        class="option"
-        :class="{ secondary: c.secondary }"
-        @click="pick(c.player)"
-      >
-        <span class="opt-name">{{ shortName(c.player) }}</span>
-        <span class="opt-skill">{{ c.skill }}</span>
-      </button>
-      <p v-if="!candidates.length" class="empty">Kein Spieler verfügbar</p>
-    </div>
+    <DropdownMenu
+      v-if="open"
+      :options="candidates"
+      empty-text="Kein Spieler verfügbar"
+      @select="pick($event.player)"
+      @close="close"
+    />
   </div>
 </template>
 
 <script>
 import { effectiveSkill } from '../assets/js/Helpers.js';
+import DropdownMenu from '@/components/DropdownMenu.vue';
 
 export default {
   name: 'LineupItem',
@@ -91,10 +85,11 @@ export default {
         .filter(p => p !== this.player && effectiveSkill(p, this.position) > 0)
         .map(p => ({
           player: p,
-          skill: effectiveSkill(p, this.position),
+          label: this.shortName(p),
+          value: effectiveSkill(p, this.position),
           secondary: !(p.positions.primary || [p.positions.position]).includes(this.position),
         }))
-        .sort((a, b) => b.skill - a.skill);
+        .sort((a, b) => b.value - a.value);
     },
   },
 
@@ -105,22 +100,11 @@ export default {
 
     toggle() {
       if (!this.editable) return;
-      this.open ? this.close() : this.openDropdown();
-    },
-
-    openDropdown() {
-      this.open = true;
-      // Defer so the opening click itself doesn't immediately close it.
-      requestAnimationFrame(() => document.addEventListener('mousedown', this.onOutside));
+      this.open = !this.open;
     },
 
     close() {
       this.open = false;
-      document.removeEventListener('mousedown', this.onOutside);
-    },
-
-    onOutside(e) {
-      if (!this.$el.contains(e.target)) this.close();
     },
 
     pick(player) {
@@ -129,8 +113,8 @@ export default {
     },
   },
 
-  beforeUnmount() {
-    document.removeEventListener('mousedown', this.onOutside);
+  components: {
+    DropdownMenu,
   },
 }
 </script>
@@ -262,69 +246,6 @@ export default {
 .player.skill-only .noPlayer {
   flex-grow: 0;
   font-size: 12px;
-}
-
-// Player picker dropdown, anchored below the box.
-.dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
-  min-width: 160px;
-  max-height: 220px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  padding: 4px;
-  gap: 2px;
-  background-color: $col_120;
-  border: 1px solid $col_module_border;
-  border-radius: 8px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-  cursor: default;
-}
-
-.option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 8px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: $col_text;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.1s ease;
-}
-
-.option:hover {
-  background-color: $col_110;
-}
-
-.option .opt-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.option .opt-skill {
-  flex-shrink: 0;
-}
-
-// A secondary-position option is dimmed to flag the 75% skill penalty.
-.option.secondary {
-  opacity: 0.6;
-}
-
-.dropdown .empty {
-  padding: 6px 8px;
-  font-size: 12px;
-  color: $col_text_secondary;
 }
 
 </style>

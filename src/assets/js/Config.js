@@ -1,3 +1,5 @@
+import formationData from '../data/formations.json';
+
 export const DRAFT_PLAYERS_PER_PICK = 3;
 export const DRAFT_COUNT = 20;
 
@@ -47,94 +49,15 @@ export const POSITION_ALTERNATIVES = {
 
 export const CLUBS_PER_LEAGUE = 8;
 
-export const formations = [
-  {
-    name: "5-4-1",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 3,
-      rb: 1,
-      lm: 1,
-      cm: 2,
-      rm: 1,
-      lf: 0,
-      st: 1,
-      rf: 0,
-    }
-  },{
-    name: "4-5-1",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 2,
-      rb: 1,
-      lm: 1,
-      cm: 3,
-      rm: 1,
-      lf: 0,
-      st: 1,
-      rf: 0,
-    }
-  },{
-    name: "4-4-2",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 2,
-      rb: 1,
-      lm: 1,
-      cm: 2,
-      rm: 1,
-      lf: 0,
-      st: 2,
-      rf: 0,
-    }
-  },{
-    name: "4-3-3",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 2,
-      rb: 1,
-      lm: 1,
-      cm: 1,
-      rm: 1,
-      lf: 1,
-      st: 1,
-      rf: 1,
-    }
-  },{
-    name: "4-1-2-1-2",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 2,
-      rb: 1,
-      cdm: 1,
-      lm: 1,
-      cm: 0,
-      rm: 1,
-      cam: 1,
-      lf: 0,
-      st: 2,
-      rf: 0,
-    }
-  },{
-    name: "4-2-3-1",
-    positions: {
-      gk: 1,
-      lb: 1,
-      cb: 2,
-      rb: 1,
-      cdm: 2,
-      lm: 1,
-      cm: 0,
-      rm: 1,
-      cam: 1,
-      lf: 0,
-      st: 1,
-      rf: 0,
-    }
-  },
-]
+// Formations are defined in src/assets/data/formations.json: per slot a
+// position plus its relative pitch coordinate (x = sideline to sideline,
+// y = own goal to opposing goal). Derive the per-position slot counts the
+// assignment logic works with; keep the raw slot list as `layout` for the UI.
+export const formations = formationData.formations.map(f => {
+  const positions = {};
+  for (const slot of f.positions) {
+    const key = slot.position.toLowerCase();
+    positions[key] = (positions[key] || 0) + 1;
+  }
+  return { name: f.name, positions, layout: f.positions };
+});

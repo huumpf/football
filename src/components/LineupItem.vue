@@ -244,9 +244,9 @@ export default {
 .player.skill-only {
   flex-direction: row;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   margin: 3px auto;
-  padding: 4px 8px;
+  padding: 3px 6px;
   width: auto;
   font-size: 12px;
   font-weight: 500;

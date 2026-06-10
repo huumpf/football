@@ -6,29 +6,22 @@
     <div class="aspect" :class="{ 'aspect-compact': skillOnly }">
       <div class="aspect-wrapper-inside">
         <div class="lineup">
-          <div class="goalkeeper">
-            <LineupItem v-for="index in formation.positions.gk" :key="index" :position="'GK'" :player="formation.players.gk[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.gk"/>
-          </div>
-          <div class="defense">
-            <LineupItem v-for="index in formation.positions.lb" :key="index" :position="'LB'" :player="formation.players.lb[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.lb"/>
-            <LineupItem v-for="index in formation.positions.cb" :key="index" :position="'CB'" :player="formation.players.cb[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cb"/>
-            <LineupItem v-for="index in formation.positions.rb" :key="index" :position="'RB'" :player="formation.players.rb[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.rb"/>
-          </div>
-          <div v-if="formation.positions.cdm" class="cdm">
-            <LineupItem v-for="index in formation.positions.cdm" :key="index" :position="'CDM'" :player="formation.players.cdm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cdm"/>
-          </div>
-          <div class="midfield">
-            <LineupItem v-for="index in formation.positions.lm" :key="index" :position="'LM'" :player="formation.players.lm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.lm"/>
-            <LineupItem v-for="index in formation.positions.cm" :key="index" :position="'CM'" :player="formation.players.cm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cm"/>
-            <LineupItem v-for="index in formation.positions.rm" :key="index" :position="'RM'" :player="formation.players.rm[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.rm"/>
-          </div>
-          <div v-if="formation.positions.cam" class="cam">
-            <LineupItem v-for="index in formation.positions.cam" :key="index" :position="'CAM'" :player="formation.players.cam[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.cam"/>
-          </div>
-          <div class="offense">
-            <LineupItem v-for="index in formation.positions.lf" :key="index" :position="'LF'" :player="formation.players.lf[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.lf"/>
-            <LineupItem v-for="index in formation.positions.st" :key="index" :position="'ST'" :player="formation.players.st[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.st"/>
-            <LineupItem v-for="index in formation.positions.rf" :key="index" :position="'RF'" :player="formation.players.rf[index-1]" :skill-only="skillOnly" :count-mode="!!counts" :count="counts && counts.rf"/>
+          <div v-for="col in visibleColumns" :key="col.key" :class="col.key">
+            <template v-for="pos in col.positions" :key="pos">
+              <LineupItem
+                v-for="index in formation.positions[pos]"
+                :key="pos + index"
+                :position="pos.toUpperCase()"
+                :player="slotPlayer(pos, index - 1)"
+                :skill-only="skillOnly"
+                :count-mode="!!counts"
+                :count="counts && counts[pos]"
+                :editable="editable"
+                :squad="squad"
+                :slot-index="index - 1"
+                @pick="$emit('pick', $event)"
+              />
+            </template>
           </div>
         </div>
       </div>
@@ -40,6 +33,18 @@
 <script>
 import Field from '@/components/Field.vue'
 import LineupItem from '@/components/LineupItem.vue'
+
+// Visual columns of the pitch, left to right. Each maps to one of the layout
+// classes the stylesheet positions; cdm/cam columns are skipped when a
+// formation has no such slots.
+const COLUMNS = [
+  { key: 'goalkeeper', positions: ['gk'] },
+  { key: 'defense', positions: ['lb', 'cb', 'rb'] },
+  { key: 'cdm', positions: ['cdm'] },
+  { key: 'midfield', positions: ['lm', 'cm', 'rm'] },
+  { key: 'cam', positions: ['cam'] },
+  { key: 'offense', positions: ['lf', 'st', 'rf'] },
+];
 
 export default {
   name: 'Lineup',
@@ -54,10 +59,30 @@ export default {
       type: Object,
       default: null,
     },
+    // Editable mode (Aufstellung): slots can be reassigned via a dropdown.
+    editable: Boolean,
+    // Full squad, forwarded to each slot to build its candidate list.
+    squad: {
+      type: Array,
+      default: () => [],
+    },
   },
 
+  emits: ['pick'],
+
   computed: {
-    player() { return this.$store.state.team.players[0] },
+    visibleColumns() {
+      return COLUMNS.filter(col =>
+        col.positions.some(pos => (this.formation.positions[pos] || 0) > 0)
+      );
+    },
+  },
+
+  methods: {
+    slotPlayer(pos, index) {
+      const arr = this.formation.players && this.formation.players[pos];
+      return arr ? arr[index] || null : null;
+    },
   },
 
   components: {
@@ -97,6 +122,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+  align-items: center;
   padding: 10px 8px;
 }
 

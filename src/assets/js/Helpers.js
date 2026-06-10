@@ -72,11 +72,39 @@ function assignPlayersToFormation(players, positionCounts) {
     const eff = weight[s][playerIndex];
     if (eff <= 0) continue; // player can't actually play this slot
     const key = slots[s].toLowerCase();
-    assigned[key].push({ ...players[playerIndex], skill: eff });
+    // Keep the original player reference so callers can map a slotted player
+    // back to the squad; the effective skill is derived per position on render.
+    assigned[key].push(players[playerIndex]);
     skillSum += eff;
   }
 
   return { assigned, skillSum };
+}
+
+// Slot-aligned optimal lineup: returns { pos: [player|null, …] } where each
+// array has exactly `positionCounts[pos]` entries (null for an empty slot) and
+// every entry is a reference into `players`. Used as the editable starting
+// point for a formation before the user reshuffles it by hand.
+export function assignLineup(players, positionCounts) {
+  const lineup = {};
+  const slots = [];
+  for (const [pos, count] of Object.entries(positionCounts)) {
+    lineup[pos] = new Array(count).fill(null);
+    for (let i = 0; i < count; i++) slots.push({ pos, index: i });
+  }
+
+  if (slots.length === 0 || players.length === 0) return lineup;
+
+  const weight = slots.map(s => players.map(p => effectiveSkill(p, s.pos.toUpperCase())));
+  const slotToPlayer = maxWeightAssignment(weight);
+
+  for (let s = 0; s < slots.length; s++) {
+    const pi = slotToPlayer[s];
+    if (pi < 0 || weight[s][pi] <= 0) continue;
+    lineup[slots[s].pos][slots[s].index] = players[pi];
+  }
+
+  return lineup;
 }
 
 // Max-weight bipartite matching (Hungarian / Kuhn-Munkres) on a rows x cols

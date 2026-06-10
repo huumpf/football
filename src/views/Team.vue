@@ -10,7 +10,13 @@
       </div>
 
       <div class="field-wrapper">
-        <Lineup v-if="selectedFormation" :formation="selectedFormation"/>
+        <Lineup
+          v-if="lineupFormation"
+          :formation="lineupFormation"
+          editable
+          :squad="players"
+          @pick="placePlayer"
+        />
       </div>
     </div>
 
@@ -32,6 +38,8 @@ export default {
   data:() => {
     return {
       selectedFormation: null,
+      // Editable lineup for the selected formation: { pos: [player|null, …] }.
+      lineup: {},
     }
   },
 
@@ -39,10 +47,45 @@ export default {
     this.selectedFormation = this.recommendedFormation;
   },
 
+  watch: {
+    // (Re)build the editable lineup from the optimal assignment whenever the
+    // formation changes; manual edits live on top of this starting point.
+    selectedFormation: {
+      immediate: true,
+      handler() { this.initLineup(); },
+    },
+  },
+
   computed: {
     formations() { return HLP.getFormationsWithPlayers(this.$store.state.team.players) },
     players() { return this.$store.state.team.players },
     recommendedFormation() { return HLP.getRecommendedFormation(this.$store.state.team.players) },
+    // Feeds Lineup from the editable assignment rather than the auto one.
+    lineupFormation() {
+      return this.selectedFormation
+        ? { positions: this.selectedFormation.positions, players: this.lineup }
+        : null;
+    },
+  },
+
+  methods: {
+    initLineup() {
+      this.lineup = this.selectedFormation
+        ? HLP.assignLineup(this.players, this.selectedFormation.positions)
+        : {};
+    },
+
+    // Set a player on a slot, first vacating any slot they already occupied.
+    placePlayer({ position, slotIndex, player }) {
+      const pos = position.toLowerCase();
+      for (const key of Object.keys(this.lineup)) {
+        const arr = this.lineup[key];
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i] === player) arr[i] = null;
+        }
+      }
+      if (this.lineup[pos]) this.lineup[pos][slotIndex] = player;
+    },
   },
 
   components: {
@@ -70,13 +113,15 @@ export default {
   align-items: center;
   padding: 12px;
   min-width: 0;
-  overflow: hidden;
+  // Visible so a slot's player-picker dropdown isn't clipped by the card
+  // (the pitch itself clips to its own rounded corners).
+  overflow: visible;
 }
 
 .field-wrapper {
   width: 100%;
   margin-top: 12px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .team-card {

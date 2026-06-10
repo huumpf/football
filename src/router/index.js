@@ -17,6 +17,18 @@ const routes = [
     name: 'Players',
     meta: { showNav: true },
     component: () => import(/* webpackChunkName: "players" */ '../views/Players.vue')
+  },
+  {
+    path: '/tabelle',
+    name: 'Tabelle',
+    meta: { showNav: true },
+    component: () => import(/* webpackChunkName: "table" */ '../views/Table.vue')
+  },
+  {
+    path: '/tabelle/:id',
+    name: 'ClubLineup',
+    meta: { showNav: true },
+    component: () => import(/* webpackChunkName: "table" */ '../views/ClubLineup.vue')
   }
 ]
 

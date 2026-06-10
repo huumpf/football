@@ -7,20 +7,18 @@ export const leagueModule = {
   },
 
   mutations: {
-    MAKE_LEAGUE(state) {
+    MAKE_LEAGUE(state, reservedNames) {
+      const names = clubFactory.makeClubNames(CFG.CLUBS_PER_LEAGUE, reservedNames);
+      state.clubs = [];
       for (let i = 0; i < CFG.CLUBS_PER_LEAGUE; i++) {
-        state.clubs.push(clubFactory.makeClub());
-      }
-      state.clubs.sort((a,b) => b.formation.skillSum - a.formation.skillSum);
-      for (let club of state.clubs) {
-        console.log(`${club.name} ${club.formation.skillSum}`);
+        state.clubs.push(clubFactory.makeClub(i, names[i]));
       }
     }
   },
 
   actions: {
-    makeLeague({ commit }) {
-      commit('MAKE_LEAGUE');
+    makeLeague({ commit, rootState }) {
+      commit('MAKE_LEAGUE', [rootState.club.name]);
     }
   },
 

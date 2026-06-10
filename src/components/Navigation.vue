@@ -9,6 +9,7 @@
     <div class="nav-links">
       <router-link class="nav-link" :to="{ name: 'Team' }">Aufstellung</router-link>
       <router-link class="nav-link" :to="{ name: 'Players' }">Spieler</router-link>
+      <router-link class="nav-link" :to="{ name: 'Tabelle' }">Tabelle</router-link>
     </div>
 
     <div class="balance">{{ balance }}</div>

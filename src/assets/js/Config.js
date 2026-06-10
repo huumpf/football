@@ -47,7 +47,13 @@ export const POSITION_ALTERNATIVES = {
   ST: ["CAM", "LF", "RF"],
 };
 
-export const CLUBS_PER_LEAGUE = 8;
+// AI clubs in the league (player's club makes it 18).
+export const CLUBS_PER_LEAGUE = 17;
+
+// AI draft picks: value blends current skill with the projected skill a few
+// years ahead, so younger players win ties against declining ones.
+export const AI_PICK_FUTURE_WEIGHT = 0.3;
+export const AI_PICK_HORIZON_YEARS = 4;
 
 // Formations are defined in src/assets/data/formations.json: per slot a
 // position plus its relative pitch coordinate (x = sideline to sideline,

@@ -29,6 +29,14 @@ export function getFormationsWithPlayers (players) {
   return formations;
 }
 
+// The skill a player will have in `years` years, following the same development
+// curve PlayerFactory derives skill from: potential decayed by AGE_FACTOR per
+// year of distance to the optimal age.
+export function projectedSkill(player, years) {
+  const distance = Math.abs(player.age + years - player.optimal_age);
+  return Math.floor(player.potential * Math.pow(CFG.AGE_FACTOR, distance));
+}
+
 // The effective skill a player brings to a given position: full skill on a
 // primary position, penalised on a secondary one, 0 if they can't play it.
 export function effectiveSkill(player, position) {

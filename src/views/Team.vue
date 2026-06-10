@@ -175,6 +175,14 @@ export default {
   z-index: 100001;
 }
 
+// Center the formation panel under the headline instead of growing from
+// its left edge.
+.select-wrapper :deep(.dropdown) {
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+}
+
 .select-wrapper::after {
   content: "";
   position: absolute;

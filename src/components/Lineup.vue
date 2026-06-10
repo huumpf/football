@@ -6,22 +6,23 @@
     <div class="aspect" :class="{ 'aspect-compact': skillOnly }">
       <div class="aspect-wrapper-inside">
         <div class="lineup">
-          <div v-for="col in visibleColumns" :key="col.key" :class="col.key">
-            <template v-for="pos in col.positions" :key="pos">
-              <LineupItem
-                v-for="index in formation.positions[pos]"
-                :key="pos + index"
-                :position="pos.toUpperCase()"
-                :player="slotPlayer(pos, index - 1)"
-                :skill-only="skillOnly"
-                :count-mode="!!counts"
-                :count="counts && counts[pos]"
-                :editable="editable"
-                :squad="squad"
-                :slot-index="index - 1"
-                @pick="$emit('pick', $event)"
-              />
-            </template>
+          <div
+            v-for="(slot, index) in layoutSlots"
+            :key="index"
+            class="slot"
+            :style="{ '--px': slot.y, '--py': slot.x }"
+          >
+            <LineupItem
+              :position="slot.position"
+              :player="slotPlayer(slot.pos, slot.slotIndex)"
+              :skill-only="skillOnly"
+              :count-mode="!!counts"
+              :count="counts && counts[slot.pos]"
+              :editable="editable"
+              :squad="squad"
+              :slot-index="slot.slotIndex"
+              @pick="$emit('pick', $event)"
+            />
           </div>
         </div>
       </div>
@@ -33,18 +34,6 @@
 <script>
 import Field from '@/components/Field.vue'
 import LineupItem from '@/components/LineupItem.vue'
-
-// Visual columns of the pitch, left to right. Each maps to one of the layout
-// classes the stylesheet positions; cdm/cam columns are skipped when a
-// formation has no such slots.
-const COLUMNS = [
-  { key: 'goalkeeper', positions: ['gk'] },
-  { key: 'defense', positions: ['lb', 'cb', 'rb'] },
-  { key: 'cdm', positions: ['cdm'] },
-  { key: 'midfield', positions: ['lm', 'cm', 'rm'] },
-  { key: 'cam', positions: ['cam'] },
-  { key: 'offense', positions: ['lf', 'st', 'rf'] },
-];
 
 export default {
   name: 'Lineup',
@@ -71,10 +60,16 @@ export default {
   emits: ['pick'],
 
   computed: {
-    visibleColumns() {
-      return COLUMNS.filter(col =>
-        col.positions.some(pos => (this.formation.positions[pos] || 0) > 0)
-      );
+    // One entry per slot from the formation's layout, with its relative pitch
+    // coordinate and its index within its position (2nd CB → slotIndex 1).
+    layoutSlots() {
+      const counters = {};
+      return (this.formation.layout || []).map(entry => {
+        const pos = entry.position.toLowerCase();
+        const slotIndex = counters[pos] || 0;
+        counters[pos] = slotIndex + 1;
+        return { position: entry.position, pos, slotIndex, x: entry.x, y: entry.y };
+      });
     },
   },
 
@@ -111,26 +106,46 @@ export default {
 }
 
 .lineup {
+  position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
 }
 
-.goalkeeper, .defense, .cdm, .midfield, .cam, .offense {
-  flex-grow: 1;
+// Each slot is a fixed-size box centered on its relative pitch coordinate.
+// The pitch renders horizontally (own goal left), so y (back→front) maps to
+// the horizontal axis and x (sideline→sideline) to the vertical one. clamp()
+// keeps the box fully inside the field when a coordinate sits near an edge.
+.slot {
+  // Fluid box width so the lineup keeps its relative geometry on narrow
+  // fields instead of the boxes colliding.
+  --w: clamp(90px, 14%, 160px);
+  --h: 28px;
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  left: clamp(0%, calc(var(--px) * 100% - var(--w) / 2), calc(100% - var(--w)));
+  top: clamp(0%, calc(var(--py) * 100% - var(--h) / 2), calc(100% - var(--h)));
+}
+
+.slot :deep(.player) {
+  width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: center;
-  padding: 10px 8px;
+  margin: 0;
 }
 
-// Compact preview (draft sidebar): tighten spacing.
-.aspect-compact {
-  .goalkeeper, .defense, .cdm, .midfield, .cam, .offense {
-    padding: 6px 2px;
-  }
+// Compact preview (draft sidebar): boxes hug their content and center on the
+// coordinate, so tightly-spaced central positions overlap less.
+.aspect-compact .slot {
+  --w: 62px;
+  --h: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aspect-compact .slot :deep(.player) {
+  width: auto;
+  height: auto;
 }
 
 </style>

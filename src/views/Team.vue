@@ -63,7 +63,11 @@ export default {
     // Feeds Lineup from the editable assignment rather than the auto one.
     lineupFormation() {
       return this.selectedFormation
-        ? { positions: this.selectedFormation.positions, players: this.lineup }
+        ? {
+            positions: this.selectedFormation.positions,
+            layout: this.selectedFormation.layout,
+            players: this.lineup,
+          }
         : null;
     },
   },

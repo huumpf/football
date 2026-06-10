@@ -50,17 +50,12 @@ export function makePlayer() {
   let skill_factor = Math.pow(player.skill / CFG.DRAFT_AVG_POTENTIAL, 2);
   player.greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE/2) * skill_factor) + 1;
 
-  // Skills & position: with POSITION_FREQUENCY_CHANCE the primary position is
-  // drawn from the formation-slot frequencies and the roll repeats until it
-  // lands there; otherwise a single plain roll stands.
-  let targetPosition = Math.random() < CFG.POSITION_FREQUENCY_CHANCE ? draw_weighted_position() : null;
-  let attempts = 0;
-  do {
-    let pos_vertical = Math.floor(Math.random() * 100);
-    let pos_horizontal = Math.floor(Math.random() * 100);
-    player.skills = get_skills(pos_horizontal, player.skill);
-    player.positions = get_pos(player, pos_vertical, pos_horizontal);
-  } while (targetPosition && player.positions.position !== targetPosition && ++attempts < 1000);
+  // Position & skills: the primary position is drawn from weighted chances
+  // (base weight + formation-slot frequency), then the skill is split into a
+  // stat profile fitting that position.
+  let position = draw_position();
+  player.skills = get_skills(position, player.skill);
+  player.positions = get_pos(position, player);
 
   // Additional positions (primary/secondary) the player can play.
   assign_extra_positions(player.positions);
@@ -74,13 +69,13 @@ export function makePlayer() {
 
 }
 
-// Draws a position from the formation-slot frequencies, so common positions
-// (CB, CM, ST) come up more often than rare ones (LF, RF).
-function draw_weighted_position() {
+// Draws the primary position: each position's chance is proportional to
+// POSITION_BASE_WEIGHT plus how often it appears across all formation slots.
+function draw_position() {
   const entries = Object.entries(CFG.POSITION_FREQUENCIES);
-  let roll = Math.random() * entries.reduce((sum, [, weight]) => sum + weight, 0);
-  for (const [position, weight] of entries) {
-    roll -= weight;
+  let roll = Math.random() * entries.reduce((sum, [, frequency]) => sum + CFG.POSITION_BASE_WEIGHT + frequency, 0);
+  for (const [position, frequency] of entries) {
+    roll -= CFG.POSITION_BASE_WEIGHT + frequency;
     if (roll < 0) return position;
   }
   return entries[entries.length - 1][0];
@@ -125,118 +120,62 @@ function position_salary_factor(positions) {
   return factor;
 }
 
-function get_skills(pos_horizontal, skill) {
+// List sort order per position (GK first, forwards last).
+const POSITION_SORT = {
+  GK: 0, CB: 1, LB: 2, RB: 3, CDM: 4, CM: 5,
+  CAM: 6, LM: 7, RM: 8, ST: 9, LF: 10, RF: 11,
+};
+
+// Splits the total skill into a stat profile fitting the position: the
+// position's main stat takes a randomised share, the rest goes to the
+// supporting stats. Defenders have no shot, forwards no defense.
+function get_skills(position, skill) {
   let skills = {
     goalkeeping: 0,
     defense: 0,
     progression: 0,
     shot: 0,
   };
+  const share = (min, max) => Math.round(skill * (Math.random() * (max - min) + min));
 
-  if (pos_horizontal <= CFG.POSITION_GK) {
-    skills.goalkeeping = skill;
-    return skills;
-  } else {
-
-    skills.defense = Math.floor(HLP.getBiasedRnd(0, skill, skill/3, 1, 0.7));
-    skills.progression = Math.floor(HLP.getBiasedRnd(0, skill - skills.defense, (skill - skills.defense)/2, 1, 0.7));
-    skills.shot = skill - skills.defense - skills.progression;
-
-    if (skills.defense >= skills.progression && skills.defense >= skills.shot) {
-      skills.defense += Math.round(skills.shot/3 * 2);
-      skills.progression += Math.round(skills.shot/3);
-      skills.shot = 0;
-    } else if (skills.shot > skills.progression && skills.shot > skills.defense) {
-      skills.shot += Math.round(skills.defense/3 * 2);
-      skills.progression += Math.round(skills.defense/3);
-      skills.defense = 0;
-    }
-
-    return skills;
+  switch (position) {
+    case "GK":
+      skills.goalkeeping = skill;
+      break;
+    case "CB": case "LB": case "RB":
+      skills.defense = share(0.6, 0.85);
+      skills.progression = skill - skills.defense;
+      break;
+    case "ST": case "LF": case "RF":
+      skills.shot = share(0.6, 0.85);
+      skills.progression = skill - skills.shot;
+      break;
+    case "CDM":
+      skills.progression = share(0.35, 0.5);
+      skills.defense = Math.round((skill - skills.progression) * (Math.random() * 0.2 + 0.7));
+      skills.shot = skill - skills.progression - skills.defense;
+      break;
+    case "CAM":
+      skills.progression = share(0.35, 0.5);
+      skills.shot = Math.round((skill - skills.progression) * (Math.random() * 0.2 + 0.7));
+      skills.defense = skill - skills.progression - skills.shot;
+      break;
+    case "CM": case "LM": case "RM":
+      skills.progression = share(0.4, 0.6);
+      skills.defense = Math.round((skill - skills.progression) * Math.random());
+      skills.shot = skill - skills.progression - skills.defense;
+      break;
   }
 
+  return skills;
 }
 
-function get_pos(player, pos_vertical, pos_horizontal) {
-
-  let positions = { 
-    position: "",
-    gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0 
+function get_pos(position, player) {
+  let positions = {
+    position,
+    sort: POSITION_SORT[position],
+    gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0
   };
-  // Positions: Goalkeeper
-  if (pos_horizontal <= CFG.POSITION_GK) {
-    positions.position = "GK";
-    positions.gk += player.skill;
-    positions.sort = 0;
-  }
-
-  if (player.skills.goalkeeping === 0) {
-    if (player.skills.defense !== 0 && player.skills.progression !== 0 && player.skills.shot !== 0 || player.skills.defense === 0 && player.skills.shot <= player.skills.progression) {
-      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
-        positions.position = "LM";
-        positions.sort = 7;
-        positions.lb += player.skills.defense;
-        positions.lm += player.skills.progression;
-        positions.lf += player.skills.shot;
-      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
-        positions.position = "RM";
-        positions.sort = 8;
-        positions.rb += player.skills.defense;
-        positions.rm += player.skills.progression;
-        positions.rf += player.skills.shot;
-      } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
-        positions.cb += player.skills.defense;
-        positions.st += player.skills.shot;
-        if (player.skills.progression / player.skills.defense <= 1.3 && player.skills.progression / player.skills.shot >= 1.3) {
-          positions.position = "CDM";
-          positions.sort = 4;
-          positions.cdm += player.skills.progression;
-        } else if (player.skills.progression / player.skills.shot <= 1.3 && player.skills.progression / player.skills.defense >= 1.3) {
-          positions.position = "CAM";
-          positions.sort = 6;
-          positions.cam += player.skills.progression;
-        } else {
-          positions.position = "CM";
-          positions.sort = 5;
-          positions.cm += player.skills.progression;
-        }
-      }
-    } else if (player.skills.shot === 0) {
-      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
-        positions.position = "LB";
-        positions.sort = 2;
-        positions.lb += player.skills.defense;
-        positions.lm += player.skills.progression;
-      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
-        positions.position = "RB";
-        positions.sort = 3;
-        positions.rb += player.skills.defense;
-        positions.rm += player.skills.progression;
-      } else if (pos_horizontal >= CFG.POSITION_OFFSET_WING && pos_horizontal <= 100 - CFG.POSITION_OFFSET_WING) {
-        positions.position = "CB";
-        positions.sort = 1;
-        positions.cb += player.skills.defense;
-        positions.cm += player.skills.progression;
-      }
-    } else if (player.skills.defense === 0 && player.skills.shot > player.skills.progression) {
-      if (pos_horizontal < CFG.POSITION_OFFSET_WING) {
-        positions.position = "LF";
-        positions.sort = 10;
-        positions.lf += player.skills.shot;
-        positions.lm += player.skills.progression;
-      } else if (pos_horizontal > 100 - CFG.POSITION_OFFSET_WING) {
-        positions.position = "RF";
-        positions.sort = 11;
-        positions.rf += player.skills.shot;
-        positions.rm += player.skills.progression;
-      } else {
-        positions.position = "ST";
-        positions.sort = 9;
-        positions.st += player.skills.shot;
-        positions.cm += player.skills.progression;
-      }
-    }
-  }
-
+  positions[position.toLowerCase()] = player.skill;
   return positions;
 }

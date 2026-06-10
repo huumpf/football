@@ -109,6 +109,7 @@ export default {
 
 // The player's own club glows like the active nav tab.
 .own .name {
+  color: $col_highlight;
   text-shadow: 0 0 8px $col_cta;
 }
 

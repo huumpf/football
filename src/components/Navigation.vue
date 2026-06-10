@@ -117,7 +117,7 @@ export default {
 
 .nav-link.router-link-active {
   opacity: 1;
-  text-shadow: 0 0 8px $col_cta;
+  color: $col_highlight;
 }
 
 .balance {

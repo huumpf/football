@@ -5,7 +5,7 @@
       :key="index"
       type="button"
       class="option"
-      :class="{ secondary: option.secondary }"
+      :class="{ secondary: option.secondary, selected: option.selected }"
       @click="$emit('select', option)"
     >
       <span class="opt-label">{{ option.label }}</span>
@@ -107,6 +107,11 @@ export default {
 // A secondary option (e.g. a player on a secondary position) is dimmed.
 .option.secondary {
   opacity: 0.6;
+}
+
+// The currently selected option (e.g. the active formation).
+.option.selected {
+  color: $col_highlight;
 }
 
 .empty {

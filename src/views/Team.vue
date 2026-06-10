@@ -3,7 +3,10 @@
     <div class="card field-card">
       <div class="formation-control">
         <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
-          <span class="selectFormation">{{ selectedFormation ? `${selectedFormation.name} · ${selectedFormation.skillSum}` : '' }}</span>
+          <span v-if="selectedFormation" class="selectFormation">
+            <span class="formation-name">{{ selectedFormation.name }}</span>
+            <span class="formation-skill"> · Total skill: {{ selectedFormation.skillSum }}</span>
+          </span>
           <DropdownMenu
             v-if="formationsOpen"
             :options="formationOptions"
@@ -70,7 +73,12 @@ export default {
     formationOptions() {
       return [...this.formations]
         .sort((a, b) => b.skillSum - a.skillSum)
-        .map(f => ({ label: f.name, value: f.skillSum, formation: f }));
+        .map(f => ({
+          label: f.name,
+          value: f.skillSum,
+          formation: f,
+          selected: this.selectedFormation && f.name === this.selectedFormation.name,
+        }));
     },
     // Feeds Lineup from the editable assignment rather than the auto one.
     lineupFormation() {
@@ -199,10 +207,17 @@ export default {
 .selectFormation {
   color: $col_text;
   font-size: 16px;
-  font-weight: 500;
   text-align: center;
   padding: 4px 22px 4px 8px;
   white-space: nowrap;
+}
+
+.formation-name {
+  font-weight: 600;
+}
+
+.formation-skill {
+  font-weight: 300;
 }
 
 </style>

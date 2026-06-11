@@ -58,6 +58,25 @@ export const POSITION_ALTERNATIVES = {
 // AI clubs in the league (player's club makes it 18).
 export const CLUBS_PER_LEAGUE = 17;
 
+// Club finances
+export const CLUB_STARTING_MONEY = 600000;
+
+// A club may not sell below this squad size (starting XI plus 5 bench).
+export const MIN_SQUAD_SIZE = 16;
+
+// Market value: blend of current skill and the projected skill a few years
+// ahead (same idea as AI draft picks), raised to an exponent so stars cost
+// disproportionately more. MV_BASE is the value of an average player
+// (skill blend = DRAFT_AVG_POTENTIAL); values round to MV_ROUND_STEP.
+export const MV_FUTURE_WEIGHT = 0.3;
+export const MV_HORIZON_YEARS = 4;
+export const MV_BASE = 100000;
+export const MV_EXPONENT = 2.5;
+export const MV_ROUND_STEP = 5000;
+
+// Transfer listings an AI club puts up at most.
+export const AI_LISTINGS_MAX = 3;
+
 // AI draft picks: value blends current skill with the projected skill a few
 // years ahead, so younger players win ties against declining ones.
 export const AI_PICK_FUTURE_WEIGHT = 0.3;

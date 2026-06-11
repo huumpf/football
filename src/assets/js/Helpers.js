@@ -31,6 +31,16 @@ export function projectedSkill(player, years) {
   return Math.floor(player.potential * Math.pow(CFG.AGE_FACTOR, distance));
 }
 
+// A player's transfer market value: blends current skill with the projected
+// skill a few years ahead (young talents outprice declining veterans of equal
+// skill), raised to an exponent so stars cost disproportionately more.
+export function marketValue(player) {
+  const blended = (1 - CFG.MV_FUTURE_WEIGHT) * player.skill
+    + CFG.MV_FUTURE_WEIGHT * projectedSkill(player, CFG.MV_HORIZON_YEARS);
+  const raw = CFG.MV_BASE * Math.pow(blended / CFG.DRAFT_AVG_POTENTIAL, CFG.MV_EXPONENT);
+  return Math.max(CFG.MV_ROUND_STEP, Math.round(raw / CFG.MV_ROUND_STEP) * CFG.MV_ROUND_STEP);
+}
+
 // The effective skill a player brings to a given position: full skill on a
 // primary position, penalised on a secondary one, 0 if they can't play it.
 export function effectiveSkill(player, position) {

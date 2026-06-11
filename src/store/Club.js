@@ -1,9 +1,10 @@
 import { makeClubName } from '@/assets/js/ClubFactory.js';
+import * as CFG from '@/assets/js/Config.js';
 
 export const clubModule = {
   state: {
     name: makeClubName(),
-    money: 300000,
+    money: CFG.CLUB_STARTING_MONEY,
   },
 
   mutations: {

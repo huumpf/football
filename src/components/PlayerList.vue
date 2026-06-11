@@ -22,6 +22,17 @@
         :class="['metric', 'salary', 'sortable', { active: sortKey === 'salary' }]"
         @click="sortBy('salary')"
       >Salary<span class="arrow">{{ arrow('salary') }}</span></div>
+      <div
+        v-if="showValue"
+        :class="['metric', 'value', 'sortable', { active: sortKey === 'value' }]"
+        @click="sortBy('value')"
+      >Value<span class="arrow">{{ arrow('value') }}</span></div>
+      <div
+        v-if="showClub"
+        :class="['club', 'sortable', { active: sortKey === 'club' }]"
+        @click="sortBy('club')"
+      >Club<span class="arrow">{{ arrow('club') }}</span></div>
+      <div v-if="$slots.actions" class="action-col"></div>
     </div>
 
     <div
@@ -37,20 +48,34 @@
           :class="{ secondary: pos.secondary }"
         >{{ pos.label }}</span>
       </div>
-      <div class="name">{{ player.firstName }} {{ player.lastName }}</div>
+      <div class="name">
+        <span class="name-text">{{ player.firstName }} {{ player.lastName }}</span>
+        <img
+          v-if="isListed(player)"
+          class="listed-icon"
+          src="../assets/img/icons/transfer-white.svg"
+          alt="Listed on transfer market"
+          title="Listed on transfer market"
+        />
+      </div>
       <div class="metric">{{ player.skill }}</div>
       <div class="metric">{{ player.age }}</div>
       <div v-if="showSalary" class="metric salary">{{ formatSalary(player.salary) }}</div>
+      <div v-if="showValue" class="metric value">{{ formatValue(player) }}</div>
+      <div v-if="showClub" class="club">{{ player.clubName }}</div>
+      <div v-if="$slots.actions" class="action-col">
+        <slot name="actions" :player="player"/>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { moneyStr } from '../assets/js/Helpers.js';
+import { moneyStr, marketValue } from '../assets/js/Helpers.js';
 
 // Default sort direction per column. Position reads ascending (GK → RF),
-// while skill/salary read best-first.
-const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', age: 'asc', salary: 'desc' };
+// while skill/salary/value read best-first.
+const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', age: 'asc', salary: 'desc', value: 'desc', club: 'asc' };
 
 export default {
   name: 'PlayerList',
@@ -59,6 +84,12 @@ export default {
     players: { type: Array, required: true },
     // Overview shows salary; the compact draft sidebar hides it.
     showSalary: { type: Boolean, default: false },
+    // Market value column (players overview and transfer market).
+    showValue: { type: Boolean, default: false },
+    // Selling club column; reads `clubName` off the player entries.
+    showClub: { type: Boolean, default: false },
+    // Ids of players listed on the transfer market (marked with an icon).
+    listedIds: { type: Object, default: null },
     // Tighter type/columns for the narrow sidebar lists.
     compact: { type: Boolean, default: false },
   },
@@ -98,7 +129,13 @@ export default {
         case 'skill': return a.skill - b.skill;
         case 'age': return a.age - b.age;
         case 'salary': return a.salary - b.salary;
+        case 'value': return marketValue(a) - marketValue(b);
+        case 'club': return (a.clubName || '').localeCompare(b.clubName || '');
       }
+    },
+
+    isListed(player) {
+      return this.listedIds !== null && this.listedIds.has(player.id);
     },
 
     sortBy(key) {
@@ -117,6 +154,10 @@ export default {
 
     formatSalary(salary) {
       return moneyStr(salary) + ' €';
+    },
+
+    formatValue(player) {
+      return moneyStr(marketValue(player)) + ' €';
     },
   },
 }
@@ -140,7 +181,7 @@ export default {
 
 // Zebra striping: rows sit flush and alternate against the card surface.
 .item:nth-of-type(even) {
-  background-color: $col_page_background;
+  background-color: $col_row_alternate;
 }
 
 // Column labels share the row columns and sit under a hairline divider.
@@ -176,14 +217,19 @@ export default {
   }
 }
 
+// Wide enough for the three-position worst case (CDM CM CAM).
 .pos-col {
   display: flex;
   gap: 0.3em;
-  width: 64px;
+  width: 96px;
   flex-shrink: 0;
   margin-right: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.compact .pos-col {
+  width: 76px;
 }
 
 // Position values render Medium (the header label stays SemiBold like the rest).
@@ -192,13 +238,26 @@ export default {
 }
 
 .name {
+  display: flex;
+  align-items: center;
   flex: 1 1 auto;
   min-width: 0;
   margin-right: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.name-text {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.listed-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-left: 6px;
+  opacity: 0.8;
 }
 
 .metric {
@@ -208,8 +267,28 @@ export default {
   font-weight: 600;
 }
 
-.salary {
+.salary,
+.value {
   width: 90px;
+  margin-left: 12px;
+}
+
+.club {
+  width: 110px;
+  flex-shrink: 0;
+  margin-left: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Per-row action cell (dots menu, buy button); fixed so header and rows align.
+.action-col {
+  display: flex;
+  justify-content: flex-end;
+  width: 76px;
+  flex-shrink: 0;
   margin-left: 12px;
 }
 

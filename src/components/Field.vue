@@ -49,7 +49,7 @@
   left: 0;
   bottom: 0;
   text-align: left;
-  z-index: 10000;
+  z-index: $z_field;
   overflow: hidden;
 }
 

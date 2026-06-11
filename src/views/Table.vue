@@ -29,8 +29,6 @@
 </template>
 
 <script>
-import * as HLP from '../assets/js/Helpers.js';
-
 export default {
   name: 'Table',
 
@@ -45,11 +43,10 @@ export default {
         own: false,
       }));
 
-      const players = this.$store.state.team.players;
       entries.push({
         id: null,
         name: this.$store.state.club.name,
-        skill: players.length > 0 ? HLP.getRecommendedFormation(players).skillSum : 0,
+        skill: this.$store.getters.recommendedFormation.skillSum,
         own: true,
       });
 

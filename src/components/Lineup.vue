@@ -94,7 +94,7 @@ export default {
   padding-top: 60%;
   margin-top: -60%;
   position: relative;
-  z-index: 100000;
+  z-index: $z_lineup;
 
   .aspect-wrapper-inside {
     position: absolute;

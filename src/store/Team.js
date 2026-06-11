@@ -1,7 +1,24 @@
+import * as HLP from '@/assets/js/Helpers.js';
+
 export const teamModule = {
   state: {
     players: [],
     positionCount: { gk: 0, cb: 0, cdm: 0, cm: 0, cam: 0, st: 0, lb: 0, lm: 0, lf: 0, rb: 0, rm: 0, rf: 0, },
+  },
+
+  getters: {
+    // Every formation with its optimal player assignment. Cached by Vuex, so
+    // the (Hungarian) assignment runs once per squad change instead of once
+    // per component that needs it.
+    formationsWithPlayers(state) {
+      return HLP.getFormationsWithPlayers(state.players);
+    },
+    // The strongest formation; ties keep the later entry, matching
+    // HLP.getRecommendedFormation.
+    recommendedFormation(state, getters) {
+      const formations = getters.formationsWithPlayers;
+      return formations.reduce((best, f) => (f.skillSum >= best.skillSum ? f : best), formations[0]);
+    },
   },
 
   mutations: {

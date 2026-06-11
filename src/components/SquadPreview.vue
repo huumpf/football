@@ -29,7 +29,6 @@
 </template>
 
 <script>
-import * as HLP from '../assets/js/Helpers.js';
 import Lineup from '@/components/Lineup.vue';
 
 // Fictional formation for the Overview — every position present exactly once
@@ -68,7 +67,7 @@ export default {
     players() { return this.$store.state.team.players },
     countPerPosition() { return this.$store.state.team.positionCount },
     overviewFormation() { return OVERVIEW_FORMATION },
-    formations() { return HLP.getFormationsWithPlayers(this.players) },
+    formations() { return this.$store.getters.formationsWithPlayers },
     // Look the formation up by name so the selection survives the formations
     // array being recomputed after every draft pick.
     selectedFormation() {

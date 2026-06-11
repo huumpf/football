@@ -1,0 +1,5 @@
+// Stacking order for positioned page layers, lowest first: the field artwork
+// sits under the lineup slot boxes, which sit under open dropdowns/overlays.
+$z_field: 1;
+$z_lineup: 2;
+$z_overlay: 3;

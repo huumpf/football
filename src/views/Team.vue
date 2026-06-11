@@ -66,9 +66,9 @@ export default {
   },
 
   computed: {
-    formations() { return HLP.getFormationsWithPlayers(this.$store.state.team.players) },
+    formations() { return this.$store.getters.formationsWithPlayers },
     players() { return this.$store.state.team.players },
-    recommendedFormation() { return HLP.getRecommendedFormation(this.$store.state.team.players) },
+    recommendedFormation() { return this.$store.getters.recommendedFormation },
     // Dropdown rows (Name | Total Skill), strongest formation first.
     formationOptions() {
       return [...this.formations]
@@ -180,7 +180,7 @@ export default {
   align-items: center;
   cursor: pointer;
   // Above the lineup boxes so the open panel overlays the field.
-  z-index: 100001;
+  z-index: $z_overlay;
 }
 
 // Center the formation panel under the headline instead of growing from

@@ -5,16 +5,13 @@
       <p class="remaining">{{ moneyToStr(currentMoney) }} € remaining</p>
     </div>
 
-    <div class="player-cards-wrapper" tag="div" name="appear" mode="out-in">
-      <!-- <transition name="appear" mode="out-in"> -->
-        <DraftCard :key="activeDraftSet[0].lastName" :player="activeDraftSet[0]" @click="addPlayerToTeam(activeDraftSet[0])"/>
-      <!-- </transition> -->
-      <!-- <transition name="appear" mode="out-in"> -->
-        <DraftCard :key="activeDraftSet[1].lastName" :player="activeDraftSet[1]" @click="addPlayerToTeam(activeDraftSet[1])"/>
-      <!-- </transition> -->
-      <!-- <transition name="appear" mode="out-in"> -->
-        <DraftCard :key="activeDraftSet[2].lastName" :player="activeDraftSet[2]" @click="addPlayerToTeam(activeDraftSet[2])"/>
-      <!-- </transition> -->
+    <div class="player-cards-wrapper">
+      <DraftCard
+        v-for="player in activeDraftSet"
+        :key="player.id"
+        :player="player"
+        @click="addPlayerToTeam(player)"
+      />
     </div>
 
     <div class="card progress-card">
@@ -29,6 +26,7 @@
 <script>
 import DraftCard from '../components/DraftCard.vue';
 import * as Helpers from '../assets/js/Helpers.js';
+import * as CFG from '../assets/js/Config.js';
 
 export default {
   name: 'DraftPicks',
@@ -40,7 +38,7 @@ export default {
   computed: {
     currentMoney() { return this.$store.state.club.money },
     activeDraftSet() { return this.$store.state.draft.activeDraftSet },
-    draftAmount() { return this.$store.state.draft.draftAmount },
+    draftAmount() { return CFG.DRAFT_COUNT },
     playersInTeam() { return this.$store.state.team.players.length },
     draftCompleted() { return this.playersInTeam / this.draftAmount }
   },
@@ -50,9 +48,6 @@ export default {
   },
 
   methods: {
-    pay(amount) {
-      this.$store.dispatch('pay', amount);
-    },
     addPlayerToTeam(player) {
       this.$store.dispatch('addPlayerToTeam', player);
       this.$store.dispatch('pay', player.salary);
@@ -146,18 +141,5 @@ export default {
     text-align: left;
     margin-left: 10px;
   }
-
-  .appear-enter-active,
-  .appear-leave-active {
-    &, &.appear-enter-to:hover, &.appear-leave-to:hover{
-    transition: all .7s ease;
-}
-  }
-  .appear-enter-from,
-  .appear-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
 
 </style>

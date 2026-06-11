@@ -4,31 +4,31 @@ const routes = [
   {
     path: '/',
     name: 'Draft',
-    component: () => import(/* webpackChunkName: "draft" */ '../views/Draft.vue')
+    component: () => import('../views/Draft.vue')
   },
   {
     path: '/team',
     name: 'Team',
     meta: { showNav: true },
-    component: () => import(/* webpackChunkName: "team" */ '../views/Team.vue')
+    component: () => import('../views/Team.vue')
   },
   {
     path: '/players',
     name: 'Players',
     meta: { showNav: true },
-    component: () => import(/* webpackChunkName: "players" */ '../views/Players.vue')
+    component: () => import('../views/Players.vue')
   },
   {
     path: '/tabelle',
     name: 'Tabelle',
     meta: { showNav: true },
-    component: () => import(/* webpackChunkName: "table" */ '../views/Table.vue')
+    component: () => import('../views/Table.vue')
   },
   {
     path: '/tabelle/:id',
     name: 'ClubLineup',
     meta: { showNav: true },
-    component: () => import(/* webpackChunkName: "table" */ '../views/ClubLineup.vue')
+    component: () => import('../views/ClubLineup.vue')
   }
 ]
 

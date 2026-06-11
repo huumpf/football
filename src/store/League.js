@@ -21,6 +21,4 @@ export const leagueModule = {
       commit('MAKE_LEAGUE', [rootState.club.name]);
     }
   },
-
-  modules: {}
 }

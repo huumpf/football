@@ -5,15 +5,6 @@ import { draftModule } from './Draft'
 import { leagueModule } from './League'
 
 export default createStore({
-  state: {
-  },
-
-  mutations: {
-  },
-
-  actions: {
-  },
-
   modules: {
     team: teamModule,
     club: clubModule,

@@ -67,16 +67,4 @@
   transform: rotate(180deg);
 }
 
-.visu-wrapper > .left-side, .center, .right-side {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  flex-grow: 2;
-  justify-content: space-between;
-}
-
-.visu-wrapper > .center {
-  flex-grow: 3;
-}
-
 </style>

@@ -23,6 +23,4 @@ export const clubModule = {
       commit('PAY', amount);
     }
   },
-
-  modules: {}
 }

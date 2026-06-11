@@ -55,7 +55,7 @@ export function makePlayer() {
   // stat profile fitting that position.
   let position = draw_position();
   player.skills = get_skills(position, player.skill);
-  player.positions = get_pos(position, player);
+  player.positions = get_pos(position);
 
   // Additional positions (primary/secondary) the player can play.
   assign_extra_positions(player.positions);
@@ -170,12 +170,9 @@ function get_skills(position, skill) {
   return skills;
 }
 
-function get_pos(position, player) {
-  let positions = {
+function get_pos(position) {
+  return {
     position,
     sort: POSITION_SORT[position],
-    gk:0, lb:0, lm:0, lf:0, cb:0, cdm:0, cm:0, cam:0, st:0, rb:0, rm:0, rf:0
   };
-  positions[position.toLowerCase()] = player.skill;
-  return positions;
 }

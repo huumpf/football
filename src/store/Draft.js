@@ -1,10 +1,8 @@
 import * as PlayerFactory from '@/assets/js/PlayerFactory.js';
-import * as CFG from '@/assets/js/Config.js';
 
 export const draftModule = {
   state: {
     activeDraftSet: [],
-    draftAmount: CFG.DRAFT_COUNT,
   },
 
   mutations: {
@@ -18,6 +16,4 @@ export const draftModule = {
       commit('MAKE_DRAFT_SET');
     }
   },
-
-  modules: {}
 }

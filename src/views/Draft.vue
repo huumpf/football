@@ -12,6 +12,7 @@
 import DraftPicks from '@/components/DraftPicks.vue'
 import SquadPreview from '@/components/SquadPreview.vue'
 import TeamList from '@/components/TeamList.vue'
+import * as CFG from '@/assets/js/Config.js'
 
 export default {
   name: 'Home',
@@ -27,7 +28,7 @@ export default {
   },
 
   computed: {
-    draftIsCompleted() { return this.$store.state.team.players.length === this.$store.state.draft.draftAmount }
+    draftIsCompleted() { return this.$store.state.team.players.length >= CFG.DRAFT_COUNT }
   },
 
   watch: {

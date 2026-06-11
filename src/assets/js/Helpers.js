@@ -25,7 +25,7 @@ export function getFormationsWithPlayers (players) {
 // curve PlayerFactory derives skill from: potential decayed by AGE_FACTOR per
 // year of distance to the optimal age.
 export function projectedSkill(player, years) {
-  const distance = Math.abs(player.age + years - player.optimal_age);
+  const distance = Math.abs(player.age + years - player.optimalAge);
   return Math.floor(player.potential * Math.pow(CFG.AGE_FACTOR, distance));
 }
 

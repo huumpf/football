@@ -22,6 +22,21 @@ export function makeClub(id, name) {
   };
 }
 
+const CLUB_NAME_ADDITION_CHANCE = 0.2;
+
+// A club name is a city, sometimes with an addition ("United", "City", …).
+function withRandomAddition(city) {
+  if (Math.random() < CLUB_NAME_ADDITION_CHANCE) {
+    return city + " " + Names.clubNameAdditions[Math.floor(Math.random() * Names.clubNameAdditions.length)];
+  }
+  return city;
+}
+
+// Single club name from a random city (used for the player's own club).
+export function makeClubName() {
+  return withRandomAddition(Names.cityNames[Math.floor(Math.random() * Names.cityNames.length)]);
+}
+
 // Unique club names: cities are drawn without replacement, and any city that
 // already appears in a reserved name (the player's club) is excluded.
 export function makeClubNames(count, reservedNames = []) {
@@ -30,9 +45,7 @@ export function makeClubNames(count, reservedNames = []) {
   );
   const names = [];
   for (let i = 0; i < count; i++) {
-    let name = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-    if (Math.random() < 0.2) { name += " " + Names.clubNameAdditions[Math.floor(Math.random() * Names.clubNameAdditions.length)] }
-    names.push(name);
+    names.push(withRandomAddition(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]));
   }
   return names;
 }

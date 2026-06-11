@@ -31,7 +31,7 @@
 import * as HLP from '../assets/js/Helpers.js';
 
 export default {
-  name: 'PlayerCard',
+  name: 'DraftCard',
 
   props: {
     player: Object,

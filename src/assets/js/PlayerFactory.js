@@ -2,6 +2,16 @@ import * as Names from './Names.js';
 import * as CFG from './Config.js';
 import * as HLP from './Helpers.js';
 
+let nextPlayerId = 1;
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomItem(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 export function makeDraftSet() {
   let draftSet = []
   for (let i = 0; i < CFG.DRAFT_PLAYERS_PER_PICK; i++) {
@@ -12,66 +22,49 @@ export function makeDraftSet() {
 }
 
 export function makePlayer() {
-  let player = {
-    firstName: String,
-    lastName: String,
-    age: Number,
-    potential: Number,
-    optimal_age: Number,
-    greed: Number,
-    skill: Number,
-    positions: Object,
-    skills: Object,
-    salary: Number,
-  };
+  const potential = HLP.getBiasedRnd(0, 100, CFG.DRAFT_AVG_POTENTIAL, 1, 0.7);
+  const age = randomInt(CFG.PLAYER_AGE_MIN, CFG.PLAYER_AGE_MAX);
+  const optimalAge = randomInt(CFG.PLAYER_OPTAGE_MIN, CFG.PLAYER_OPTAGE_MAX);
 
-  // Name
-  player.firstName = Names.firstNames[Math.floor(Math.random() * Names.firstNames.length)];
-  player.lastName = Names.lastNames[Math.floor(Math.random() * Names.lastNames.length)];
+  // Skill: potential decayed by AGE_FACTOR per year of distance to the optimal age.
+  const skill = Math.floor(potential * Math.pow(CFG.AGE_FACTOR, Math.abs(age - optimalAge)));
 
-  // Potential
-  player.potential = HLP.getBiasedRnd (0, 100, CFG.DRAFT_AVG_POTENTIAL, 1, 0.7);
-
-  // Age
-  player.age = Math.floor((Math.random() * (CFG.PLAYER_AGE_MAX - CFG.PLAYER_AGE_MIN)) + CFG.PLAYER_AGE_MIN);
-
-  // Optimal Age
-  player.optimal_age = Math.floor((Math.random() * (CFG.PLAYER_OPTAGE_MAX - CFG.PLAYER_OPTAGE_MIN)) + CFG.PLAYER_OPTAGE_MIN);
-
-  // Skill
-  let away_from_opt_age = Math.abs(player.age - player.optimal_age);
-  player.skill = player.potential;
-  for (let i=0; i < away_from_opt_age; i++) {
-    player.skill = player.skill * CFG.AGE_FACTOR;
-  }
-  player.skill = Math.floor(player.skill);
-
-  // Greed
-  let skill_factor = Math.pow(player.skill / CFG.DRAFT_AVG_POTENTIAL, 2);
-  player.greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE/2) * skill_factor) + 1;
+  // Greed grows quadratically with skill, so stars demand disproportionate pay.
+  const skillFactor = Math.pow(skill / CFG.DRAFT_AVG_POTENTIAL, 2);
+  const greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE / 2) * skillFactor) + 1;
 
   // Position & skills: the primary position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
   // stat profile fitting that position.
-  let position = draw_position();
-  player.skills = get_skills(position, player.skill);
-  player.positions = get_pos(position);
+  const position = drawPosition();
+  const positions = getPositions(position);
 
   // Additional positions (primary/secondary) the player can play.
-  assign_extra_positions(player.positions);
+  assignExtraPositions(positions);
 
   // Salary
-  player.salary = Math.round(player.skill * CFG.PLAYER_SALARY_FACTOR * player.greed) / 1000;
-  player.salary = Math.round(player.salary.toFixed(2) * 10000);
-  player.salary = Math.round(player.salary * position_salary_factor(player.positions));
+  let salary = Math.round(skill * CFG.PLAYER_SALARY_FACTOR * greed) / 1000;
+  salary = Math.round(salary.toFixed(2) * 10000);
+  salary = Math.round(salary * positionSalaryFactor(positions));
 
-  return player;
-
+  return {
+    id: nextPlayerId++,
+    firstName: randomItem(Names.firstNames),
+    lastName: randomItem(Names.lastNames),
+    age,
+    potential,
+    optimalAge,
+    greed,
+    skill,
+    positions,
+    skills: getSkills(position, skill),
+    salary,
+  };
 }
 
 // Draws the primary position: each position's chance is proportional to
 // POSITION_BASE_WEIGHT plus how often it appears across all formation slots.
-function draw_position() {
+function drawPosition() {
   const entries = Object.entries(CFG.POSITION_FREQUENCIES);
   let roll = Math.random() * entries.reduce((sum, [, frequency]) => sum + CFG.POSITION_BASE_WEIGHT + frequency, 0);
   for (const [position, frequency] of entries) {
@@ -83,7 +76,7 @@ function draw_position() {
 
 // Rolls for extra positions and records them on `positions` as `primary` and
 // `secondary` arrays. The original position is kept as the first primary.
-function assign_extra_positions(positions) {
+function assignExtraPositions(positions) {
   const original = positions.position;
   const pool = [...(CFG.POSITION_ALTERNATIVES[original] || [])];
   const primary = [original];
@@ -108,7 +101,7 @@ function assign_extra_positions(positions) {
 
 // Salary multiplier from extra positions: each additional primary adds 15-25 %,
 // each secondary adds 10-20 %.
-function position_salary_factor(positions) {
+function positionSalaryFactor(positions) {
   let factor = 1;
   const rnd = (min, max) => Math.random() * (max - min) + min;
   for (let i = 1; i < positions.primary.length; i++) {
@@ -129,7 +122,7 @@ const POSITION_SORT = {
 // Splits the total skill into a stat profile fitting the position: the
 // position's main stat takes a randomised share, the rest goes to the
 // supporting stats. Defenders have no shot, forwards no defense.
-function get_skills(position, skill) {
+function getSkills(position, skill) {
   let skills = {
     goalkeeping: 0,
     defense: 0,
@@ -170,7 +163,7 @@ function get_skills(position, skill) {
   return skills;
 }
 
-function get_pos(position) {
+function getPositions(position) {
   return {
     position,
     sort: POSITION_SORT[position],

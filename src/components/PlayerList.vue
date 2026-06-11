@@ -25,8 +25,8 @@
     </div>
 
     <div
-      v-for="(player, index) in sortedPlayers"
-      :key="index"
+      v-for="player in sortedPlayers"
+      :key="player.id"
       class="row item"
     >
       <div class="pos-col">

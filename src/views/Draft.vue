@@ -15,7 +15,7 @@ import TeamList from '@/components/TeamList.vue'
 import * as CFG from '@/assets/js/Config.js'
 
 export default {
-  name: 'Home',
+  name: 'Draft',
 
   components: {
     DraftPicks,
@@ -24,6 +24,12 @@ export default {
   },
 
   created() {
+    // A finished draft can't be reopened: redirect instead of re-rolling the
+    // league and offering picks beyond the draft limit.
+    if (this.draftIsCompleted) {
+      this.$router.replace({ name: 'Team' });
+      return;
+    }
     this.$store.dispatch('makeLeague');
   },
 

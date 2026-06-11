@@ -46,6 +46,8 @@
 </template>
 
 <script>
+import { moneyStr } from '../assets/js/Helpers.js';
+
 // Default sort direction per column. Position reads ascending (GK → RF),
 // while skill/salary read best-first.
 const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', age: 'asc', salary: 'desc' };
@@ -114,7 +116,7 @@ export default {
     },
 
     formatSalary(salary) {
-      return salary.toLocaleString('de-DE') + ' €';
+      return moneyStr(salary) + ' €';
     },
   },
 }

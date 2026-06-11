@@ -3,10 +3,10 @@
     <div class="card list-card">
       <div class="row header">
         <div class="rank">#</div>
-        <div class="name">Verein</div>
-        <div class="metric">Spiele</div>
-        <div class="metric">Tore</div>
-        <div class="metric">Punkte</div>
+        <div class="name">Club</div>
+        <div class="metric">Matches</div>
+        <div class="metric">Goals</div>
+        <div class="metric">Points</div>
         <div class="metric">Skill</div>
       </div>
 

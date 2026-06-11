@@ -48,7 +48,7 @@ export default {
       type: Object,
       default: null,
     },
-    // Editable mode (Aufstellung): slots can be reassigned via a dropdown.
+    // Editable mode (team view): slots can be reassigned via a dropdown.
     editable: Boolean,
     // Full squad, forwarded to each slot to build its candidate list.
     squad: {

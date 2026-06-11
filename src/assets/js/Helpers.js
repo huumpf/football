@@ -1,7 +1,9 @@
 import * as CFG from './Config.js';
 
+// Single money formatter for the whole app. The display locale is
+// intentionally German (1.234.567); the code language stays English.
 export function moneyStr(amount) {
-  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return amount.toLocaleString('de-DE');
 }
 
 export function getBiasedRnd (min, max, bias, influence, mixfactor) {

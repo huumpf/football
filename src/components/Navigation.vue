@@ -1,7 +1,7 @@
 <template>
   <nav class="nav">
     <div class="brand">
-      <img class="crest" src="../assets/img/wappen.svg" alt=""/>
+      <img class="crest" src="../assets/img/crest.svg" alt=""/>
       <span class="club-name">{{ clubName }}</span>
       <button class="restart-btn" title="Restart" aria-label="Restart" @click="restartGame">↻</button>
     </div>
@@ -9,7 +9,7 @@
     <div class="nav-links">
       <router-link class="nav-link" :to="{ name: 'Team' }">Formation</router-link>
       <router-link class="nav-link" :to="{ name: 'Players' }">Players</router-link>
-      <router-link class="nav-link" :to="{ name: 'Tabelle' }">Standings</router-link>
+      <router-link class="nav-link" :to="{ name: 'Standings' }">Standings</router-link>
     </div>
 
     <div class="balance">{{ balance }}</div>
@@ -17,12 +17,14 @@
 </template>
 
 <script>
+import { moneyStr } from '../assets/js/Helpers.js';
+
 export default {
   name: 'Navigation',
 
   computed: {
     clubName() { return this.$store.state.club.name },
-    balance() { return this.$store.state.club.money.toLocaleString('de-DE') + ' €' },
+    balance() { return moneyStr(this.$store.state.club.money) + ' €' },
   },
 
   methods: {

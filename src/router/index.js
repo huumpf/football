@@ -19,13 +19,13 @@ const routes = [
     component: () => import('../views/Players.vue')
   },
   {
-    path: '/tabelle',
-    name: 'Tabelle',
+    path: '/standings',
+    name: 'Standings',
     meta: { showNav: true },
     component: () => import('../views/Table.vue')
   },
   {
-    path: '/tabelle/:id',
+    path: '/standings/:id',
     name: 'ClubLineup',
     meta: { showNav: true },
     component: () => import('../views/ClubLineup.vue')

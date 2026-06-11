@@ -22,7 +22,7 @@
     <DropdownMenu
       v-if="open"
       :options="candidates"
-      empty-text="Kein Spieler verfügbar"
+      empty-text="No player available"
       @select="pick($event.player)"
       @close="close"
     />
@@ -45,7 +45,7 @@ export default {
     // Count mode (Overview): show a plain count value instead of a player's skill.
     countMode: Boolean,
     count: [Number, String],
-    // Editable mode (Aufstellung): clicking opens a dropdown to set the player.
+    // Editable mode (team view): clicking opens a dropdown to set the player.
     editable: Boolean,
     // Full squad, used to build the candidate list for this position.
     squad: {

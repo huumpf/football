@@ -27,7 +27,7 @@ export default {
   created() {
     // Direct URL hits without a generated league (e.g. after a reload) have
     // nothing to show — back to the table.
-    if (!this.club) this.$router.replace({ name: 'Tabelle' });
+    if (!this.club) this.$router.replace({ name: 'Standings' });
   },
 
   computed: {

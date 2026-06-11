@@ -27,7 +27,7 @@ export default {
     // { label, value, secondary?, … } — the full option is echoed on select,
     // so parents can attach their payload (player, formation, …).
     options: { type: Array, required: true },
-    emptyText: { type: String, default: 'Keine Optionen' },
+    emptyText: { type: String, default: 'No options' },
   },
 
   emits: ['select', 'close'],

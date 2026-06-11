@@ -17,9 +17,9 @@ export const PLAYER_SALARY_FACTOR = 36;
 
 // A player's primary position is drawn with a chance proportional to
 // POSITION_BASE_WEIGHT plus the position's frequency across all formation
-// slots, so common lineup positions (CB) come up about twice as often as
-// rare ones (LF) while every position stays in supply.
-export const POSITION_BASE_WEIGHT = 30;
+// slots, so common lineup positions (CB) come up about four times as often
+// as rare ones (LF) while every position stays in supply.
+export const POSITION_BASE_WEIGHT = 10;
 export const POSITION_FREQUENCIES = {
   GK: 15, CB: 35, CM: 28, ST: 22, LB: 12, RB: 12,
   LM: 10, RM: 10, CAM: 9, CDM: 8, LF: 2, RF: 2,

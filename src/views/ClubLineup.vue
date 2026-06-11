@@ -12,7 +12,7 @@
     </div>
 
     <div class="card team-card">
-      <PlayerList :players="club.players" compact/>
+      <PlayerList :players="club.players"/>
     </div>
   </div>
 </template>

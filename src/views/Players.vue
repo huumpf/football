@@ -4,7 +4,6 @@
       <PlayerList
         :players="players"
         :listed-ids="listedIds"
-        compact
         show-salary
         show-value
       >

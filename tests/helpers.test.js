@@ -3,6 +3,7 @@ import {
   moneyStr,
   projectedSkill,
   effectiveSkill,
+  marketValue,
   assignLineup,
   getFormationsWithPlayers,
   getRecommendedFormation,
@@ -31,6 +32,34 @@ describe('projectedSkill', () => {
     expect(projectedSkill(p, 4)).toBe(80); // lands exactly on the optimal age
     expect(projectedSkill(p, 0)).toBe(Math.floor(80 * Math.pow(CFG.AGE_FACTOR, 4)));
     expect(projectedSkill(p, 8)).toBe(Math.floor(80 * Math.pow(CFG.AGE_FACTOR, 4)));
+  });
+});
+
+describe('marketValue', () => {
+  it('is MV_BASE for an average player holding his level', () => {
+    // Projected skill equals current skill (lands on the optimal age), so the
+    // blend is exactly DRAFT_AVG_POTENTIAL.
+    const p = { skill: 50, potential: 50, age: 24, optimalAge: 24 + CFG.MV_HORIZON_YEARS };
+    expect(marketValue(p)).toBe(CFG.MV_BASE);
+  });
+
+  it('grows with skill', () => {
+    const at = skill => marketValue({ skill, potential: skill, age: 24, optimalAge: 28 });
+    expect(at(60)).toBeGreaterThan(at(40));
+    expect(at(90)).toBeGreaterThan(at(60));
+  });
+
+  it('values a young talent above a declining veteran of equal skill', () => {
+    const young = { skill: 60, potential: 70, age: 22, optimalAge: 28 };
+    const old = { skill: 60, potential: 75, age: 32, optimalAge: 28 };
+    expect(marketValue(young)).toBeGreaterThan(marketValue(old));
+  });
+
+  it('rounds to MV_ROUND_STEP and never drops below it', () => {
+    const junk = { skill: 1, potential: 1, age: 34, optimalAge: 28 };
+    expect(marketValue(junk)).toBe(CFG.MV_ROUND_STEP);
+    const star = { skill: 87, potential: 91, age: 26, optimalAge: 29 };
+    expect(marketValue(star) % CFG.MV_ROUND_STEP).toBe(0);
   });
 });
 

@@ -19,6 +19,12 @@ const routes = [
     component: () => import('../views/Players.vue')
   },
   {
+    path: '/transfers',
+    name: 'Transfers',
+    meta: { showNav: true },
+    component: () => import('../views/TransferMarket.vue')
+  },
+  {
     path: '/standings',
     name: 'Standings',
     meta: { showNav: true },

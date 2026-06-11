@@ -9,6 +9,7 @@
     <div class="nav-links">
       <router-link class="nav-link" :to="{ name: 'Team' }">Formation</router-link>
       <router-link class="nav-link" :to="{ name: 'Players' }">Players</router-link>
+      <router-link class="nav-link" :to="{ name: 'Transfers' }">Transfers</router-link>
       <router-link class="nav-link" :to="{ name: 'Standings' }">Standings</router-link>
     </div>
 

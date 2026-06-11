@@ -68,12 +68,16 @@ export default {
 
 <style lang="scss" scoped>
 
-// Full-width card like the Players page; rows mirror the PlayerList styling.
+// Centered card like the Players page; rows mirror the compact PlayerList
+// styling (smaller type, tighter rows).
 .table-wrapper {
   padding: 12px;
 }
 
+// Sized to the columns (rank, club, matches, goals, points, skill).
 .list-card {
+  max-width: 560px;
+  margin: 0 auto;
   overflow: hidden;
 }
 
@@ -81,16 +85,18 @@ export default {
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 6px 12px;
-  font-size: 16px;
+  padding: 4px 8px;
+  font-size: 12px;
   text-align: left;
 }
 
 .item:nth-of-type(even) {
-  background-color: $col_page_background;
+  background-color: $col_row_alternate;
 }
 
 .item {
+  padding-top: 6px;
+  padding-bottom: 6px;
   cursor: pointer;
   transition: color 0.15s ease;
 }
@@ -121,7 +127,7 @@ export default {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

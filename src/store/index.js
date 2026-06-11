@@ -3,6 +3,7 @@ import { clubModule } from './Club'
 import { teamModule } from './Team'
 import { draftModule } from './Draft'
 import { leagueModule } from './League'
+import { transferMarketModule } from './TransferMarket'
 
 export default createStore({
   modules: {
@@ -10,5 +11,6 @@ export default createStore({
     club: clubModule,
     draft: draftModule,
     league: leagueModule,
+    transferMarket: transferMarketModule,
   }
 })

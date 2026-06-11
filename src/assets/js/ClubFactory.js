@@ -3,6 +3,10 @@ import * as PlayerFactory from './PlayerFactory.js';
 import * as HLP from './Helpers.js';
 import * as CFG from './Config.js';
 
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 // Builds an AI club by simulating the same draft the player goes through:
 // DRAFT_COUNT rounds, each picking one player from a best-of-3 set. The squad
 // therefore draws from the same distribution as the player's, which keeps the
@@ -18,8 +22,51 @@ export function makeClub(id, name) {
     id,
     name,
     players,
+    money: CFG.CLUB_STARTING_MONEY,
     formation: HLP.getRecommendedFormation(players),
   };
+}
+
+// Players an AI club offers on the transfer market, picked from the bench by
+// depth chart: a player who can't fill any slot of the club's formation at all
+// (e.g. a pure LF/RF in a 4-4-2) is always offered; otherwise a player is
+// surplus when on every position he can play, all slots are taken by better
+// players and at least one better backup remains beyond them. The most deeply
+// buried surplus players are offered first, capped at AI_LISTINGS_MAX.
+export function selectListingCandidates(club) {
+  const starters = new Set(Object.values(club.formation.players).flat());
+  const bench = club.players.filter(p => !starters.has(p));
+
+  const useless = [];
+  const surplus = [];
+  for (const player of bench) {
+    const playable = [
+      ...(player.positions.primary || [player.positions.position]),
+      ...(player.positions.secondary || []),
+    ].filter(pos => club.formation.positions[pos.toLowerCase()]);
+
+    if (playable.length === 0) {
+      useless.push(player);
+      continue;
+    }
+
+    // Per position: players better than him there, minus the formation slots.
+    // >= 1 everywhere means starters and at least one better backup block him.
+    const depth = Math.min(...playable.map(pos => {
+      const own = HLP.effectiveSkill(player, pos);
+      const better = club.players
+        .filter(p => p !== player && HLP.effectiveSkill(p, pos) > own).length;
+      return better - club.formation.positions[pos.toLowerCase()];
+    }));
+    if (depth >= 1) surplus.push({ player, depth });
+  }
+
+  surplus.sort((a, b) => b.depth - a.depth);
+  const count = Math.min(
+    CFG.AI_LISTINGS_MAX,
+    Math.max(useless.length, randomInt(1, CFG.AI_LISTINGS_MAX))
+  );
+  return [...useless, ...surplus.map(s => s.player)].slice(0, count);
 }
 
 const CLUB_NAME_ADDITION_CHANCE = 0.2;

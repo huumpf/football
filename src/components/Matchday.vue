@@ -186,7 +186,12 @@ function initialMatchday(week) {
   color: $col_highlight;
 }
 
+// Fixed-width and right-aligned so club names line up across all pairings,
+// whether the rank is "1." or "18.".
 .rank {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: right;
   opacity: 0.5;
 }
 

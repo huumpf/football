@@ -12,11 +12,11 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@import "@/assets/scss/var-color-base.scss";
-@import "@/assets/scss/var-color-mapping.scss";
-@import "@/assets/scss/var-breakpoints.scss";
-@import "@/assets/scss/var-fonts.scss";
-@import "@/assets/scss/var-z.scss";`
+        additionalData: `@use "@/assets/scss/var-color-base.scss" as *;
+@use "@/assets/scss/var-color-mapping.scss" as *;
+@use "@/assets/scss/var-breakpoints.scss" as *;
+@use "@/assets/scss/var-fonts.scss" as *;
+@use "@/assets/scss/var-z.scss" as *;`
       }
     }
   },

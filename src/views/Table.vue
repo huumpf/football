@@ -26,17 +26,23 @@
         <div class="metric">{{ entry.skill }}</div>
       </ListRow>
     </div>
+
+    <div class="matchday-col">
+      <Matchday/>
+    </div>
   </div>
 </template>
 
 <script>
 import ListRow from '../components/ListRow.vue';
+import Matchday from '../components/Matchday.vue';
 
 export default {
   name: 'Table',
 
   components: {
     ListRow,
+    Matchday,
   },
 
   computed: {
@@ -59,20 +65,33 @@ export default {
 
 <style lang="scss" scoped>
 
-// Centered card like the Players page; row height and spacing come from the
-// shared ListRow component.
+// Standings card on the left, matchday module centered in the remaining
+// space; row height and spacing come from the shared ListRow component.
 .table-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   padding: 12px;
+  min-height: 100%;
 }
 
 // Sized to the columns (rank, club, matches, goals, points, skill).
 .list-card {
-  max-width: 560px;
-  margin: 0 auto;
+  flex: 0 1 560px;
+  min-width: 0;
   overflow: hidden;
   font-weight: 500;
   // Breathing room so the last row doesn't sit flush against the card edge.
   padding-bottom: 12px;
+}
+
+// Centers the matchday module against the standings card's height.
+.matchday-col {
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
 }
 
 .item {

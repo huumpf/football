@@ -67,7 +67,8 @@ export default {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 64px;
+  // Collapses on narrow viewports so the tabs don't run under the week label.
+  gap: clamp(16px, 4vw, 64px);
   flex: 1 1 auto;
   min-width: 0;
   padding-left: 24px;
@@ -77,7 +78,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .crest {
@@ -87,21 +88,26 @@ export default {
   flex-shrink: 0;
 }
 
-// Club name with the current balance stacked beneath it.
+// Club name with the current balance stacked beneath it; the name truncates
+// when the brand has to give up space on narrow viewports.
 .club-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .club-name {
+  max-width: 100%;
   font-family: $font_heading;
   font-size: 20px;
   font-weight: 500;
   line-height: 24px;
   color: $col_text;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .balance {

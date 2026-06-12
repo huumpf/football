@@ -3,6 +3,7 @@
     <div class="card list-card">
       <PlayerList
         v-if="rows.length > 0"
+        title="Transfer Market"
         :players="rows"
         show-value
         show-club

@@ -28,7 +28,7 @@
     </div>
 
     <div class="card team-card">
-      <PlayerList v-if="players.length > 0" :players="players"/>
+      <PlayerList v-if="players.length > 0" title="Squad" :players="players"/>
     </div>
   </div>
 

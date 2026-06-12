@@ -2,6 +2,7 @@
   <div class="players-wrapper">
     <div class="card list-card">
       <PlayerList
+        title="Squad"
         :players="players"
         :listed-ids="listedIds"
         show-salary

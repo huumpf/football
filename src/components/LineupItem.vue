@@ -13,7 +13,7 @@
     <template v-else>
       <div class="info">
         <p class="position">{{ position }}</p>
-        <p class="name">{{ player ? playerName : '' }}</p>
+        <p class="name"><template v-if="player"><span class="first-initial">{{ player.firstName.charAt(0) }}.&nbsp;</span>{{ player.lastName }}</template></p>
       </div>
       <p class="skill">{{ player ? skillValue : '' }}</p>
     </template>
@@ -66,12 +66,6 @@ export default {
   },
 
   computed: {
-    // Design shows the name as first-initial + last name, e.g. "P. Robinson".
-    playerName() {
-      if (!this.player) return '';
-      return this.shortName(this.player);
-    },
-
     // The skill the slotted player brings to THIS position (75% on a secondary).
     skillValue() {
       return this.player ? effectiveSkill(this.player, this.position) : null;
@@ -207,6 +201,14 @@ export default {
     font-size: 12px;
     font-weight: 500;
     color: $col_text;
+  }
+}
+
+// On a narrow formation card there is no room for the abbreviated first
+// name, so only the last name remains.
+@container formation-card (max-width: 980px) {
+  .player:not(.skill-only) .name .first-initial {
+    display: none;
   }
 }
 

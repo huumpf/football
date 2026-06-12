@@ -139,6 +139,9 @@ export default {
 }
 
 .field-card {
+  // Query container so lineup items can drop the first-name initial when
+  // the card gets narrow (see LineupItem.vue).
+  container: formation-card / inline-size;
   display: flex;
   flex-direction: column;
   min-width: 0;

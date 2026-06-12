@@ -9,11 +9,16 @@ export const PLAYER_AGE_MIN = 16;
 export const PLAYER_AGE_MAX = 34;
 export const PLAYER_OPTAGE_MIN = 28;
 export const PLAYER_OPTAGE_MAX = 31;
-export const PLAYER_GREED_DIFFERENCE = .8;
 export const AGE_FACTOR = .95;
 
-// Player Positions
-export const PLAYER_SALARY_FACTOR = 36;
+// Salary: SALARY_BASE is the pay of an average player (skill =
+// DRAFT_AVG_POTENTIAL), raised superlinearly so stars demand disproportionate
+// pay — flatter than MV_EXPONENT, so salaries spread less than prices. Greed
+// is a flat per-player modifier of 1 ± PLAYER_GREED_SPREAD on top.
+export const SALARY_BASE = 18000;
+export const SALARY_EXPONENT = 1.8;
+export const PLAYER_GREED_SPREAD = 0.15;
+export const SALARY_ROUND_STEP = 100;
 
 // A player's position is drawn with a chance proportional to
 // POSITION_BASE_WEIGHT plus the position's frequency across all formation

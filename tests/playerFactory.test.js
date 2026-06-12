@@ -37,9 +37,13 @@ describe('makePlayer', () => {
     }
   });
 
-  it('produces a positive salary', () => {
+  it('keeps the salary within the greed and position-surcharge bounds', () => {
     for (const p of SAMPLE) {
+      const base = CFG.SALARY_BASE * Math.pow(p.skill / CFG.DRAFT_AVG_POTENTIAL, CFG.SALARY_EXPONENT);
+      const surcharge = p.positions.length > 1 ? 1 + CFG.SECOND_POSITION_SALARY_MAX : 1;
       expect(p.salary).toBeGreaterThan(0);
+      expect(p.salary).toBeGreaterThanOrEqual(base * (1 - CFG.PLAYER_GREED_SPREAD) - CFG.SALARY_ROUND_STEP);
+      expect(p.salary).toBeLessThanOrEqual(base * (1 + CFG.PLAYER_GREED_SPREAD) * surcharge + CFG.SALARY_ROUND_STEP);
     }
   });
 });

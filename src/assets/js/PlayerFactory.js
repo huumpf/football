@@ -29,9 +29,8 @@ export function makePlayer() {
   // Skill: potential decayed by AGE_FACTOR per year of distance to the optimal age.
   const skill = Math.floor(potential * Math.pow(CFG.AGE_FACTOR, Math.abs(age - optimalAge)));
 
-  // Greed grows quadratically with skill, so stars demand disproportionate pay.
-  const skillFactor = Math.pow(skill / CFG.DRAFT_AVG_POTENTIAL, 2);
-  const greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE / 2) * skillFactor) + 1;
+  // Greed: a flat per-player pay modifier, independent of skill.
+  const greed = 1 + (Math.random() * 2 - 1) * CFG.PLAYER_GREED_SPREAD;
 
   // Position & skills: the position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
@@ -39,10 +38,10 @@ export function makePlayer() {
   const position = drawPosition();
   const positions = rollPositions(position);
 
-  // Salary
-  let salary = Math.round(skill * CFG.PLAYER_SALARY_FACTOR * greed) / 1000;
-  salary = Math.round(salary.toFixed(2) * 10000);
-  salary = Math.round(salary * positionSalaryFactor(positions));
+  // Salary: superlinear in skill (stars demand disproportionate pay), scaled
+  // by greed and the second-position surcharge.
+  const baseSalary = CFG.SALARY_BASE * Math.pow(skill / CFG.DRAFT_AVG_POTENTIAL, CFG.SALARY_EXPONENT);
+  const salary = Math.round(baseSalary * greed * positionSalaryFactor(positions) / CFG.SALARY_ROUND_STEP) * CFG.SALARY_ROUND_STEP;
 
   return {
     id: nextPlayerId++,

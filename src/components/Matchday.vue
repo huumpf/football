@@ -1,5 +1,5 @@
 <template>
-  <div class="matchday">
+  <div class="matchday" v-if="fixtures.length">
     <div class="pager">
       <button
         class="arrow"

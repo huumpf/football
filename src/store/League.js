@@ -122,12 +122,13 @@ export const leagueModule = {
       dispatch('refreshAiListings');
     },
 
-    // Simulates the current week's matchday, if the week has one and it has
+    // Simulates the current week's matchday, if the week has one, a schedule
+    // exists (the league is only made once the draft is visited) and it has
     // not been played yet. Every club enters with its strongest formation's
     // total skill.
     playMatchday({ commit, state, getters, rootState }) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
-      if (matchday === null || state.results[matchday]) return;
+      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
 
       const strengthOf = id => id === null
         ? getters.recommendedFormation.skillSum

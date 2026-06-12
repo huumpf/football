@@ -70,6 +70,17 @@ describe('advanceWeek', () => {
     }
   });
 
+  it('skips the matchday when no schedule exists yet', () => {
+    const store = makeStore();
+    store.state.league.fixtures = [];
+    store.state.club.week = CFG.FIRST_HALF_START_WEEK;
+
+    store.dispatch('advanceWeek');
+
+    expect(store.state.club.week).toBe(CFG.FIRST_HALF_START_WEEK + 1);
+    expect(store.state.league.results.length).toBe(0);
+  });
+
   it('does not replay an already played matchday', () => {
     const store = makeStore();
     store.state.club.week = CFG.FIRST_HALF_START_WEEK;

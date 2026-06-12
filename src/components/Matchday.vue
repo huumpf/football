@@ -44,7 +44,6 @@
 </template>
 
 <script>
-import * as CFG from '../assets/js/Config.js';
 import * as SCHED from '../assets/js/Schedule.js';
 
 export default {
@@ -52,10 +51,16 @@ export default {
 
   data() {
     return {
-      // Start on the current week's matchday; in match-free weeks fall back
-      // to the next upcoming one (or the season's last after the final round).
-      matchday: initialMatchday(this.$store.state.club.week),
+      matchday: defaultMatchday(this.$store.state),
     };
+  },
+
+  watch: {
+    // A week tick re-anchors the pager, so the just-played matchday's results
+    // show up without manual paging.
+    '$store.state.club.week'() {
+      this.matchday = defaultMatchday(this.$store.state);
+    },
   },
 
   computed: {
@@ -83,12 +88,13 @@ export default {
   },
 }
 
-function initialMatchday(week) {
-  const matchday = SCHED.matchdayForWeek(week);
-  if (matchday !== null) return matchday;
-  if (week < CFG.FIRST_HALF_START_WEEK) return 0;
-  if (week < CFG.SECOND_HALF_START_WEEK) return CFG.MATCHDAYS_PER_HALF;
-  return 2 * CFG.MATCHDAYS_PER_HALF - 1;
+// The matchday shown by default: the last played one, so the latest results
+// are visible; before the season's first matchday, the current or first
+// upcoming one.
+function defaultMatchday(state) {
+  const lastPlayed = state.league.results.length - 1;
+  if (lastPlayed >= 0) return lastPlayed;
+  return SCHED.matchdayForWeek(state.club.week) ?? 0;
 }
 </script>
 

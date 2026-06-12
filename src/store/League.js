@@ -104,13 +104,22 @@ export const leagueModule = {
       club.money += price;
       club.formation = HLP.getRecommendedFormation(club.players);
     },
+
+    // The mirror image: a club signs a player off the market, the fee leaves,
+    // and the club re-picks its strongest formation.
+    BUY_PLAYER(state, { clubId, player, price }) {
+      const club = state.clubs.find(c => c.id === clubId);
+      club.players.push(player);
+      club.money -= price;
+      club.formation = HLP.getRecommendedFormation(club.players);
+    },
   },
 
   actions: {
     makeLeague({ commit, dispatch, rootState }) {
       commit('MAKE_LEAGUE', [rootState.club.name]);
       commit('MAKE_SCHEDULE');
-      dispatch('seedListings');
+      dispatch('refreshAiListings');
     },
 
     // Simulates the current week's matchday, if the week has one and it has

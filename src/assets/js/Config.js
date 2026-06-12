@@ -97,6 +97,11 @@ export const AI_LISTINGS_MAX = 3;
 export const AI_PICK_FUTURE_WEIGHT = 0.3;
 export const AI_PICK_HORIZON_YEARS = 4;
 
+// AI buying: each week every AI club may sign at most one listed player, and
+// only one who beats the club's best player on his position by at least this
+// margin (in skill points, on the draft value blend).
+export const AI_BUY_MIN_IMPROVEMENT = 5;
+
 // Formations are defined in src/assets/data/formations.json: per slot a
 // position plus its relative pitch coordinate (x = sideline to sideline,
 // y = own goal to opposing goal). Derive the per-position slot counts the

@@ -1,6 +1,6 @@
 import * as HLP from '@/assets/js/Helpers.js';
 import * as CFG from '@/assets/js/Config.js';
-import { selectListingCandidates } from '@/assets/js/ClubFactory.js';
+import { selectListingCandidates, pickTransferBuy } from '@/assets/js/ClubFactory.js';
 
 export const transferMarketModule = {
   state: {
@@ -51,11 +51,15 @@ export const transferMarketModule = {
   },
 
   actions: {
-    // (Re)builds the AI side of the market; runs whenever the league is made.
-    seedListings({ commit, rootState }) {
-      const listings = [];
+    // (Re)builds the AI side of the market; runs when the league is made and
+    // again on every week tick. Own listings survive a refresh, and an AI
+    // club only offers as many players as it could lose without dropping
+    // below the minimum squad size.
+    refreshAiListings({ commit, state, rootState }) {
+      const listings = state.listings.filter(l => l.sellerClubId === null);
       for (const club of rootState.league.clubs) {
-        for (const player of selectListingCandidates(club)) {
+        const spare = Math.max(0, club.players.length - CFG.MIN_SQUAD_SIZE);
+        for (const player of selectListingCandidates(club).slice(0, spare)) {
           listings.push({
             playerId: player.id,
             sellerClubId: club.id,
@@ -64,6 +68,42 @@ export const transferMarketModule = {
         }
       }
       commit('SET_LISTINGS', listings);
+    },
+
+    // Weekly AI buy round, dispatched from advanceWeek: every AI club may
+    // sign at most one listed player (pickTransferBuy decides which, if any).
+    // v1 conflict resolution: clubs act strictly one after another in reverse
+    // table order (bottom club first), so two clubs never compete for the
+    // same player and no randomness is involved — meant to be replaced by a
+    // proper bidding/negotiation system later.
+    runAiTransfers({ commit, state, rootState, rootGetters }) {
+      const order = [...rootGetters.standings].reverse();
+      for (const entry of order) {
+        if (entry.own) continue;
+        const club = rootState.league.clubs.find(c => c.id === entry.id);
+
+        const offers = state.listings
+          .filter(l => l.sellerClubId !== club.id)
+          .map(l => ({
+            ...l,
+            player: l.sellerClubId === null
+              ? rootState.team.players.find(p => p.id === l.playerId)
+              : rootState.league.clubs
+                  .find(c => c.id === l.sellerClubId)
+                  .players.find(p => p.id === l.playerId),
+          }));
+        const buy = pickTransferBuy(club, offers);
+        if (!buy) continue;
+
+        if (buy.sellerClubId === null) {
+          commit('REMOVE_FROM_TEAM', buy.playerId);
+          commit('RECEIVE', buy.price);
+        } else {
+          commit('SELL_PLAYER', { clubId: buy.sellerClubId, playerId: buy.playerId, price: buy.price });
+        }
+        commit('BUY_PLAYER', { clubId: club.id, player: buy.player, price: buy.price });
+        commit('REMOVE_LISTING', buy.playerId);
+      }
     },
 
     listPlayer({ commit, getters }, player) {

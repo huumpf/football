@@ -50,6 +50,13 @@ function starters442(skill) {
   };
 }
 
+// Bench fillers that are neither useless nor surplus in a 4-4-2 (worse than
+// the starting CBs, so nothing blocks them twice over): they pad an AI squad
+// above MIN_SQUAD_SIZE without showing up as listing candidates.
+function fillers(count) {
+  return Array.from({ length: count }, () => player(40, ['CB']));
+}
+
 // The module state objects are shared module-level singletons, so every test
 // builds a store and resets the state it touches.
 function makeStore() {
@@ -74,13 +81,13 @@ function teamOfSize(store, size) {
   }
 }
 
-describe('seedListings', () => {
+describe('refreshAiListings', () => {
   it('lists AI surplus players at their market value', () => {
     const store = makeStore();
     const misfit = player(70, ['LF'], ['RF']); // no slot in a 4-4-2
-    store.state.league.clubs = [aiClub(0, starters442(60), [misfit])];
+    store.state.league.clubs = [aiClub(0, starters442(60), [misfit, ...fillers(5)])];
 
-    store.dispatch('seedListings');
+    store.dispatch('refreshAiListings');
 
     expect(store.state.transferMarket.listings).toEqual([
       { playerId: misfit.id, sellerClubId: 0, price: marketValue(misfit) },
@@ -129,8 +136,8 @@ describe('listPlayer / unlistPlayer', () => {
 describe('buyPlayer', () => {
   function marketWithMisfit(store) {
     const misfit = player(70, ['LF'], ['RF']);
-    store.state.league.clubs = [aiClub(0, starters442(60), [misfit])];
-    store.dispatch('seedListings');
+    store.state.league.clubs = [aiClub(0, starters442(60), [misfit, ...fillers(5)])];
+    store.dispatch('refreshAiListings');
     return { misfit, listing: store.state.transferMarket.listings[0] };
   }
 

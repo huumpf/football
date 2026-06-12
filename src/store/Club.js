@@ -13,6 +13,9 @@ export const clubModule = {
     PAY(state, amount) {
       state.money -= amount;
     },
+    RECEIVE(state, amount) {
+      state.money += amount;
+    },
     ADVANCE_WEEK(state) {
       state.week += 1;
     },
@@ -27,10 +30,13 @@ export const clubModule = {
       commit('PAY', amount);
     },
     // The game's main tick: the current week's matchday (if any) is played
-    // first, then time moves on. After week 52 a new season starts with a
-    // fresh schedule and a cleared table.
+    // first, then the transfer market gets its weekly round (fresh AI
+    // listings, one buy opportunity per AI club), then time moves on. After
+    // week 52 a new season starts with a fresh schedule and a cleared table.
     advanceWeek({ commit, dispatch, state }) {
       dispatch('playMatchday');
+      dispatch('refreshAiListings');
+      dispatch('runAiTransfers');
       if (state.week >= CFG.SEASON_WEEKS) {
         commit('START_NEW_SEASON');
         commit('MAKE_SCHEDULE');

@@ -3,6 +3,7 @@ import { createStore } from 'vuex';
 import { clubModule } from '../src/store/Club.js';
 import { teamModule } from '../src/store/Team.js';
 import { leagueModule } from '../src/store/League.js';
+import { transferMarketModule } from '../src/store/TransferMarket.js';
 import * as CFG from '../src/assets/js/Config.js';
 
 // A minimal AI club: playMatchday and the standings only need an id, a name
@@ -25,11 +26,13 @@ function makeStore() {
       club: clubModule,
       team: teamModule,
       league: leagueModule,
+      transferMarket: transferMarketModule,
     },
   });
   store.state.club.season = 1;
   store.state.club.week = 1;
   store.state.team.players = [];
+  store.state.transferMarket.listings = [];
   store.state.league.clubs = Array.from(
     { length: CFG.CLUBS_PER_LEAGUE },
     (_, i) => stubClub(i, 500 + i)

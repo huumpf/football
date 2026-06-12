@@ -104,6 +104,32 @@ function pickValue(player) {
     + CFG.AI_PICK_FUTURE_WEIGHT * HLP.projectedSkill(player, CFG.AI_PICK_HORIZON_YEARS);
 }
 
+// How an AI club shops the transfer market, scoring offers like a late draft
+// round (pickPlayer with full need weight): a candidate's value plus his
+// improvement over the club's best player on the candidate's position. Only
+// offers the club can pay count, and the improvement must be noticeable
+// (AI_BUY_MIN_IMPROVEMENT) — no signings for marginal upgrades. Returns the
+// best such offer ({ player, price, ... }) or null. Deliberately simple v1 of
+// AI buying, meant to be replaced by a bidding/negotiation system later.
+export function pickTransferBuy(club, offers) {
+  let best = null;
+  let bestScore = -Infinity;
+  for (const offer of offers) {
+    if (offer.price > club.money) continue;
+    const value = pickValue(offer.player);
+    const position = offer.player.positions.position;
+    const coveredSkill = Math.max(0, ...club.players.map(p => HLP.effectiveSkill(p, position)));
+    const improvement = value - coveredSkill;
+    if (improvement < CFG.AI_BUY_MIN_IMPROVEMENT) continue;
+    const score = value + improvement;
+    if (score > bestScore) {
+      bestScore = score;
+      best = offer;
+    }
+  }
+  return best;
+}
+
 // Picks one of the 3 candidates. Early rounds simply chase the most valuable
 // player; with each round the bonus for filling a weak or empty position grows,
 // so gaps get plugged towards the end of the draft.

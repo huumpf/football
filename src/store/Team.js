@@ -27,6 +27,10 @@ export const teamModule = {
       state.positionCount = getTeamPositionCount(state.players);
       state.players.sort((a, b) => a.positions.sort - b.positions.sort || b.skill - a.skill);
     },
+    REMOVE_FROM_TEAM(state, playerId) {
+      state.players = state.players.filter(p => p.id !== playerId);
+      state.positionCount = getTeamPositionCount(state.players);
+    },
   },
 
   actions: {

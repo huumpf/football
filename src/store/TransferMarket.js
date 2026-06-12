@@ -48,6 +48,11 @@ export const transferMarketModule = {
     REMOVE_LISTING(state, playerId) {
       state.listings = state.listings.filter(l => l.playerId !== playerId);
     },
+    // Drops every listing (own ones included) whose player is no longer in
+    // any squad, e.g. after careers end at the season change.
+    PRUNE_LISTINGS(state, activePlayerIds) {
+      state.listings = state.listings.filter(l => activePlayerIds.has(l.playerId));
+    },
   },
 
   actions: {

@@ -96,6 +96,17 @@ export const leagueModule = {
       state.results[matchday] = results;
     },
 
+    // Season change: every AI club's players age a year, players past the age
+    // limit retire, and the club re-picks its strongest formation. Careers may
+    // shrink a squad below MIN_SQUAD_SIZE — the minimum only blocks sales.
+    AGE_CLUBS(state) {
+      for (const club of state.clubs) {
+        for (const player of club.players) HLP.agePlayer(player);
+        club.players = club.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
+        club.formation = HLP.getRecommendedFormation(club.players);
+      }
+    },
+
     // A club sells a player off the market: the player leaves the squad, the
     // fee arrives, and the club re-picks its strongest formation.
     SELL_PLAYER(state, { clubId, playerId, price }) {

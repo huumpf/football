@@ -1,4 +1,5 @@
 import * as HLP from '@/assets/js/Helpers.js';
+import * as CFG from '@/assets/js/Config.js';
 
 export const teamModule = {
   state: {
@@ -29,6 +30,13 @@ export const teamModule = {
     },
     REMOVE_FROM_TEAM(state, playerId) {
       state.players = state.players.filter(p => p.id !== playerId);
+      state.positionCount = getTeamPositionCount(state.players);
+    },
+    // Season change: every player ages a year; players past the age limit
+    // end their career and leave the squad.
+    AGE_TEAM(state) {
+      for (const player of state.players) HLP.agePlayer(player);
+      state.players = state.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
       state.positionCount = getTeamPositionCount(state.players);
     },
   },

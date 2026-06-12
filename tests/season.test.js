@@ -5,6 +5,7 @@ import { teamModule } from '../src/store/Team.js';
 import { leagueModule } from '../src/store/League.js';
 import { transferMarketModule } from '../src/store/TransferMarket.js';
 import * as CFG from '../src/assets/js/Config.js';
+import * as HLP from '../src/assets/js/Helpers.js';
 
 // A minimal AI club: playMatchday and the standings only need an id, a name
 // and the formation's total skill.
@@ -15,6 +16,25 @@ function stubClub(id, skill) {
     players: [],
     money: 0,
     formation: { skillSum: skill, positions: {}, players: {} },
+  };
+}
+
+// A minimal player for the aging tests: skill derived from the development
+// curve like PlayerFactory does, with a stat profile summing to the skill.
+function stubPlayer(id, age, { potential = 60, optimalAge = 28 } = {}) {
+  const skill = Math.floor(potential * Math.pow(CFG.AGE_FACTOR, Math.abs(age - optimalAge)));
+  return {
+    id,
+    firstName: 'Test',
+    lastName: `Player ${id}`,
+    age,
+    potential,
+    optimalAge,
+    greed: 1,
+    skill,
+    positions: { position: 'CB', sort: 1, primary: ['CB'], secondary: [] },
+    skills: { goalkeeping: 0, defense: skill - 20, progression: 20, shot: 0 },
+    salary: 0,
   };
 }
 
@@ -106,6 +126,58 @@ describe('advanceWeek', () => {
     expect(store.state.club.week).toBe(1);
     expect(store.state.league.results.length).toBe(0);
     expect(store.state.league.fixtures.length).toBe(2 * CFG.MATCHDAYS_PER_HALF);
+  });
+});
+
+describe('season change', () => {
+  it('ages every player by one year along the development curve', () => {
+    const store = makeStore();
+    const own = stubPlayer(100, 25);
+    const ai = stubPlayer(101, 30);
+    store.state.team.players = [own];
+    store.state.league.clubs[0].players = [ai];
+    store.state.club.week = CFG.SEASON_WEEKS;
+
+    const expectedOwnSkill = HLP.projectedSkill(own, 1);
+    const expectedAiSkill = HLP.projectedSkill(ai, 1);
+    const expectedDefense = Math.round(own.skills.defense * expectedOwnSkill / own.skill);
+    const expectedProgression = Math.round(own.skills.progression * expectedOwnSkill / own.skill);
+
+    store.dispatch('advanceWeek');
+
+    expect(own.age).toBe(26);
+    expect(own.skill).toBe(expectedOwnSkill);
+    expect(own.skills.defense).toBe(expectedDefense);
+    expect(own.skills.progression).toBe(expectedProgression);
+    expect(ai.age).toBe(31);
+    expect(ai.skill).toBe(expectedAiSkill);
+  });
+
+  it('retires players turning 35 from squad, formation and listings', () => {
+    const store = makeStore();
+    const retiringOwn = stubPlayer(100, CFG.PLAYER_AGE_MAX);
+    const stayingOwn = stubPlayer(101, 28);
+    store.state.team.players = [retiringOwn, stayingOwn];
+    const club = store.state.league.clubs[0];
+    const retiringAi = stubPlayer(102, CFG.PLAYER_AGE_MAX);
+    const stayingAi = stubPlayer(103, 22);
+    club.players = [retiringAi, stayingAi];
+    store.state.transferMarket.listings = [
+      { playerId: retiringOwn.id, sellerClubId: null, price: HLP.marketValue(retiringOwn) },
+    ];
+    store.state.club.week = CFG.SEASON_WEEKS;
+
+    store.dispatch('advanceWeek');
+
+    expect(store.state.team.players.map(p => p.id)).toEqual([stayingOwn.id]);
+    expect(club.players.map(p => p.id)).toEqual([stayingAi.id]);
+    expect(store.state.transferMarket.listings
+      .some(l => l.playerId === retiringOwn.id)).toBe(false);
+
+    // The AI club re-picked its formation from the remaining squad.
+    const lineupIds = Object.values(club.formation.players).flat().map(p => p.id);
+    expect(lineupIds).toEqual([stayingAi.id]);
+    expect(store.getters.recommendedFormation.skillSum).toBe(stayingOwn.skill);
   });
 });
 

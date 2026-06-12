@@ -31,6 +31,18 @@ export function projectedSkill(player, years) {
   return Math.floor(player.potential * Math.pow(CFG.AGE_FACTOR, distance));
 }
 
+// Ages a player by one year (season change): the skill follows the development
+// curve (projectedSkill one year out) and the stat profile scales with it.
+export function agePlayer(player) {
+  const newSkill = projectedSkill(player, 1);
+  const factor = player.skill > 0 ? newSkill / player.skill : 0;
+  for (const key of Object.keys(player.skills)) {
+    player.skills[key] = Math.round(player.skills[key] * factor);
+  }
+  player.age += 1;
+  player.skill = newSkill;
+}
+
 // A player's transfer market value: blends current skill with the projected
 // skill a few years ahead (young talents outprice declining veterans of equal
 // skill), raised to an exponent so stars cost disproportionately more.

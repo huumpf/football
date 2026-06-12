@@ -32,17 +32,32 @@ export const clubModule = {
     // The game's main tick: the current week's matchday (if any) is played
     // first, then the transfer market gets its weekly round (fresh AI
     // listings, one buy opportunity per AI club), then time moves on. After
-    // week 52 a new season starts with a fresh schedule and a cleared table.
+    // week 52 a new season starts.
     advanceWeek({ commit, dispatch, state }) {
       dispatch('playMatchday');
       dispatch('refreshAiListings');
       dispatch('runAiTransfers');
       if (state.week >= CFG.SEASON_WEEKS) {
-        commit('START_NEW_SEASON');
-        commit('MAKE_SCHEDULE');
+        dispatch('startNewSeason');
       } else {
         commit('ADVANCE_WEEK');
       }
+    },
+
+    // Closes the season: every player ages a year (the AI clubs re-pick their
+    // formation, the own club's recommendedFormation getter follows the squad
+    // anyway), the market drops listings of retired players, and the next
+    // season starts with a fresh schedule and a cleared table.
+    startNewSeason({ commit, rootState }) {
+      commit('AGE_TEAM');
+      commit('AGE_CLUBS');
+      const activeIds = new Set([
+        ...rootState.team.players.map(p => p.id),
+        ...rootState.league.clubs.flatMap(c => c.players.map(p => p.id)),
+      ]);
+      commit('PRUNE_LISTINGS', activeIds);
+      commit('START_NEW_SEASON');
+      commit('MAKE_SCHEDULE');
     },
   },
 }

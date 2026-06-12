@@ -97,10 +97,9 @@ export default {
   color: $col_cta;
 }
 
-// The player's own club glows like the active nav tab.
+// The player's own club is marked by the highlight colour, like the active nav tab.
 .own .name {
   color: $col_highlight;
-  text-shadow: 0 0 8px $col_cta;
 }
 
 .rank {

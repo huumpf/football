@@ -43,7 +43,7 @@ describe('makeClubName', () => {
   it('starts with a known city', () => {
     for (let i = 0; i < 50; i++) {
       const name = makeClubName();
-      expect(cityNames.some(city => name === city || name.startsWith(city + ' '))).toBe(true);
+      expect(cityNames.some(city => name === city || name.endsWith(' ' + city))).toBe(true);
     }
   });
 });
@@ -57,9 +57,9 @@ describe('makeClubNames', () => {
 
   it('excludes cities already used by a reserved name', () => {
     const reservedCity = cityNames[0];
-    const names = makeClubNames(CFG.CLUBS_PER_LEAGUE, [reservedCity + ' United']);
+    const names = makeClubNames(CFG.CLUBS_PER_LEAGUE, ['FC ' + reservedCity]);
     for (const name of names) {
-      expect(name.startsWith(reservedCity)).toBe(false);
+      expect(name.endsWith(reservedCity)).toBe(false);
     }
   });
 });

@@ -23,7 +23,7 @@ export default {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 28px;
+  height: 32px;
   padding: 0 12px;
   gap: 12px;
   font-size: 12px;

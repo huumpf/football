@@ -190,7 +190,8 @@ export default {
 .next-week-btn {
   align-self: stretch;
   height: 100%;
-  padding: 0 32px;
+  // Extra left padding visually compensates for the diagonal clip cut.
+  padding: 0 32px 0 40px;
   border: none;
   background-color: $col_cta;
   color: $col_text;

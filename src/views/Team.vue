@@ -132,7 +132,7 @@ export default {
 // list takes a fluid fixed-ish track and stacks below on narrow screens.
 .team-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 26%, 380px);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
   height: 100%;

@@ -52,14 +52,17 @@ export default {
 
 <style lang="scss" scoped>
 
-// Full-width top bar in the card surface colour. The left content keeps a
-// 24px gutter to the page edge; the Next Week CTA bleeds flush to the right.
+// Floating top bar in the card surface colour, inset from the page edges
+// like the cards below. The left content keeps a 24px gutter; the Next Week
+// CTA bleeds flush to the bar's rounded right edge.
 .nav {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
   height: 73px;
   flex-shrink: 0;
+  margin: 12px 12px 0;
+  border-radius: 12px;
   overflow: hidden;
   background-color: $col_module_background;
 }

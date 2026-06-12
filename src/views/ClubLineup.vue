@@ -12,7 +12,7 @@
     </div>
 
     <div class="card team-card">
-      <PlayerList :players="club.players"/>
+      <PlayerList title="Squad" :players="club.players"/>
     </div>
   </div>
 </template>
@@ -27,7 +27,7 @@ export default {
   created() {
     // Direct URL hits without a generated league (e.g. after a reload) have
     // nothing to show — back to the table.
-    if (!this.club) this.$router.replace({ name: 'Standings' });
+    if (!this.club) this.$router.replace({ name: 'League' });
   },
 
   computed: {

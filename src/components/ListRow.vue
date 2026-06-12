@@ -31,8 +31,9 @@ export default {
 }
 
 .header {
+  height: 41px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: $col_text_secondary;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 // Zebra striping: rows sit flush and alternate against the card surface.

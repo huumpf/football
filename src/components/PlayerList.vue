@@ -1,5 +1,6 @@
 <template>
   <div class="player-list">
+    <div v-if="title" class="list-headline">{{ title }}</div>
     <ListRow header>
       <div
         :class="['pos-col', 'sortable', { active: sortKey === 'position' }]"
@@ -87,6 +88,8 @@ export default {
 
   props: {
     players: { type: Array, required: true },
+    // Headline shown above the column labels (e.g. "Squad").
+    title: { type: String, default: '' },
     // Overview shows salary; the draft sidebar hides it.
     showSalary: { type: Boolean, default: false },
     // Market value column (players overview and transfer market).
@@ -174,6 +177,8 @@ export default {
   display: flex;
   flex-direction: column;
   font-weight: 500;
+  // Breathing room so the last row doesn't sit flush against the card edge.
+  padding-bottom: 12px;
 }
 
 // Wide enough for the three-position worst case (CDM CM CAM).

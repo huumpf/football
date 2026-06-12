@@ -1,19 +1,27 @@
 <template>
   <nav class="nav">
-    <div class="brand">
-      <img class="crest" src="../assets/img/crest.svg" alt=""/>
-      <span class="club-name">{{ clubName }}</span>
-      <button class="restart-btn" title="Restart" aria-label="Restart" @click="restartGame">↻</button>
+    <div class="nav-left">
+      <div class="brand">
+        <img class="crest" src="../assets/img/crest.svg" alt=""/>
+        <div class="club-info">
+          <span class="club-name">{{ clubName }}</span>
+          <span class="balance">{{ balance }}</span>
+        </div>
+        <button class="restart-btn" title="Restart" aria-label="Restart" @click="restartGame">↻</button>
+      </div>
+
+      <div class="nav-links">
+        <router-link class="nav-link" :to="{ name: 'Team' }">Team</router-link>
+        <router-link class="nav-link" :to="{ name: 'Players' }">Players</router-link>
+        <router-link class="nav-link" :to="{ name: 'Transfers' }">Transfers</router-link>
+        <router-link class="nav-link" :to="{ name: 'League' }">League</router-link>
+      </div>
     </div>
 
-    <div class="nav-links">
-      <router-link class="nav-link" :to="{ name: 'Team' }">Formation</router-link>
-      <router-link class="nav-link" :to="{ name: 'Players' }">Players</router-link>
-      <router-link class="nav-link" :to="{ name: 'Transfers' }">Transfers</router-link>
-      <router-link class="nav-link" :to="{ name: 'Standings' }">Standings</router-link>
+    <div class="nav-right">
+      <span class="week">Week {{ week }}</span>
+      <button class="next-week-btn" @click="advanceWeek">Next Week</button>
     </div>
-
-    <div class="balance">{{ balance }}</div>
   </nav>
 </template>
 
@@ -26,6 +34,7 @@ export default {
   computed: {
     clubName() { return this.$store.state.club.name },
     balance() { return moneyStr(this.$store.state.club.money) + ' €' },
+    week() { return this.$store.state.club.week },
   },
 
   methods: {
@@ -33,22 +42,35 @@ export default {
     restartGame() {
       window.location.assign('/');
     },
+
+    advanceWeek() {
+      this.$store.dispatch('advanceWeek');
+    },
   }
 }
 </script>
 
 <style lang="scss" scoped>
 
-// Full-width top bar in the card surface colour; the 12px content padding
-// below it produces the gutter to the first content card (per the design).
+// Full-width top bar in the card surface colour. The left content keeps a
+// 24px gutter to the page edge; the Next Week CTA bleeds flush to the right.
 .nav {
   display: flex;
-  align-items: center;
-  gap: 48px;
+  align-items: stretch;
+  justify-content: space-between;
   height: 73px;
   flex-shrink: 0;
-  padding: 8px 24px;
+  overflow: hidden;
   background-color: $col_module_background;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 24px;
 }
 
 .brand {
@@ -60,14 +82,31 @@ export default {
 
 .crest {
   display: block;
-  width: 18px;
-  height: 20px;
+  width: auto;
+  height: 36px;
   flex-shrink: 0;
+}
+
+// Club name with the current balance stacked beneath it.
+.club-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
 }
 
 .club-name {
   font-family: $font_heading;
   font-size: 20px;
+  font-weight: 500;
+  line-height: 24px;
+  color: $col_text;
+  white-space: nowrap;
+}
+
+.balance {
+  font-family: $font_body;
+  font-size: 12px;
   font-weight: 500;
   color: $col_text;
   white-space: nowrap;
@@ -102,14 +141,13 @@ export default {
   flex-shrink: 0;
 }
 
-// Tabs use the condensed display face; the active tab is marked by the
-// highlight colour.
+// Tabs use the body face; inactive tabs are dimmed, the active tab is full white.
 .nav-link {
-  font-family: $font_heading;
-  font-size: 16px;
+  font-family: $font_body;
+  font-size: 14px;
   font-weight: 500;
   color: $col_text;
-  opacity: 0.55;
+  opacity: 0.5;
   text-decoration: none;
   transition: opacity 0.15s ease;
 }
@@ -120,18 +158,44 @@ export default {
 
 .nav-link.router-link-active {
   opacity: 1;
-  color: $col_highlight;
 }
 
-.balance {
-  flex: 1 0 0;
-  min-width: 0;
-  text-align: right;
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  padding-left: 24px;
+}
+
+.week {
   font-family: $font_body;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: $col_text;
+  opacity: 0.5;
   white-space: nowrap;
+}
+
+// CTA bleeds to the full navbar height with a 30px diagonal cut on the top-left.
+.next-week-btn {
+  align-self: stretch;
+  height: 100%;
+  padding: 0 32px;
+  border: none;
+  background-color: $col_cta;
+  color: $col_text;
+  font-family: $font_body;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  clip-path: polygon(30px 0, 100% 0, 100% 100%, 0 100%);
+  transition: filter 0.15s ease;
+}
+
+.next-week-btn:hover {
+  filter: brightness(1.08);
 }
 
 </style>

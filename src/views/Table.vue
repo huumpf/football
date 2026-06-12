@@ -1,6 +1,7 @@
 <template>
   <div class="table-wrapper">
     <div class="card list-card">
+      <div class="list-headline">Standings</div>
       <ListRow header>
         <div class="rank">#</div>
         <div class="name">Club</div>
@@ -86,6 +87,8 @@ export default {
   margin: 0 auto;
   overflow: hidden;
   font-weight: 500;
+  // Breathing room so the last row doesn't sit flush against the card edge.
+  padding-bottom: 12px;
 }
 
 .item {

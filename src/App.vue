@@ -70,4 +70,14 @@ h1, h2, h3, .headline {
   background-color: $col_module_background;
   border-radius: 12px;
 }
+
+// Title at the top of every list, above the column-label titleRow.
+.list-headline {
+  padding: 12px 20px;
+  font-family: $font_heading;
+  font-size: 20px;
+  font-weight: 500;
+  text-align: left;
+  color: $col_text;
+}
 </style>

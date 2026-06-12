@@ -25,13 +25,13 @@ const routes = [
     component: () => import('../views/TransferMarket.vue')
   },
   {
-    path: '/standings',
-    name: 'Standings',
+    path: '/league',
+    name: 'League',
     meta: { showNav: true },
     component: () => import('../views/Table.vue')
   },
   {
-    path: '/standings/:id',
+    path: '/league/:id',
     name: 'ClubLineup',
     meta: { showNav: true },
     component: () => import('../views/ClubLineup.vue')

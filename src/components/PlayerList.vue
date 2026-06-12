@@ -43,10 +43,11 @@
     >
       <div class="pos-col">
         <span
-          v-for="pos in player.positions"
-          :key="pos"
+          v-for="pos in positionList(player)"
+          :key="pos.label"
           class="pos"
-        >{{ pos }}</span>
+          :class="{ secondary: pos.secondary }"
+        >{{ pos.label }}</span>
       </div>
       <div class="name">
         <span class="name-text">{{ player.firstName }} {{ player.lastName }}</span>
@@ -118,9 +119,18 @@ export default {
   },
 
   methods: {
+    // All positions a player can fill as individual entries (primary first,
+    // then secondary) so every position renders with the same spacing.
+    positionList(player) {
+      const p = player.positions;
+      const primary = (p.primary || [p.position]).map(label => ({ label, secondary: false }));
+      const secondary = (p.secondary || []).map(label => ({ label, secondary: true }));
+      return [...primary, ...secondary];
+    },
+
     sortValue(a, b) {
       switch (this.sortKey) {
-        case 'position': return a.positionSort - b.positionSort;
+        case 'position': return a.positions.sort - b.positions.sort;
         case 'name': return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
         case 'skill': return a.skill - b.skill;
         case 'age': return a.age - b.age;
@@ -169,7 +179,7 @@ export default {
   font-weight: 500;
 }
 
-// Wide enough for the two-position worst case (CDM CAM).
+// Wide enough for the three-position worst case (CDM CM CAM).
 .pos-col {
   display: flex;
   gap: 0.3em;
@@ -231,8 +241,13 @@ export default {
   flex-shrink: 0;
 }
 
+// Position values: primary readable, secondary fainter.
 .item .pos-col .pos {
   opacity: 0.5;
+}
+
+.item .pos-col .pos.secondary {
+  opacity: 0.3;
 }
 
 .sortable {

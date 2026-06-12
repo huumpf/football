@@ -26,12 +26,18 @@ describe('makePlayer', () => {
     }
   });
 
-  it('caps the positions at two and draws the second from the alternatives', () => {
+  it('keeps the original position as the first primary', () => {
     for (const p of SAMPLE) {
-      expect(p.positions.length).toBeGreaterThanOrEqual(1);
-      expect(p.positions.length).toBeLessThanOrEqual(2);
-      const allowed = CFG.POSITION_ALTERNATIVES[p.positions[0]];
-      for (const extra of p.positions.slice(1)) {
+      expect(p.positions.primary[0]).toBe(p.positions.position);
+    }
+  });
+
+  it('caps the total number of positions and draws extras from the alternatives', () => {
+    for (const p of SAMPLE) {
+      const { position, primary, secondary } = p.positions;
+      expect(primary.length + secondary.length).toBeLessThanOrEqual(CFG.MAX_TOTAL_POSITIONS);
+      const allowed = CFG.POSITION_ALTERNATIVES[position];
+      for (const extra of [...primary.slice(1), ...secondary]) {
         expect(allowed).toContain(extra);
       }
     }
@@ -40,7 +46,10 @@ describe('makePlayer', () => {
   it('keeps the salary within the greed and position-surcharge bounds', () => {
     for (const p of SAMPLE) {
       const base = CFG.SALARY_BASE * Math.pow(p.skill / CFG.DRAFT_AVG_POTENTIAL, CFG.SALARY_EXPONENT);
-      const surcharge = p.positions.length > 1 ? 1 + CFG.SECOND_POSITION_SALARY_MAX : 1;
+      const { primary, secondary } = p.positions;
+      const surcharge = 1
+        + (primary.length - 1) * CFG.EXTRA_PRIMARY_SALARY_MAX
+        + secondary.length * CFG.SECONDARY_SALARY_MAX;
       expect(p.salary).toBeGreaterThan(0);
       expect(p.salary).toBeGreaterThanOrEqual(base * (1 - CFG.PLAYER_GREED_SPREAD) - CFG.SALARY_ROUND_STEP);
       expect(p.salary).toBeLessThanOrEqual(base * (1 + CFG.PLAYER_GREED_SPREAD) * surcharge + CFG.SALARY_ROUND_STEP);

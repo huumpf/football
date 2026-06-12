@@ -32,14 +32,17 @@ export function makePlayer() {
   // Greed: a flat per-player pay modifier, independent of skill.
   const greed = 1 + (Math.random() * 2 - 1) * CFG.PLAYER_GREED_SPREAD;
 
-  // Position & skills: the position is drawn from weighted chances
+  // Position & skills: the primary position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
   // stat profile fitting that position.
   const position = drawPosition();
-  const positions = rollPositions(position);
+  const positions = getPositions(position);
+
+  // Additional positions (primary/secondary) the player can play.
+  assignExtraPositions(positions);
 
   // Salary: superlinear in skill (stars demand disproportionate pay), scaled
-  // by greed and the second-position surcharge.
+  // by greed and the extra-position surcharges.
   const baseSalary = CFG.SALARY_BASE * Math.pow(skill / CFG.DRAFT_AVG_POTENTIAL, CFG.SALARY_EXPONENT);
   const salary = Math.round(baseSalary * greed * positionSalaryFactor(positions) / CFG.SALARY_ROUND_STEP) * CFG.SALARY_ROUND_STEP;
 
@@ -53,13 +56,12 @@ export function makePlayer() {
     greed,
     skill,
     positions,
-    positionSort: POSITION_SORT[position],
     skills: getSkills(position, skill),
     salary,
   };
 }
 
-// Draws the position: each position's chance is proportional to
+// Draws the primary position: each position's chance is proportional to
 // POSITION_BASE_WEIGHT plus how often it appears across all formation slots.
 function drawPosition() {
   const entries = Object.entries(CFG.POSITION_FREQUENCIES);
@@ -71,23 +73,43 @@ function drawPosition() {
   return entries[entries.length - 1][0];
 }
 
-// The positions a player can play: the original position, plus a single roll
-// for a second one drawn from the original's alternatives.
-function rollPositions(original) {
-  const pool = CFG.POSITION_ALTERNATIVES[original] || [];
-  const positions = [original];
-  if (pool.length > 0 && Math.random() < CFG.SECOND_POSITION_CHANCE) {
-    positions.push(randomItem(pool));
+// Rolls for extra positions and records them on `positions` as `primary` and
+// `secondary` arrays. The original position is kept as the first primary.
+function assignExtraPositions(positions) {
+  const original = positions.position;
+  const pool = [...(CFG.POSITION_ALTERNATIVES[original] || [])];
+  const primary = [original];
+  const secondary = [];
+
+  const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+
+  // Two 25% rolls for secondary positions.
+  for (let i = 0; i < CFG.SECONDARY_POSITION_ROLLS; i++) {
+    if (pool.length === 0) break;
+    if (Math.random() < CFG.SECONDARY_POSITION_CHANCE) secondary.push(take());
   }
-  return positions;
+
+  // If not already at the max, a single 15% roll for a second primary position.
+  if (primary.length + secondary.length < CFG.MAX_TOTAL_POSITIONS && pool.length > 0) {
+    if (Math.random() < CFG.EXTRA_PRIMARY_CHANCE) primary.push(take());
+  }
+
+  positions.primary = primary;
+  positions.secondary = secondary;
 }
 
-// Salary multiplier from positions: a second position adds 15-25 %.
+// Salary multiplier from extra positions: each additional primary adds 15-25 %,
+// each secondary adds 10-20 %.
 function positionSalaryFactor(positions) {
-  if (positions.length < 2) return 1;
-  return 1 + Math.random()
-    * (CFG.SECOND_POSITION_SALARY_MAX - CFG.SECOND_POSITION_SALARY_MIN)
-    + CFG.SECOND_POSITION_SALARY_MIN;
+  let factor = 1;
+  const rnd = (min, max) => Math.random() * (max - min) + min;
+  for (let i = 1; i < positions.primary.length; i++) {
+    factor += rnd(CFG.EXTRA_PRIMARY_SALARY_MIN, CFG.EXTRA_PRIMARY_SALARY_MAX);
+  }
+  for (let i = 0; i < positions.secondary.length; i++) {
+    factor += rnd(CFG.SECONDARY_SALARY_MIN, CFG.SECONDARY_SALARY_MAX);
+  }
+  return factor;
 }
 
 // List sort order per position (GK first, forwards last).
@@ -138,4 +160,11 @@ function getSkills(position, skill) {
   }
 
   return skills;
+}
+
+function getPositions(position) {
+  return {
+    position,
+    sort: POSITION_SORT[position],
+  };
 }

@@ -104,7 +104,7 @@ export default {
   flex-shrink: 0;
 }
 
-// A secondary option (e.g. the squad-at-minimum-size hint) is dimmed.
+// A secondary option (e.g. a player on a secondary position) is dimmed.
 .option.secondary {
   opacity: 0.6;
 }

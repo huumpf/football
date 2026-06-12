@@ -40,8 +40,10 @@ export function selectListingCandidates(club) {
   const useless = [];
   const surplus = [];
   for (const player of bench) {
-    const playable = player.positions
-      .filter(pos => club.formation.positions[pos.toLowerCase()]);
+    const playable = [
+      ...(player.positions.primary || [player.positions.position]),
+      ...(player.positions.secondary || []),
+    ].filter(pos => club.formation.positions[pos.toLowerCase()]);
 
     if (playable.length === 0) {
       useless.push(player);
@@ -115,7 +117,7 @@ export function pickTransferBuy(club, offers) {
   for (const offer of offers) {
     if (offer.price > club.money) continue;
     const value = pickValue(offer.player);
-    const position = offer.player.positions[0];
+    const position = offer.player.positions.position;
     const coveredSkill = Math.max(0, ...club.players.map(p => HLP.effectiveSkill(p, position)));
     const improvement = value - coveredSkill;
     if (improvement < CFG.AI_BUY_MIN_IMPROVEMENT) continue;
@@ -138,7 +140,7 @@ function pickPlayer(candidates, squad, round) {
   let bestScore = -Infinity;
   for (const candidate of candidates) {
     const value = pickValue(candidate);
-    const position = candidate.positions[0];
+    const position = candidate.positions.position;
     const coveredSkill = Math.max(0, ...squad.map(p => HLP.effectiveSkill(p, position)));
     const need = Math.max(0, value - coveredSkill);
     const score = value + needWeight * need;

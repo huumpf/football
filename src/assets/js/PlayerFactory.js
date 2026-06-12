@@ -83,9 +83,10 @@ function assignExtraPositions(positions) {
 
   const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
 
-  // Two 25% rolls for secondary positions.
+  // Two 25% rolls for secondary positions, stopping at the position max.
   for (let i = 0; i < CFG.SECONDARY_POSITION_ROLLS; i++) {
     if (pool.length === 0) break;
+    if (primary.length + secondary.length >= CFG.MAX_TOTAL_POSITIONS) break;
     if (Math.random() < CFG.SECONDARY_POSITION_CHANCE) secondary.push(take());
   }
 

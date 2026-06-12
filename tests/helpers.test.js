@@ -113,7 +113,7 @@ describe('assignLineup', () => {
 
   it('prefers a strong secondary over a weak primary', () => {
     const weakPrimary = player(40, ['CAM']);
-    const strongSecondary = player(90, ['ST'], ['CAM']); // 68 effective on CAM
+    const strongSecondary = player(90, ['ST'], ['CAM']); // 77 effective on CAM
     const lineup = assignLineup([weakPrimary, strongSecondary], { cam: 1 });
     expect(lineup.cam[0]).toBe(strongSecondary);
   });

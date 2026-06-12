@@ -31,12 +31,12 @@ export const POSITION_FREQUENCIES = {
 };
 
 // Multiple positions per player
-export const MAX_TOTAL_POSITIONS = 3;
+export const MAX_TOTAL_POSITIONS = 2;
 export const SECONDARY_POSITION_ROLLS = 2;
 export const SECONDARY_POSITION_CHANCE = 0.25;
 export const EXTRA_PRIMARY_CHANCE = 0.15;
 // Skill penalty applied when a player is played on a secondary position.
-export const SECONDARY_POSITION_PENALTY = 0.25;
+export const SECONDARY_POSITION_PENALTY = 0.15;
 // Salary surcharges per extra position (random within each range).
 export const EXTRA_PRIMARY_SALARY_MIN = 0.15;
 export const EXTRA_PRIMARY_SALARY_MAX = 0.25;

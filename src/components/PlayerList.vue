@@ -177,8 +177,6 @@ export default {
   display: flex;
   flex-direction: column;
   font-weight: 500;
-  // Breathing room so the last row doesn't sit flush against the card edge.
-  padding-bottom: 12px;
 }
 
 // Wide enough for the three-position worst case (CDM CM CAM).

@@ -1,0 +1,6 @@
+// Paddings from the Figma list spec: cards hug their content with a tighter
+// top edge; headline and rows share the same inner indent.
+$card_padding: 8px 12px 12px;
+$list_headline_padding: 4px 8px;
+$list_row_padding: 6px 8px;
+$list_row_gap: 12px;

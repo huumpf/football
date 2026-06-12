@@ -15,6 +15,7 @@ export default defineConfig({
         additionalData: `@use "@/assets/scss/var-color-base.scss" as *;
 @use "@/assets/scss/var-color-mapping.scss" as *;
 @use "@/assets/scss/var-breakpoints.scss" as *;
+@use "@/assets/scss/var-spacing.scss" as *;
 @use "@/assets/scss/var-fonts.scss" as *;
 @use "@/assets/scss/var-z.scss" as *;`
       }

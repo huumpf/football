@@ -65,11 +65,12 @@ export default {
 
 <style lang="scss" scoped>
 
-// Standings card on the left, matchday module centered in the remaining
-// space; row height and spacing come from the shared ListRow component.
+// Standings card and matchday module centered as a pair on the page; row
+// height and spacing come from the shared ListRow component.
 .table-wrapper {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: 12px;
   padding: 12px;
   min-height: 100%;
@@ -81,13 +82,11 @@ export default {
   min-width: 0;
   overflow: hidden;
   font-weight: 500;
-  // Breathing room so the last row doesn't sit flush against the card edge.
-  padding-bottom: 12px;
 }
 
 // Centers the matchday module against the standings card's height.
 .matchday-col {
-  flex: 1 1 0;
+  flex: 0 1 604px;
   min-width: 0;
   align-self: stretch;
   display: flex;

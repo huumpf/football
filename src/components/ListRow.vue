@@ -23,9 +23,9 @@ export default {
   display: flex;
   align-items: center;
   width: 100%;
-  height: 32px;
-  padding: 0 12px;
-  gap: 12px;
+  padding: $list_row_padding;
+  gap: $list_row_gap;
+  border-radius: 4px;
   font-size: 12px;
   text-align: left;
 }

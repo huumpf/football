@@ -65,15 +65,17 @@ h1, h2, h3, .headline {
   overflow: auto;
 }
 
-// Shared surface for the card-based, responsive grid layout.
+// Shared surface for the card-based, responsive grid layout. Every card
+// (except the navbar, which doesn't use this class) shares the same padding.
 .card {
   background-color: $col_module_background;
   border-radius: 12px;
+  padding: $card_padding;
 }
 
 // Title at the top of every list, above the column-label titleRow.
 .list-headline {
-  padding: 12px 20px;
+  padding: $list_headline_padding;
   font-family: $font_heading;
   font-size: 20px;
   font-weight: 500;

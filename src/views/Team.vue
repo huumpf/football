@@ -1,12 +1,13 @@
 <template>
   <div class="team-grid">
     <div class="card field-card">
-      <div class="formation-control">
+      <div class="formation-header">
+        <h2 class="formation-title">Formation</h2>
         <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
-          <span v-if="selectedFormation" class="selectFormation">
-            <span class="formation-name">{{ selectedFormation.name }}</span>
-            <span class="formation-skill"> · Total skill: {{ selectedFormation.skillSum }}</span>
-          </span>
+          <span v-if="selectedFormation" class="formation-name">{{ selectedFormation.name }}</span>
+          <svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6.5l5 5 5-5"/>
+          </svg>
           <DropdownMenu
             v-if="formationsOpen"
             :options="formationOptions"
@@ -140,8 +141,6 @@ export default {
 .field-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 12px;
   min-width: 0;
   // Visible so a slot's player-picker dropdown isn't clipped by the card
   // (the pitch itself clips to its own rounded corners).
@@ -166,58 +165,45 @@ export default {
   }
 }
 
-// Minimal formation selector centered at the top of the field card.
-.formation-control {
+// Headline row per the design: card title and formation select on one line.
+.formation-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 10px;
+  width: 100%;
+  padding: $list_headline_padding;
+}
+
+.formation-title {
+  font-size: 20px;
+  font-weight: 500;
 }
 
 .select-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+  padding-left: 8px;
   cursor: pointer;
   // Above the lineup boxes so the open panel overlays the field.
   z-index: $z_overlay;
 }
 
-// Center the formation panel under the headline instead of growing from
-// its left edge.
 .select-wrapper :deep(.dropdown) {
-  left: 50%;
-  transform: translateX(-50%);
   width: max-content;
 }
 
-.select-wrapper::after {
-  content: "";
-  position: absolute;
-  right: 6px;
-  width: 7px;
-  height: 7px;
-  margin-top: -3px;
-  border-right: 2px solid $col_text;
-  border-bottom: 2px solid $col_text;
-  transform: rotate(45deg);
-  pointer-events: none;
-}
-
-.selectFormation {
-  color: $col_text;
+.formation-name {
   font-size: 16px;
-  text-align: center;
-  padding: 4px 22px 4px 8px;
+  font-weight: 500;
   white-space: nowrap;
 }
 
-.formation-name {
-  font-weight: 600;
-}
-
-.formation-skill {
-  font-weight: 300;
+.caret {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 </style>

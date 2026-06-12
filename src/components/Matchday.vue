@@ -122,6 +122,8 @@ function initialMatchday(week) {
   min-width: 130px;
 }
 
+// Dimmed by default, full strength on hover; disabled arrows disappear but
+// keep their space so the title doesn't shift.
 .arrow {
   display: flex;
   align-items: center;
@@ -133,8 +135,9 @@ function initialMatchday(week) {
   border-radius: 999px;
   background: none;
   color: $col_text;
+  opacity: 0.5;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
 .arrow svg {
@@ -143,12 +146,12 @@ function initialMatchday(week) {
 }
 
 .arrow:hover:not(:disabled) {
+  opacity: 1;
   background-color: $col_190_t10;
 }
 
 .arrow:disabled {
-  opacity: 0.3;
-  cursor: default;
+  visibility: hidden;
 }
 
 .pairings {

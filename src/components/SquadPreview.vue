@@ -117,16 +117,17 @@ export default {
 
 <style lang="scss" scoped>
 
+// Edge spacing comes from the shared card padding.
 .formation-control {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  margin: 20px 20px 0;
+  margin-top: 8px;
 }
 
 .lineup-preview {
-  margin: 16px 20px 20px;
+  margin-top: 16px;
 }
 
 .select-wrapper {

@@ -8,7 +8,7 @@ import { marketValue } from '../src/assets/js/Helpers.js';
 import * as CFG from '../src/assets/js/Config.js';
 
 let nextId = 1;
-function player(skill, primary, secondary = []) {
+function player(skill, positions) {
   return {
     id: nextId++,
     firstName: 'Test',
@@ -17,7 +17,8 @@ function player(skill, primary, secondary = []) {
     potential: skill,
     age: 24,
     optimalAge: 28,
-    positions: { position: primary[0], primary, secondary, sort: 0 },
+    positions,
+    positionSort: 0,
     salary: 10000,
   };
 }
@@ -84,7 +85,7 @@ function teamOfSize(store, size) {
 describe('refreshAiListings', () => {
   it('lists AI surplus players at their market value', () => {
     const store = makeStore();
-    const misfit = player(70, ['LF'], ['RF']); // no slot in a 4-4-2
+    const misfit = player(70, ['LF', 'RF']); // no slot in a 4-4-2
     store.state.league.clubs = [aiClub(0, starters442(60), [misfit, ...fillers(5)])];
 
     store.dispatch('refreshAiListings');
@@ -135,7 +136,7 @@ describe('listPlayer / unlistPlayer', () => {
 
 describe('buyPlayer', () => {
   function marketWithMisfit(store) {
-    const misfit = player(70, ['LF'], ['RF']);
+    const misfit = player(70, ['LF', 'RF']);
     store.state.league.clubs = [aiClub(0, starters442(60), [misfit, ...fillers(5)])];
     store.dispatch('refreshAiListings');
     return { misfit, listing: store.state.transferMarket.listings[0] };

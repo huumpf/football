@@ -4,11 +4,10 @@
     <div class="stats">
       <div class="stat positions">
         <div class="number"><span
-          v-for="pos in positionsList"
-          :key="pos.label"
+          v-for="pos in player.positions"
+          :key="pos"
           class="pos"
-          :class="{ 'secondary-pos': pos.secondary }"
-        >{{ pos.label }}</span></div>
+        >{{ pos }}</span></div>
         <div class="reference">Pos</div>
       </div>
       <div class="stat">
@@ -39,12 +38,6 @@ export default {
 
   computed: {
     fullName() { return this.player.firstName + " " + this.player.lastName; },
-    positionsList() {
-      const p = this.player.positions;
-      const primary = (p.primary || [p.position]).map(label => ({ label, secondary: false }));
-      const secondary = (p.secondary || []).map(label => ({ label, secondary: true }));
-      return [...primary, ...secondary];
-    },
     age() { return this.player.age; },
     skill() { return this.player.skill; },
     salaryStr() { return HLP.moneyStr(this.player.salary); },
@@ -83,7 +76,7 @@ export default {
 
 // Four equal columns so the centered values keep a consistent gap and line up
 // vertically across cards. minmax(0, 1fr) keeps the columns equal even when a
-// three-position value is wider than the column (it overflows into the slack).
+// two-position value is wider than the column (it overflows into the slack).
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -111,13 +104,9 @@ export default {
   opacity: .5;
 }
 
-// Separate positions by spacing only; secondary ones are faded.
+// Separate positions by spacing only.
 .pos + .pos {
   margin-left: 0.4em;
-}
-
-.secondary-pos {
-  color: $col_text_faded;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {

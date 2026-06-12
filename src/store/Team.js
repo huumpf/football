@@ -26,7 +26,7 @@ export const teamModule = {
     ADD_TO_TEAM(state, player) {
       state.players.push(player);
       state.positionCount = getTeamPositionCount(state.players);
-      state.players.sort((a, b) => a.positions.sort - b.positions.sort || b.skill - a.skill);
+      state.players.sort((a, b) => a.positionSort - b.positionSort || b.skill - a.skill);
     },
     REMOVE_FROM_TEAM(state, playerId) {
       state.players = state.players.filter(p => p.id !== playerId);
@@ -54,11 +54,7 @@ function getTeamPositionCount(players) {
   }
 
   for (let player of players) {
-    const playable = [
-      ...(player.positions.primary || [player.positions.position]),
-      ...(player.positions.secondary || []),
-    ];
-    for (const pos of playable) {
+    for (const pos of player.positions) {
       const key = pos.toLowerCase();
       if (key in positions) positions[key] += 1;
     }

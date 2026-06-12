@@ -26,18 +26,12 @@ describe('makePlayer', () => {
     }
   });
 
-  it('keeps the original position as the first primary', () => {
+  it('caps the positions at two and draws the second from the alternatives', () => {
     for (const p of SAMPLE) {
-      expect(p.positions.primary[0]).toBe(p.positions.position);
-    }
-  });
-
-  it('caps the total number of positions and draws extras from the alternatives', () => {
-    for (const p of SAMPLE) {
-      const { position, primary, secondary } = p.positions;
-      expect(primary.length + secondary.length).toBeLessThanOrEqual(CFG.MAX_TOTAL_POSITIONS);
-      const allowed = CFG.POSITION_ALTERNATIVES[position];
-      for (const extra of [...primary.slice(1), ...secondary]) {
+      expect(p.positions.length).toBeGreaterThanOrEqual(1);
+      expect(p.positions.length).toBeLessThanOrEqual(2);
+      const allowed = CFG.POSITION_ALTERNATIVES[p.positions[0]];
+      for (const extra of p.positions.slice(1)) {
         expect(allowed).toContain(extra);
       }
     }

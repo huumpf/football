@@ -66,7 +66,7 @@ export default {
   },
 
   computed: {
-    // The skill the slotted player brings to THIS position (75% on a secondary).
+    // The skill the slotted player brings to THIS position.
     skillValue() {
       return this.player ? effectiveSkill(this.player, this.position) : null;
     },
@@ -81,7 +81,6 @@ export default {
           player: p,
           label: this.shortName(p),
           value: effectiveSkill(p, this.position),
-          secondary: !(p.positions.primary || [p.positions.position]).includes(this.position),
         }))
         .sort((a, b) => b.value - a.value);
     },

@@ -11,11 +11,8 @@ import {
 import * as CFG from '../src/assets/js/Config.js';
 
 // Minimal player fixture matching the shape PlayerFactory produces.
-function player(skill, primary, secondary = []) {
-  return {
-    skill,
-    positions: { position: primary[0], primary, secondary },
-  };
+function player(skill, positions) {
+  return { skill, positions };
 }
 
 describe('moneyStr', () => {
@@ -64,17 +61,12 @@ describe('marketValue', () => {
 });
 
 describe('effectiveSkill', () => {
-  it('returns full skill on a primary position', () => {
-    expect(effectiveSkill(player(80, ['ST']), 'ST')).toBe(80);
-  });
-
-  it('applies the penalty on a secondary position', () => {
-    expect(effectiveSkill(player(80, ['ST'], ['CAM']), 'CAM'))
-      .toBe(Math.round(80 * (1 - CFG.SECONDARY_POSITION_PENALTY)));
+  it('returns full skill on a position the player can play', () => {
+    expect(effectiveSkill(player(80, ['ST', 'CAM']), 'CAM')).toBe(80);
   });
 
   it('returns 0 for a position the player cannot play', () => {
-    expect(effectiveSkill(player(80, ['ST'], ['CAM']), 'GK')).toBe(0);
+    expect(effectiveSkill(player(80, ['ST', 'CAM']), 'GK')).toBe(0);
   });
 });
 
@@ -109,13 +101,6 @@ describe('assignLineup', () => {
     const lineup = assignLineup([st], { gk: 1, st: 1 });
     expect(lineup.gk[0]).toBeNull();
     expect(lineup.st[0]).toBe(st);
-  });
-
-  it('prefers a strong secondary over a weak primary', () => {
-    const weakPrimary = player(40, ['CAM']);
-    const strongSecondary = player(90, ['ST'], ['CAM']); // 68 effective on CAM
-    const lineup = assignLineup([weakPrimary, strongSecondary], { cam: 1 });
-    expect(lineup.cam[0]).toBe(strongSecondary);
   });
 });
 

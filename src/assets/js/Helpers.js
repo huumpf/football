@@ -53,23 +53,17 @@ export function marketValue(player) {
   return Math.max(CFG.MV_ROUND_STEP, Math.round(raw / CFG.MV_ROUND_STEP) * CFG.MV_ROUND_STEP);
 }
 
-// The effective skill a player brings to a given position: full skill on a
-// primary position, penalised on a secondary one, 0 if they can't play it.
+// The effective skill a player brings to a given position: full skill if they
+// can play it, 0 otherwise.
 export function effectiveSkill(player, position) {
-  const primary = player.positions.primary || [player.positions.position];
-  const secondary = player.positions.secondary || [];
-  if (primary.includes(position)) return player.skill;
-  if (secondary.includes(position)) {
-    return Math.round(player.skill * (1 - CFG.SECONDARY_POSITION_PENALTY));
-  }
-  return 0;
+  return player.positions.includes(position) ? player.skill : 0;
 }
 
 // Optimally fills a formation's slots with the available players, maximising the
 // summed effective skill. Each player takes at most one slot, considering every
-// position they can play (primary at full skill, secondary penalised). Solved as
-// a max-weight bipartite assignment so a player isn't greedily locked into a slot
-// where another player could not be replaced.
+// position they can play. Solved as a max-weight bipartite assignment so a
+// player isn't greedily locked into a slot where another player could not be
+// replaced.
 function assignPlayersToFormation(players, positionCounts) {
   const assigned = {};
   for (const pos of Object.keys(positionCounts)) assigned[pos] = [];

@@ -5,11 +5,11 @@ import * as CFG from '../src/assets/js/Config.js';
 
 // Minimal player fixture matching the shape PlayerFactory produces.
 let nextId = 1;
-function player(skill, primary, secondary = []) {
+function player(skill, positions) {
   return {
     id: nextId++,
     skill,
-    positions: { position: primary[0], primary, secondary },
+    positions,
   };
 }
 
@@ -76,7 +76,7 @@ describe('makeClub', () => {
 
 describe('selectListingCandidates', () => {
   it('always offers a player who fits no formation slot at all', () => {
-    const misfit = player(70, ['LF'], ['RF']); // 4-4-2 has no LF/RF slots
+    const misfit = player(70, ['LF', 'RF']); // 4-4-2 has no LF/RF slots
     const club = club442(starters442(60), [misfit]);
     for (let i = 0; i < 10; i++) {
       expect(selectListingCandidates(club)).toContain(misfit);

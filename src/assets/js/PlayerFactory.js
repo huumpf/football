@@ -33,14 +33,11 @@ export function makePlayer() {
   const skillFactor = Math.pow(skill / CFG.DRAFT_AVG_POTENTIAL, 2);
   const greed = ((Math.random() * CFG.PLAYER_GREED_DIFFERENCE - CFG.PLAYER_GREED_DIFFERENCE / 2) * skillFactor) + 1;
 
-  // Position & skills: the primary position is drawn from weighted chances
+  // Position & skills: the position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
   // stat profile fitting that position.
   const position = drawPosition();
-  const positions = getPositions(position);
-
-  // Additional positions (primary/secondary) the player can play.
-  assignExtraPositions(positions);
+  const positions = rollPositions(position);
 
   // Salary
   let salary = Math.round(skill * CFG.PLAYER_SALARY_FACTOR * greed) / 1000;
@@ -57,12 +54,13 @@ export function makePlayer() {
     greed,
     skill,
     positions,
+    positionSort: POSITION_SORT[position],
     skills: getSkills(position, skill),
     salary,
   };
 }
 
-// Draws the primary position: each position's chance is proportional to
+// Draws the position: each position's chance is proportional to
 // POSITION_BASE_WEIGHT plus how often it appears across all formation slots.
 function drawPosition() {
   const entries = Object.entries(CFG.POSITION_FREQUENCIES);
@@ -74,43 +72,23 @@ function drawPosition() {
   return entries[entries.length - 1][0];
 }
 
-// Rolls for extra positions and records them on `positions` as `primary` and
-// `secondary` arrays. The original position is kept as the first primary.
-function assignExtraPositions(positions) {
-  const original = positions.position;
-  const pool = [...(CFG.POSITION_ALTERNATIVES[original] || [])];
-  const primary = [original];
-  const secondary = [];
-
-  const take = () => pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-
-  // Two 25% rolls for secondary positions.
-  for (let i = 0; i < CFG.SECONDARY_POSITION_ROLLS; i++) {
-    if (pool.length === 0) break;
-    if (Math.random() < CFG.SECONDARY_POSITION_CHANCE) secondary.push(take());
+// The positions a player can play: the original position, plus a single roll
+// for a second one drawn from the original's alternatives.
+function rollPositions(original) {
+  const pool = CFG.POSITION_ALTERNATIVES[original] || [];
+  const positions = [original];
+  if (pool.length > 0 && Math.random() < CFG.SECOND_POSITION_CHANCE) {
+    positions.push(randomItem(pool));
   }
-
-  // If not already at the max, a single 15% roll for a second primary position.
-  if (primary.length + secondary.length < CFG.MAX_TOTAL_POSITIONS && pool.length > 0) {
-    if (Math.random() < CFG.EXTRA_PRIMARY_CHANCE) primary.push(take());
-  }
-
-  positions.primary = primary;
-  positions.secondary = secondary;
+  return positions;
 }
 
-// Salary multiplier from extra positions: each additional primary adds 15-25 %,
-// each secondary adds 10-20 %.
+// Salary multiplier from positions: a second position adds 15-25 %.
 function positionSalaryFactor(positions) {
-  let factor = 1;
-  const rnd = (min, max) => Math.random() * (max - min) + min;
-  for (let i = 1; i < positions.primary.length; i++) {
-    factor += rnd(CFG.EXTRA_PRIMARY_SALARY_MIN, CFG.EXTRA_PRIMARY_SALARY_MAX);
-  }
-  for (let i = 0; i < positions.secondary.length; i++) {
-    factor += rnd(CFG.SECONDARY_SALARY_MIN, CFG.SECONDARY_SALARY_MAX);
-  }
-  return factor;
+  if (positions.length < 2) return 1;
+  return 1 + Math.random()
+    * (CFG.SECOND_POSITION_SALARY_MAX - CFG.SECOND_POSITION_SALARY_MIN)
+    + CFG.SECOND_POSITION_SALARY_MIN;
 }
 
 // List sort order per position (GK first, forwards last).
@@ -161,11 +139,4 @@ function getSkills(position, skill) {
   }
 
   return skills;
-}
-
-function getPositions(position) {
-  return {
-    position,
-    sort: POSITION_SORT[position],
-  };
 }

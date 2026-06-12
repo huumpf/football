@@ -15,7 +15,7 @@ export const AGE_FACTOR = .95;
 // Player Positions
 export const PLAYER_SALARY_FACTOR = 36;
 
-// A player's primary position is drawn with a chance proportional to
+// A player's position is drawn with a chance proportional to
 // POSITION_BASE_WEIGHT plus the position's frequency across all formation
 // slots, so common lineup positions (CB) come up about four times as often
 // as rare ones (LF) while every position stays in supply.
@@ -25,21 +25,15 @@ export const POSITION_FREQUENCIES = {
   LM: 10, RM: 10, CAM: 9, CDM: 8, LF: 2, RF: 2,
 };
 
-// Multiple positions per player
-export const MAX_TOTAL_POSITIONS = 3;
-export const SECONDARY_POSITION_ROLLS = 2;
-export const SECONDARY_POSITION_CHANCE = 0.25;
-export const EXTRA_PRIMARY_CHANCE = 0.15;
-// Skill penalty applied when a player is played on a secondary position.
-export const SECONDARY_POSITION_PENALTY = 0.25;
-// Salary surcharges per extra position (random within each range).
-export const EXTRA_PRIMARY_SALARY_MIN = 0.15;
-export const EXTRA_PRIMARY_SALARY_MAX = 0.25;
-export const SECONDARY_SALARY_MIN = 0.10;
-export const SECONDARY_SALARY_MAX = 0.20;
+// Multiple positions per player: a single roll for a second position, so a
+// player has at most two.
+export const SECOND_POSITION_CHANCE = 0.4;
+// Salary surcharge for a second position (random within the range).
+export const SECOND_POSITION_SALARY_MIN = 0.15;
+export const SECOND_POSITION_SALARY_MAX = 0.25;
 
 // Positions a player can additionally learn, keyed by their original position.
-// Used for both extra primary and secondary positions. GK learns none.
+// Used for the second position. GK learns none.
 export const POSITION_ALTERNATIVES = {
   GK: [],
   LB: ["RB", "LM", "CB"],

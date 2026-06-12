@@ -32,7 +32,8 @@ function stubPlayer(id, age, { potential = 60, optimalAge = 28 } = {}) {
     optimalAge,
     greed: 1,
     skill,
-    positions: { position: 'CB', sort: 1, primary: ['CB'], secondary: [] },
+    positions: ['CB'],
+    positionSort: 1,
     skills: { goalkeeping: 0, defense: skill - 20, progression: 20, shot: 0 },
     salary: 0,
   };

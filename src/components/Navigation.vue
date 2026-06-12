@@ -102,8 +102,8 @@ export default {
   flex-shrink: 0;
 }
 
-// Tabs use the condensed display face; the active tab keeps a white label
-// with a soft green glow rather than a colour change.
+// Tabs use the condensed display face; the active tab is marked by the
+// highlight colour.
 .nav-link {
   font-family: $font_heading;
   font-size: 16px;
@@ -111,7 +111,7 @@ export default {
   color: $col_text;
   opacity: 0.55;
   text-decoration: none;
-  transition: opacity 0.15s ease, text-shadow 0.15s ease;
+  transition: opacity 0.15s ease;
 }
 
 .nav-link:hover {

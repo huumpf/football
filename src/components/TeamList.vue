@@ -1,6 +1,6 @@
 <template>
   <div class="team-list-wrapper card">
-    <PlayerList v-if="team.length > 0" :players="team" compact/>
+    <PlayerList v-if="team.length > 0" :players="team"/>
   </div>
 </template>
 

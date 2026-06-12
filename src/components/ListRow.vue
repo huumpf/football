@@ -1,0 +1,43 @@
+<template>
+  <div class="list-row" :class="{ header }">
+    <slot/>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'ListRow',
+
+  props: {
+    // Column-label row: hairline divider, secondary color, no zebra stripe.
+    header: { type: Boolean, default: false },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+
+// Single source of truth for list lines: every row in every list shares the
+// same height, horizontal padding and column gap.
+.list-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  gap: 12px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: $col_text_secondary;
+}
+
+// Zebra striping: rows sit flush and alternate against the card surface.
+.list-row:not(.header):nth-of-type(even) {
+  background-color: $col_row_alternate;
+}
+
+</style>

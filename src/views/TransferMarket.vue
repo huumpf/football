@@ -4,7 +4,6 @@
       <PlayerList
         v-if="rows.length > 0"
         :players="rows"
-        compact
         show-value
         show-club
       >

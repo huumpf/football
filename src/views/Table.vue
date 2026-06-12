@@ -1,19 +1,19 @@
 <template>
   <div class="table-wrapper">
     <div class="card list-card">
-      <div class="row header">
+      <ListRow header>
         <div class="rank">#</div>
         <div class="name">Club</div>
         <div class="metric">Matches</div>
         <div class="metric">Goals</div>
         <div class="metric">Points</div>
         <div class="metric">Skill</div>
-      </div>
+      </ListRow>
 
-      <div
+      <ListRow
         v-for="(entry, index) in standings"
         :key="entry.name"
-        class="row item"
+        class="item"
         :class="{ own: entry.own }"
         @click="openClub(entry)"
       >
@@ -23,14 +23,20 @@
         <div class="metric">0:0</div>
         <div class="metric">0</div>
         <div class="metric">{{ entry.skill }}</div>
-      </div>
+      </ListRow>
     </div>
   </div>
 </template>
 
 <script>
+import ListRow from '../components/ListRow.vue';
+
 export default {
   name: 'Table',
+
+  components: {
+    ListRow,
+  },
 
   computed: {
     // All 18 teams: the player's club plus the AI clubs. No matches are played
@@ -68,8 +74,8 @@ export default {
 
 <style lang="scss" scoped>
 
-// Centered card like the Players page; rows mirror the compact PlayerList
-// styling (smaller type, tighter rows).
+// Centered card like the Players page; row height and spacing come from the
+// shared ListRow component.
 .table-wrapper {
   padding: 12px;
 }
@@ -79,24 +85,10 @@ export default {
   max-width: 560px;
   margin: 0 auto;
   overflow: hidden;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 4px 8px;
-  font-size: 12px;
-  text-align: left;
-}
-
-.item:nth-of-type(even) {
-  background-color: $col_row_alternate;
+  font-weight: 500;
 }
 
 .item {
-  padding-top: 6px;
-  padding-bottom: 6px;
   cursor: pointer;
   transition: color 0.15s ease;
 }
@@ -105,29 +97,20 @@ export default {
   color: $col_cta;
 }
 
-.header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: $col_text_secondary;
-}
-
-// The player's own club glows like the active nav tab.
+// The player's own club is marked by the highlight colour, like the active nav tab.
 .own .name {
   color: $col_highlight;
-  text-shadow: 0 0 8px $col_cta;
 }
 
 .rank {
   width: 36px;
   flex-shrink: 0;
   text-align: center;
-  font-weight: 500;
 }
 
 .name {
   flex: 1 1 auto;
   min-width: 0;
-  margin: 0 12px;
-  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -137,7 +120,6 @@ export default {
   width: 64px;
   flex-shrink: 0;
   text-align: center;
-  font-weight: 500;
 }
 
 </style>

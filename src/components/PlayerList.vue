@@ -1,6 +1,6 @@
 <template>
-  <div class="player-list" :class="{ compact }">
-    <div class="row header">
+  <div class="player-list">
+    <ListRow header>
       <div
         :class="['pos-col', 'sortable', { active: sortKey === 'position' }]"
         @click="sortBy('position')"
@@ -33,12 +33,12 @@
         @click="sortBy('club')"
       >Club<span class="arrow">{{ arrow('club') }}</span></div>
       <div v-if="$slots.actions" class="action-col"></div>
-    </div>
+    </ListRow>
 
-    <div
+    <ListRow
       v-for="player in sortedPlayers"
       :key="player.id"
-      class="row item"
+      class="item"
     >
       <div class="pos-col">
         <span
@@ -66,11 +66,12 @@
       <div v-if="$slots.actions" class="action-col">
         <slot name="actions" :player="player"/>
       </div>
-    </div>
+    </ListRow>
   </div>
 </template>
 
 <script>
+import ListRow from './ListRow.vue';
 import { moneyStr, marketValue } from '../assets/js/Helpers.js';
 
 // Default sort direction per column. Position reads ascending (GK → RF),
@@ -80,9 +81,13 @@ const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', age: 'asc', s
 export default {
   name: 'PlayerList',
 
+  components: {
+    ListRow,
+  },
+
   props: {
     players: { type: Array, required: true },
-    // Overview shows salary; the compact draft sidebar hides it.
+    // Overview shows salary; the draft sidebar hides it.
     showSalary: { type: Boolean, default: false },
     // Market value column (players overview and transfer market).
     showValue: { type: Boolean, default: false },
@@ -90,8 +95,6 @@ export default {
     showClub: { type: Boolean, default: false },
     // Ids of players listed on the transfer market (marked with an icon).
     listedIds: { type: Object, default: null },
-    // Tighter type/columns for the narrow sidebar lists.
-    compact: { type: Boolean, default: false },
   },
 
   data: () => {
@@ -165,76 +168,26 @@ export default {
 
 <style lang="scss" scoped>
 
+// Row height, padding and column gap come from the shared ListRow component;
+// this component only defines its columns.
 .player-list {
   display: flex;
   flex-direction: column;
-  font-size: 16px;
-  text-align: left;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 6px 12px;
-}
-
-// Zebra striping: rows sit flush and alternate against the card surface.
-.item:nth-of-type(even) {
-  background-color: $col_row_alternate;
-}
-
-// Column labels share the row columns and sit under a hairline divider.
-.header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: $col_text_secondary;
-}
-
-// Compact sidebar variant (draft + team): smaller type, tighter rows.
-.compact {
-  font-size: 12px;
-
-  .row {
-    padding: 4px 8px;
-  }
-
-  // List items get a touch more vertical breathing room.
-  .item {
-    padding-top: 6px;
-    padding-bottom: 6px;
-  }
-
-  // Sidebar lists use no bold — everything medium...
-  .pos-col,
-  .name,
-  .metric {
-    font-weight: 500;
-  }
-
-  // ...except the position values, which render thin.
-  .item .pos-col {
-    font-weight: 300;
-  }
+  font-weight: 500;
 }
 
 // Wide enough for the three-position worst case (CDM CM CAM).
 .pos-col {
   display: flex;
   gap: 0.3em;
-  width: 96px;
+  width: 76px;
   flex-shrink: 0;
-  margin-right: 12px;
-  font-weight: 600;
   white-space: nowrap;
 }
 
-.compact .pos-col {
-  width: 76px;
-}
-
-// Position values render Medium (the header label stays SemiBold like the rest).
+// Position values render thin (the header label stays Medium like the rest).
 .item .pos-col {
-  font-weight: 500;
+  font-weight: 300;
 }
 
 .name {
@@ -242,8 +195,6 @@ export default {
   align-items: center;
   flex: 1 1 auto;
   min-width: 0;
-  margin-right: 12px;
-  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -264,20 +215,16 @@ export default {
   width: 42px;
   flex-shrink: 0;
   text-align: center;
-  font-weight: 600;
 }
 
 .salary,
 .value {
   width: 90px;
-  margin-left: 12px;
 }
 
 .club {
   width: 110px;
   flex-shrink: 0;
-  margin-left: 12px;
-  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -289,7 +236,6 @@ export default {
   justify-content: flex-end;
   width: 76px;
   flex-shrink: 0;
-  margin-left: 12px;
 }
 
 // Position values: primary readable, secondary fainter.

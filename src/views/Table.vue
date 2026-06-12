@@ -20,9 +20,9 @@
       >
         <div class="rank">{{ index + 1 }}</div>
         <div class="name">{{ entry.name }}</div>
-        <div class="metric">0</div>
-        <div class="metric">0:0</div>
-        <div class="metric">0</div>
+        <div class="metric">{{ entry.played }}</div>
+        <div class="metric">{{ entry.goalsFor }}:{{ entry.goalsAgainst }}</div>
+        <div class="metric">{{ entry.points }}</div>
         <div class="metric">{{ entry.skill }}</div>
       </ListRow>
     </div>
@@ -40,24 +40,8 @@ export default {
   },
 
   computed: {
-    // All 18 teams: the player's club plus the AI clubs. No matches are played
-    // yet, so the standings are ordered by team strength for now.
     standings() {
-      const entries = this.$store.state.league.clubs.map(club => ({
-        id: club.id,
-        name: club.name,
-        skill: club.formation.skillSum,
-        own: false,
-      }));
-
-      entries.push({
-        id: null,
-        name: this.$store.state.club.name,
-        skill: this.$store.getters.recommendedFormation.skillSum,
-        own: true,
-      });
-
-      return entries.sort((a, b) => b.skill - a.skill);
+      return this.$store.getters.standings;
     },
   },
 

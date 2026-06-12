@@ -58,6 +58,21 @@ export const POSITION_ALTERNATIVES = {
 // AI clubs in the league (player's club makes it 18).
 export const CLUBS_PER_LEAGUE = 17;
 
+// Season structure: 52 weeks per season. The 18 clubs play a double round
+// robin (34 matchdays): the first half runs week 11-27, the second half
+// mirrors it week 35-51 with home advantage swapped. All other weeks are
+// match-free; week 52 closes the season.
+export const SEASON_WEEKS = 52;
+export const MATCHDAYS_PER_HALF = CLUBS_PER_LEAGUE; // 18 teams -> 17 rounds
+export const FIRST_HALF_START_WEEK = 11;
+export const SECOND_HALF_START_WEEK = 35;
+
+// Match simulation: the expected goals of a match are split between the two
+// teams by their share of total strength. The exponent stretches the share,
+// so a modest skill gap still favours the stronger team noticeably.
+export const MATCH_AVG_GOALS = 2.8;
+export const MATCH_SKILL_EXPONENT = 4;
+
 // Club finances
 export const CLUB_STARTING_MONEY = 600000;
 

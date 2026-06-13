@@ -3,18 +3,21 @@
     <div class="card field-card">
       <div class="formation-header">
         <h2 class="formation-title">Formation</h2>
-        <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
-          <span v-if="selectedFormation" class="formation-name">{{ selectedFormation.name }}</span>
-          <svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6.5l5 5 5-5"/>
-          </svg>
-          <DropdownMenu
-            v-if="formationsOpen"
-            :options="formationOptions"
-            @select="selectFormation"
-            @close="formationsOpen = false"
-          />
+        <div class="formation-select">
+          <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
+            <span v-if="selectedFormation" class="formation-name">{{ selectedFormation.name }}</span>
+            <svg class="caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6.5l5 5 5-5"/>
+            </svg>
+            <DropdownMenu
+              v-if="formationsOpen"
+              :options="formationOptions"
+              @select="selectFormation"
+              @close="formationsOpen = false"
+            />
+          </div>
         </div>
+        <span class="total-skill">Total skill: {{ lineupSkill }}</span>
       </div>
 
       <div class="field-wrapper">
@@ -80,6 +83,17 @@ export default {
           formation: f,
           selected: this.selectedFormation && f.name === this.selectedFormation.name,
         }));
+    },
+    // Summed effective skill of the players currently placed in the editable
+    // lineup, so the headline total reflects manual swaps, not the auto optimum.
+    lineupSkill() {
+      let sum = 0;
+      for (const [pos, slots] of Object.entries(this.lineup)) {
+        for (const player of slots) {
+          if (player) sum += HLP.effectiveSkill(player, pos.toUpperCase());
+        }
+      }
+      return sum;
     },
     // Feeds Lineup from the editable assignment rather than the auto one.
     lineupFormation() {
@@ -168,26 +182,50 @@ export default {
   }
 }
 
-// Headline row per the design: card title and formation select on one line.
+// Headline row per the design: three equal columns — the title left, the
+// formation select centered, the lineup's total skill right-aligned.
 .formation-header {
   display: flex;
   align-items: center;
-  gap: 10px;
   width: 100%;
-  padding: $list_headline_padding;
+  // Vertical-only padding so the title and total skill align flush with the
+  // pitch below, which sits at the card's content edge.
+  padding: 4px 0;
 }
 
 .formation-title {
+  flex: 1 0 0;
+  min-width: 0;
+  text-align: left;
   font-size: 20px;
   font-weight: 500;
 }
 
+.formation-select {
+  flex: 1 0 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.total-skill {
+  flex: 1 0 0;
+  min-width: 0;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// Pill around the formation selector: faded white outline, rounded corners.
 .select-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding-left: 8px;
+  padding: 4px 8px 4px 12px;
+  border: 1px solid $col_190_t10;
+  border-radius: 8px;
   cursor: pointer;
   // Above the lineup boxes so the open panel overlays the field.
   z-index: $z_overlay;
@@ -198,7 +236,7 @@ export default {
 }
 
 .formation-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
 }

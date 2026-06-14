@@ -1,7 +1,8 @@
 <template>
   <div
     class="player"
-    :class="{ 'skill-only': skillOnly, editable, open }"
+    :class="{ 'skill-only': skillOnly, editable, open, dragging: isDragging }"
+    :data-player-id="editable && player ? player.id : null"
     @click="toggle"
   >
     <template v-if="skillOnly">
@@ -30,7 +31,7 @@
 </template>
 
 <script>
-import { effectiveSkill } from '../assets/js/Helpers.js';
+import { effectiveSkill, fieldSkill } from '../assets/js/Helpers.js';
 import DropdownMenu from '@/components/DropdownMenu.vue';
 
 export default {
@@ -57,6 +58,12 @@ export default {
       type: Number,
       default: 0,
     },
+    // Id of the player currently being dragged, so the slot it was picked up
+    // from renders at half opacity while it floats under the cursor.
+    draggingId: {
+      type: [String, Number],
+      default: null,
+    },
   },
 
   data: () => {
@@ -66,9 +73,16 @@ export default {
   },
 
   computed: {
-    // The skill the slotted player brings to THIS position (85% on a secondary).
+    // The skill the slotted player brings to THIS position: full on a primary,
+    // reduced on a secondary, halved when forced onto a foreign position.
     skillValue() {
-      return this.player ? effectiveSkill(this.player, this.position) : null;
+      return this.player ? fieldSkill(this.player, this.position) : null;
+    },
+
+    // Half-opacity source while this slot's player is the one being dragged.
+    isDragging() {
+      return this.editable && this.player != null && this.draggingId != null
+        && this.player.id === this.draggingId;
     },
 
     // Every other squad player who can play this position, best first. Players
@@ -212,10 +226,34 @@ export default {
   }
 }
 
+// On a small pitch (mobile, or the narrow one-column layout) the paddings and
+// gaps eat most of a card's width, leaving almost nothing for the name. Tighten
+// them so the name keeps a usable column.
+@container formation-card (max-width: 860px) {
+  .player:not(.skill-only) {
+    gap: 3px;
+    padding: 4px 5px;
+
+    .info {
+      gap: 4px;
+    }
+  }
+}
+
 // Clickable when the lineup is editable.
 .player.editable {
   cursor: pointer;
   transition: background-color 0.12s ease;
+}
+
+// Draggable field pill: claim touch gestures so a drag doesn't scroll the page,
+// and dim the slot the player was picked up from while the ghost is in flight.
+.player[data-player-id] {
+  touch-action: none;
+}
+
+.player.dragging {
+  opacity: 0.5;
 }
 
 .player.editable:hover {
@@ -232,7 +270,7 @@ export default {
   justify-content: center;
   gap: 3px;
   margin: 3px auto;
-  padding: 3px 6px;
+  padding: 3px 4px;
   width: auto;
   font-size: 12px;
   font-weight: 500;

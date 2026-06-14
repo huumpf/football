@@ -1,5 +1,5 @@
 <template>
-  <div class="dropdown" @click.stop>
+  <div class="dropdown" :class="{ up }" @click.stop>
     <button
       v-for="(option, index) in options"
       :key="index"
@@ -32,7 +32,15 @@ export default {
 
   emits: ['select', 'close'],
 
+  data: () => {
+    return {
+      // Flips the panel above its anchor when there's no room below.
+      up: false,
+    }
+  },
+
   mounted() {
+    this.flipIfClipped();
     // Defer so the opening click itself doesn't immediately close the panel.
     requestAnimationFrame(() => document.addEventListener('mousedown', this.onOutside));
   },
@@ -42,6 +50,31 @@ export default {
   },
 
   methods: {
+    // Open upward when the panel wouldn't fit below the anchor within the
+    // nearest clipping ancestor (e.g. the horizontally-scrolling pitch on
+    // mobile, or the viewport), so a bottom-row slot's options aren't cut off.
+    flipIfClipped() {
+      const anchor = this.$el.parentElement;
+      if (!anchor) return;
+      const bound = this.clipBounds(anchor);
+      const rect = anchor.getBoundingClientRect();
+      const panelH = this.$el.offsetHeight + 4;
+      const below = bound.bottom - rect.bottom;
+      const above = rect.top - bound.top;
+      this.up = below < panelH && above > below;
+    },
+
+    // Bounding rect of the nearest ancestor that clips overflow, falling back
+    // to the viewport when nothing clips.
+    clipBounds(el) {
+      let node = el.parentElement;
+      while (node && node !== document.body) {
+        if (getComputedStyle(node).overflowY !== 'visible') return node.getBoundingClientRect();
+        node = node.parentElement;
+      }
+      return { top: 0, bottom: window.innerHeight };
+    },
+
     onOutside(e) {
       const anchor = this.$el.parentElement || this.$el;
       if (!anchor.contains(e.target)) this.$emit('close');
@@ -57,6 +90,10 @@ export default {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
+  &.up {
+    top: auto;
+    bottom: calc(100% + 4px);
+  }
   width: 100%;
   min-width: 160px;
   max-height: 220px;

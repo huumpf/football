@@ -10,7 +10,11 @@
             v-for="(slot, index) in layoutSlots"
             :key="index"
             class="slot"
+            :class="{ 'slot-hover': editable && hoverKey === `slot:${slot.pos}:${slot.slotIndex}` }"
             :style="{ '--px': slot.y, '--py': slot.x }"
+            :data-drop="editable ? 'slot' : null"
+            :data-pos="slot.pos"
+            :data-index="slot.slotIndex"
           >
             <LineupItem
               :position="slot.position"
@@ -21,6 +25,7 @@
               :editable="editable"
               :squad="squad"
               :slot-index="slot.slotIndex"
+              :dragging-id="draggingId"
               @pick="$emit('pick', $event)"
             />
           </div>
@@ -54,6 +59,16 @@ export default {
     squad: {
       type: Array,
       default: () => [],
+    },
+    // Id of the player being dragged (dims its source slot).
+    draggingId: {
+      type: [String, Number],
+      default: null,
+    },
+    // Drop target currently under the cursor (e.g. "slot:cb:1"), to outline it.
+    hoverKey: {
+      type: String,
+      default: '',
     },
   },
 
@@ -114,17 +129,20 @@ export default {
 // Each slot is a fixed-size box centered on its relative pitch coordinate.
 // The pitch renders horizontally (own goal left), so y (back→front) maps to
 // the horizontal axis and x (sideline→sideline) to the vertical one. clamp()
-// keeps the box fully inside the field when a coordinate sits near an edge.
+// keeps the box fully inside the field, inset by --gut so no card ever sits
+// flush against an edge (e.g. the GK against the goal line).
 .slot {
   // Fluid box width so the lineup keeps its relative geometry on narrow
   // fields instead of the boxes colliding.
   --w: clamp(90px, 14%, 160px);
   --h: 28px;
+  // Minimum breathing room between any card and the field edge.
+  --gut: clamp(10px, 2.2%, 18px);
   position: absolute;
   width: var(--w);
   height: var(--h);
-  left: clamp(0%, calc(var(--px) * 100% - var(--w) / 2), calc(100% - var(--w)));
-  top: clamp(0%, calc(var(--py) * 100% - var(--h) / 2), calc(100% - var(--h)));
+  left: clamp(var(--gut), calc(var(--px) * 100% - var(--w) / 2), calc(100% - var(--w) - var(--gut)));
+  top: clamp(var(--gut), calc(var(--py) * 100% - var(--h) / 2), calc(100% - var(--h) - var(--gut)));
 }
 
 .slot :deep(.player) {
@@ -133,11 +151,29 @@ export default {
   margin: 0;
 }
 
+// Outline the slot the dragged player is hovering over so the drop target is
+// obvious. Sits above the box so it isn't hidden behind a neighbouring card.
+.slot.slot-hover {
+  z-index: $z_overlay;
+}
+
+.slot.slot-hover::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px dashed $col_cta;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
 // Compact preview (draft sidebar): boxes hug their content and center on the
-// coordinate, so tightly-spaced central positions overlap less.
+// coordinate. A tight slot width and gutter let the edge positions (e.g. the
+// clamped GK) sit right against the touchline, clearing their neighbours on
+// the narrow sidebar pitch.
 .aspect-compact .slot {
-  --w: 62px;
+  --w: 38px;
   --h: 24px;
+  --gut: 3px;
   display: flex;
   align-items: center;
   justify-content: center;

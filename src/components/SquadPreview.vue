@@ -42,9 +42,12 @@ const OVERVIEW_FORMATION = {
   name: 'Overview',
   positions: { gk: 1, lb: 1, cb: 1, rb: 1, lm: 1, cdm: 1, cm: 1, cam: 1, rm: 1, lf: 1, st: 1, rf: 1 },
   layout: [
+    // Central spine on x=0.5. The CB sits level with LB/RB for a flat back
+    // line; the GK hugs the goal line (the compact slot's tight gutter keeps
+    // the GK and CB boxes clear of each other on the narrow sidebar pitch).
     { position: 'GK', x: 0.5, y: 0.05 },
     { position: 'LB', x: 0.15, y: 0.22 },
-    { position: 'CB', x: 0.5, y: 0.18 },
+    { position: 'CB', x: 0.5, y: 0.22 },
     { position: 'RB', x: 0.85, y: 0.22 },
     { position: 'CDM', x: 0.5, y: 0.36 },
     { position: 'LM', x: 0.15, y: 0.52 },

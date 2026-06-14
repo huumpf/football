@@ -65,6 +65,16 @@ export function effectiveSkill(player, position) {
   return 0;
 }
 
+// The skill shown for a player placed on a position by hand (team-page lineup).
+// Like effectiveSkill, but a position the player can't play at all isn't
+// rejected — it costs OUT_OF_POSITION_PENALTY of their skill, because the editor
+// lets you force any player onto any slot. Keep effectiveSkill (0 = ineligible)
+// for the optimal assignment, which must not place players out of position.
+export function fieldSkill(player, position) {
+  const eff = effectiveSkill(player, position);
+  return eff > 0 ? eff : Math.round(player.skill * (1 - CFG.OUT_OF_POSITION_PENALTY));
+}
+
 // Optimally fills a formation's slots with the available players, maximising the
 // summed effective skill. Each player takes at most one slot, considering every
 // position they can play (primary at full skill, secondary penalised). Solved as

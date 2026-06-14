@@ -37,6 +37,11 @@ export const SECONDARY_POSITION_CHANCE = 0.25;
 export const EXTRA_PRIMARY_CHANCE = 0.15;
 // Skill penalty applied when a player is played on a secondary position.
 export const SECONDARY_POSITION_PENALTY = 0.15;
+// Skill penalty when a player is forced onto a position they can't play at all.
+// The team-page lineup editor lets you drag any player onto any slot; a wholly
+// foreign role costs half their skill (the optimal auto-assignment still treats
+// such a pairing as ineligible — see effectiveSkill vs fieldSkill).
+export const OUT_OF_POSITION_PENALTY = 0.5;
 // Salary surcharges per extra position (random within each range).
 export const EXTRA_PRIMARY_SALARY_MIN = 0.15;
 export const EXTRA_PRIMARY_SALARY_MAX = 0.25;

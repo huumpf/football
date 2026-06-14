@@ -63,6 +63,7 @@ export default {
   flex-shrink: 0;
   margin: 12px 12px 0;
   border-radius: 12px;
+  border-bottom: 1px solid $col_page_background;
   overflow: hidden;
   background-color: $col_module_background;
 }

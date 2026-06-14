@@ -2,10 +2,11 @@
   <div class="player-list">
     <div v-if="title" class="list-headline">{{ title }}</div>
     <ListRow header>
+      <div v-if="numbered" class="rank">#</div>
       <div
         :class="['pos-col', 'sortable', { active: sortKey === 'position' }]"
         @click="sortBy('position')"
-      >Position<span class="arrow">{{ arrow('position') }}</span></div>
+      >Pos<span class="arrow">{{ arrow('position') }}</span></div>
       <div
         :class="['name', 'sortable', { active: sortKey === 'name' }]"
         @click="sortBy('name')"
@@ -37,10 +38,15 @@
     </ListRow>
 
     <ListRow
-      v-for="player in sortedPlayers"
+      v-for="(player, index) in sortedPlayers"
       :key="player.id"
       class="item"
+      :class="{ dragging: draggable && draggingId != null && player.id === draggingId }"
+      :data-player-id="draggable ? player.id : null"
+      :data-drop="draggable ? 'row' : null"
+      :data-bucket="draggable ? dropKey : null"
     >
+      <div v-if="numbered" class="rank">{{ index + 1 }}</div>
       <div class="pos-col">
         <span
           v-for="pos in positionList(player)"
@@ -98,6 +104,16 @@ export default {
     showClub: { type: Boolean, default: false },
     // Ids of players listed on the transfer market (marked with an icon).
     listedIds: { type: Object, default: null },
+    // Team page: make rows drag handles + swap targets for the lineup editor.
+    draggable: { type: Boolean, default: false },
+    // Bucket this list represents ("bench" | "reserve"), tagged on each row so a
+    // drop knows which card it landed in.
+    dropKey: { type: String, default: '' },
+    // Id of the player currently being dragged (its row shows at half opacity).
+    draggingId: { type: [String, Number], default: null },
+    // Prepend a 1-based rank column (like the League standings), so each row is
+    // numbered by its place in the current order.
+    numbered: { type: Boolean, default: false },
   },
 
   data: () => {
@@ -179,11 +195,21 @@ export default {
   font-weight: 500;
 }
 
-// Wide enough for the three-position worst case (CDM CM CAM).
+// Leading rank column (opt-in via `numbered`). Just wide enough for the largest
+// rank (two digits), with flex-shrink:0 so a one- to two-digit jump never nudges
+// the columns after it; centered text keeps every row vertically aligned.
+.rank {
+  width: 16px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+// Sized to the two-position worst case (e.g. CDM CM); a player can hold at most
+// two positions (CFG.MAX_TOTAL_POSITIONS), and no pair is two three-letter codes.
 .pos-col {
   display: flex;
   gap: 0.3em;
-  width: 76px;
+  width: 48px;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -241,6 +267,12 @@ export default {
   flex-shrink: 0;
 }
 
+// The rank reads as quiet metadata, dialled back like the position labels.
+.item .rank {
+  font-weight: 300;
+  opacity: 0.5;
+}
+
 // Position values: primary readable, secondary fainter.
 .item .pos-col .pos {
   opacity: 0.5;
@@ -248,6 +280,17 @@ export default {
 
 .item .pos-col .pos.secondary {
   opacity: 0.3;
+}
+
+// Draggable rows (team-page bench/reserve): grabbable, and dimmed while their
+// player is the one in flight. touch-action keeps a drag from scrolling on touch.
+.item[data-player-id] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.item.dragging {
+  opacity: 0.5;
 }
 
 .sortable {

@@ -12,6 +12,11 @@
         :player="player"
         @click="addPlayerToTeam(player)"
       />
+
+      <div class="reroll-line">
+        <button v-if="canReroll" class="reroll-btn" @click="reroll">Reroll</button>
+        <span class="reroll-info">{{ rerollLabel }}</span>
+      </div>
     </div>
 
     <div class="card progress-card">
@@ -40,7 +45,10 @@ export default {
     activeDraftSet() { return this.$store.state.draft.activeDraftSet },
     draftAmount() { return CFG.DRAFT_COUNT },
     playersInTeam() { return this.$store.state.team.players.length },
-    draftCompleted() { return this.playersInTeam / this.draftAmount }
+    draftCompleted() { return this.playersInTeam / this.draftAmount },
+    rerollsRemaining() { return this.$store.state.draft.rerollsRemaining },
+    canReroll() { return this.rerollsRemaining > 0 },
+    rerollLabel() { return this.canReroll ? `${this.rerollsRemaining} remaining` : 'No rerolls left' },
   },
 
   created() {
@@ -52,6 +60,9 @@ export default {
       this.$store.dispatch('addPlayerToTeam', player);
       this.$store.dispatch('pay', player.salary);
       this.$store.dispatch('makeDraftSet');
+    },
+    reroll() {
+      this.$store.dispatch('reroll');
     },
     moneyToStr(amount) { 
       return Helpers.moneyStr(amount);
@@ -81,6 +92,37 @@ export default {
     width: 100%;
     max-width: 800px;
     align-self: center;
+  }
+
+  // Reroll action sitting directly under the draft cards.
+  .reroll-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .reroll-btn {
+    padding: 6px 18px;
+    border: none;
+    border-radius: 6px;
+    background-color: $col_cta;
+    color: $col_text;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+
+  .reroll-btn:hover {
+    filter: brightness(1.08);
+  }
+
+  .reroll-info {
+    font-size: 14px;
+    color: $col_text_secondary;
   }
 
   .header-card {

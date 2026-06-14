@@ -1,7 +1,9 @@
 import formationData from '../data/formations.json';
 
 export const DRAFT_PLAYERS_PER_PICK = 3;
-export const DRAFT_COUNT = 20;
+export const DRAFT_COUNT = 25;
+// How many times the draft options can be rerolled across the whole draft.
+export const DRAFT_REROLLS = 3;
 
 // Player Stats
 export const DRAFT_AVG_POTENTIAL = 50;

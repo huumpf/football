@@ -1,21 +1,59 @@
 <template>
   <div class="app-wrapper">
-    <Navigation v-if="$route.meta.showNav"/>
+    <Navigation v-if="$route.meta.showNav" @advance-week="startWeekTransition"/>
     <div class="app-content">
       <router-view/>
     </div>
+    <WeekTransition
+      v-if="weekTransition.active"
+      :from="weekTransition.from"
+      :to="weekTransition.to"
+      :mode="weekTransition.mode"
+      @midpoint="commitWeek"
+      @finished="endWeekTransition"
+    />
   </div>
 </template>
 
 <script>
 import Navigation from './components/Navigation.vue'
+import WeekTransition from './components/WeekTransition.vue'
+import * as CFG from '@/assets/js/Config.js'
 
 export default {
   name: 'App',
 
   components: {
     Navigation,
-  }
+    WeekTransition,
+  },
+
+  data() {
+    return {
+      weekTransition: { active: false, mode: 'week', from: null, to: null },
+    }
+  },
+
+  methods: {
+    // Capture the target up front and play the overlay; the real store update
+    // happens later, at the midpoint. At week 52 advanceWeek rolls the season,
+    // so the overlay counts the season up instead of the week.
+    startWeekTransition() {
+      if (this.weekTransition.active) return;
+      const { week, season } = this.$store.state.club;
+      this.weekTransition = week >= CFG.SEASON_WEEKS
+        ? { active: true, mode: 'season', from: season, to: season + 1 }
+        : { active: true, mode: 'week', from: week, to: week + 1 };
+    },
+
+    commitWeek() {
+      this.$store.dispatch('advanceWeek');
+    },
+
+    endWeekTransition() {
+      this.weekTransition.active = false;
+    },
+  },
 }
 </script>
 

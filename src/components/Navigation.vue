@@ -31,6 +31,8 @@ import { moneyStr } from '../assets/js/Helpers.js';
 export default {
   name: 'Navigation',
 
+  emits: ['advance-week'],
+
   computed: {
     clubName() { return this.$store.state.club.name },
     balance() { return moneyStr(this.$store.state.club.money) + ' €' },
@@ -43,8 +45,10 @@ export default {
       window.location.assign('/');
     },
 
+    // App orchestrates the week transition and commits the store change at the
+    // overlay's midpoint, so the new week is revealed rather than popping in.
     advanceWeek() {
-      this.$store.dispatch('advanceWeek');
+      this.$emit('advance-week');
     },
   }
 }

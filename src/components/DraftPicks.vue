@@ -14,7 +14,7 @@
       />
 
       <div class="reroll-line">
-        <button v-if="canReroll" class="reroll-btn" @click="reroll">Reroll</button>
+        <Button v-if="canReroll" border @click="reroll">Reroll</Button>
         <span class="reroll-info">{{ rerollLabel }}</span>
       </div>
     </div>
@@ -30,14 +30,16 @@
 
 <script>
 import DraftCard from '../components/DraftCard.vue';
+import Button from '../components/Button.vue';
 import * as Helpers from '../assets/js/Helpers.js';
 import * as CFG from '../assets/js/Config.js';
 
 export default {
   name: 'DraftPicks',
-  
+
   components: {
     DraftCard,
+    Button,
   },
 
   computed: {
@@ -101,23 +103,6 @@ export default {
     justify-content: center;
     gap: 12px;
     margin-top: 16px;
-  }
-
-  .reroll-btn {
-    padding: 6px 18px;
-    border: none;
-    border-radius: 6px;
-    background-color: $col_cta;
-    color: $col_text;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: filter 0.15s ease;
-  }
-
-  .reroll-btn:hover {
-    filter: brightness(1.08);
   }
 
   .reroll-info {

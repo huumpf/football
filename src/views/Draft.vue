@@ -30,7 +30,11 @@ export default {
       this.$router.replace({ name: 'Team' });
       return;
     }
-    this.$store.dispatch('makeLeague');
+    // Only build the league for a brand-new game. A reload mid-draft has the
+    // league restored from the save already; re-running would regenerate it.
+    if (!this.$store.state.league.clubs.length) {
+      this.$store.dispatch('makeLeague');
+    }
   },
 
   computed: {

@@ -1,6 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import store from '../store'
 
 const routes = [
+  {
+    // The sign-in / create-account screen; the only route reachable signed out.
+    path: '/login',
+    name: 'Login',
+    meta: { public: true },
+    component: () => import('../views/Login.vue')
+  },
   {
     path: '/',
     name: 'Draft',
@@ -48,6 +56,16 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// Everything but the login screen needs an account. The initial /me check has
+// already resolved before the app mounts, so the guard sees real auth state.
+router.beforeEach((to) => {
+  const authed = store.getters['auth/isAuthenticated']
+  if (to.meta.public) {
+    return authed ? { name: 'Draft' } : true
+  }
+  return authed ? true : { name: 'Login' }
 })
 
 export default router

@@ -8,6 +8,7 @@
           <span class="balance">{{ balance }}</span>
         </div>
         <button class="restart-btn" title="Restart" aria-label="Restart" @click="restartGame">↻</button>
+        <button class="restart-btn" :title="`Sign out (${userEmail})`" aria-label="Sign out" @click="logout">⎋</button>
       </div>
 
       <div class="nav-links">
@@ -34,6 +35,8 @@ export default {
 
   components: { ClubCrest },
 
+  inject: ['persistence'],
+
   emits: ['advance-week'],
 
   computed: {
@@ -41,15 +44,27 @@ export default {
     crest() { return this.$store.state.club.crest },
     balance() { return moneyStr(this.$store.state.club.money) + ' €' },
     week() { return this.$store.state.club.week },
+    userEmail() { return this.$store.state.auth.user?.email ?? '' },
     // A week the manager watches their own match advances into the match screen
     // rather than straight to the next week, so the CTA names that.
     advanceLabel() { return this.$store.getters.currentMatch ? 'Next Match' : 'Next Week' },
   },
 
   methods: {
-    // TODO: temporary — full reload wipes the in-memory store and starts a fresh draft
+    // Wipe the current game back to a fresh slate and reopen the draft. The next
+    // pick autosaves over the old save. (No reload — that would just re-hydrate
+    // the saved game and bounce back to the team.)
     restartGame() {
-      window.location.assign('/');
+      this.persistence.reset();
+      this.$router.push({ name: 'Draft' });
+    },
+
+    // End the session: clear the user, stop autosaving, and wipe the game so the
+    // next account on this browser starts clean.
+    async logout() {
+      await this.$store.dispatch('auth/logout');
+      this.persistence.end();
+      this.$router.replace({ name: 'Login' });
     },
 
     // App orchestrates the week transition and commits the store change at the

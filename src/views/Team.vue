@@ -78,15 +78,16 @@
 
 <script>
 import * as HLP from '../assets/js/Helpers.js';
+import * as CFG from '../assets/js/Config.js';
 import Lineup from '@/components/Lineup.vue';
 import LineupItem from '@/components/LineupItem.vue';
 import PlayerList from '@/components/PlayerList.vue';
 import PlayerRowMenu from '@/components/PlayerRowMenu.vue';
 import DropdownMenu from '@/components/DropdownMenu.vue';
 
-// Matchday subs bench capacity; everyone outside the XI and the bench sits in
-// the (unbounded) reserve.
-const BENCH_SIZE = 9;
+// Matchday subs bench capacity (shared with the store auto-fill via Config);
+// everyone outside the XI and the bench sits in the (unbounded) reserve.
+const BENCH_SIZE = CFG.BENCH_SIZE;
 // Pointer travel (px) before a press turns into a drag rather than a click, so
 // the click-to-pick dropdown still works on a plain tap.
 const DRAG_THRESHOLD = 5;
@@ -113,7 +114,10 @@ export default {
   },
 
   created() {
-    this.selectedFormation = this.recommendedFormation;
+    // Seed the saved sheets once (no-op if already filled), then load the active
+    // formation's saved buckets into the editor.
+    this.$store.dispatch('initFormations');
+    this.loadActive();
   },
 
   beforeUnmount() {
@@ -122,11 +126,11 @@ export default {
   },
 
   watch: {
-    // (Re)build the three buckets from the optimal assignment whenever the
-    // formation changes; manual drags live on top of this starting point.
-    selectedFormation: {
-      immediate: true,
-      handler() { this.initBuckets(); },
+    // A transfer settled while the manager sits here (e.g. an AI buys a listed
+    // player on a week tick) reconciles the saved sheets in the store; reload so
+    // the editor never shows a departed player.
+    players() {
+      this.loadActive();
     },
   },
 
@@ -173,34 +177,45 @@ export default {
 
   methods: {
     selectFormation(option) {
-      this.selectedFormation = option.formation;
+      // Switching the dropdown sets the new default, then loads its saved sheet.
+      this.$store.commit('SET_ACTIVE_FORMATION', option.formation.name);
+      this.loadActive();
       this.formationsOpen = false;
     },
 
-    // Optimal XI on the pitch, the next-best up to BENCH_SIZE on the bench, the
-    // rest in the reserve. Re-run on every formation change.
-    initBuckets() {
-      if (!this.selectedFormation) {
-        this.lineup = {};
-        this.bench = [];
-        this.reserve = [];
-        return;
-      }
-      this.lineup = HLP.assignLineup(this.players, this.selectedFormation.positions);
-      const placed = new Set();
-      for (const slots of Object.values(this.lineup)) {
-        for (const p of slots) if (p) placed.add(p.id);
-      }
-      const rest = this.players
-        .filter(p => !placed.has(p.id))
-        .sort((a, b) => b.skill - a.skill);
-      this.bench = rest.slice(0, BENCH_SIZE);
-      this.reserve = rest.slice(BENCH_SIZE);
+    // Load the active formation's saved sheet into the editor buffers. Clones
+    // the containers (new lineup object / arrays) but keeps the same player
+    // objects, so the in-place drag edits never mutate the store and player
+    // identity (used by findLocation and the drag ghost) stays intact.
+    loadActive() {
+      const name = this.$store.state.team.activeFormation;
+      this.selectedFormation = this.formations.find(f => f.name === name) || this.recommendedFormation;
+      const sheet = this.$store.state.team.formations[name]
+        || HLP.buildSheet(this.players, this.selectedFormation.positions, BENCH_SIZE);
+      this.lineup = Object.fromEntries(
+        Object.entries(sheet.lineup).map(([pos, slots]) => [pos, slots.slice()])
+      );
+      this.bench = [...sheet.bench];
+      this.reserve = [...sheet.reserve];
+    },
+
+    // Save the editor's current buckets back to the store for the active
+    // formation. Clones the containers so the store keeps its own arrays.
+    persist() {
+      this.$store.commit('SET_FORMATION_SHEET', {
+        name: this.selectedFormation.name,
+        lineup: Object.fromEntries(
+          Object.entries(this.lineup).map(([pos, slots]) => [pos, slots.slice()])
+        ),
+        bench: [...this.bench],
+        reserve: [...this.reserve],
+      });
     },
 
     // Click-to-pick dropdown: setting a slot is just a move onto that slot.
     placePlayer({ position, slotIndex, player }) {
       this.performMove(player, { type: 'slot', pos: position.toLowerCase(), index: slotIndex });
+      this.persist();
     },
 
     // ---- bucket model -----------------------------------------------------
@@ -330,7 +345,10 @@ export default {
       this.dragCandidate = null;
       if (this.drag.active && c) {
         const target = this.dropTargetAt(e.clientX, e.clientY);
-        if (target) this.performMove(c.player, target);
+        if (target) {
+          this.performMove(c.player, target);
+          this.persist();
+        }
         this.justDragged = true;
       }
       this.drag.active = false;
@@ -535,6 +553,9 @@ export default {
 
 .select-wrapper :deep(.dropdown) {
   width: max-content;
+  // Centre the panel under the trigger (the shared slot picker keeps left:0).
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .formation-name {

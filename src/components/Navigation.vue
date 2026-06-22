@@ -2,7 +2,7 @@
   <nav class="nav">
     <div class="nav-left">
       <div class="brand">
-        <img class="crest" src="../assets/img/crest.svg" alt=""/>
+        <ClubCrest v-if="crest" :crest="crest" :id="'nav'" :size="36"/>
         <div class="club-info">
           <span class="club-name">{{ clubName }}</span>
           <span class="balance">{{ balance }}</span>
@@ -27,14 +27,18 @@
 
 <script>
 import { moneyStr } from '../assets/js/Helpers.js';
+import ClubCrest from './ClubCrest.vue';
 
 export default {
   name: 'Navigation',
+
+  components: { ClubCrest },
 
   emits: ['advance-week'],
 
   computed: {
     clubName() { return this.$store.state.club.name },
+    crest() { return this.$store.state.club.crest },
     balance() { return moneyStr(this.$store.state.club.money) + ' €' },
     week() { return this.$store.state.club.week },
     // A week the manager watches their own match advances into the match screen
@@ -90,13 +94,6 @@ export default {
   align-items: center;
   gap: 12px;
   min-width: 0;
-}
-
-.crest {
-  display: block;
-  width: auto;
-  height: 36px;
-  flex-shrink: 0;
 }
 
 // Club name with the current balance stacked beneath it; the name truncates

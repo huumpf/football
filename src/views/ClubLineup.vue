@@ -2,6 +2,7 @@
   <div v-if="club" class="team-grid">
     <div class="card field-card">
       <div class="club-header">
+        <ClubCrest :crest="club.crest" :id="'club-' + club.id" :size="52"/>
         <h2 class="club-name">{{ club.name }}</h2>
         <div class="formation-name">{{ club.formation.name }} · {{ club.formation.skillSum }}</div>
       </div>
@@ -20,6 +21,7 @@
 <script>
 import Lineup from '@/components/Lineup.vue';
 import PlayerList from '@/components/PlayerList.vue';
+import ClubCrest from '@/components/ClubCrest.vue';
 
 export default {
   name: 'ClubLineup',
@@ -40,6 +42,7 @@ export default {
   components: {
     Lineup,
     PlayerList,
+    ClubCrest,
   },
 }
 </script>
@@ -68,6 +71,10 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 2px;
+}
+
+.club-header .club-crest {
+  margin-bottom: 8px;
 }
 
 .club-name {

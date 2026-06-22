@@ -19,7 +19,10 @@
         @click="openClub(entry)"
       >
         <div class="rank">{{ index + 1 }}</div>
-        <div class="name">{{ entry.name }}</div>
+        <div class="name">
+          <ClubCrest :crest="crestFor(entry.id)" :id="'tbl-' + entry.id" :size="22"/>
+          <span class="club">{{ entry.name }}</span>
+        </div>
         <div class="metric">{{ entry.played }}</div>
         <div class="metric">{{ entry.goalsFor }}:{{ entry.goalsAgainst }}</div>
         <div class="metric">{{ entry.points }}</div>
@@ -36,6 +39,7 @@
 <script>
 import ListRow from '../components/ListRow.vue';
 import Matchday from '../components/Matchday.vue';
+import ClubCrest from '../components/ClubCrest.vue';
 
 export default {
   name: 'Table',
@@ -43,6 +47,7 @@ export default {
   components: {
     ListRow,
     Matchday,
+    ClubCrest,
   },
 
   computed: {
@@ -52,6 +57,9 @@ export default {
   },
 
   methods: {
+    crestFor(id) {
+      return this.$store.getters.crestById(id);
+    },
     openClub(entry) {
       if (entry.own) {
         this.$router.push({ name: 'Team' });
@@ -111,7 +119,14 @@ export default {
 }
 
 .name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+.name .club {
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;

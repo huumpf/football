@@ -28,6 +28,7 @@
       <div class="pairing" v-for="(match, index) in pairings" :key="index">
         <div class="team" :class="{ own: match.home.own }">
           <span class="rank">{{ match.home.rank }}.</span>
+          <ClubCrest :crest="crestFor(match.home.id)" :id="'md-' + match.home.id" :size="18"/>
           <span class="name">{{ match.home.name }}</span>
           <span class="skill">{{ match.home.skill }}</span>
         </div>
@@ -35,6 +36,7 @@
         <span class="score dash" v-else></span>
         <div class="team" :class="{ own: match.away.own }">
           <span class="rank">{{ match.away.rank }}.</span>
+          <ClubCrest :crest="crestFor(match.away.id)" :id="'md-' + match.away.id" :size="18"/>
           <span class="name">{{ match.away.name }}</span>
           <span class="skill">{{ match.away.skill }}</span>
         </div>
@@ -45,9 +47,18 @@
 
 <script>
 import * as SCHED from '../assets/js/Schedule.js';
+import ClubCrest from './ClubCrest.vue';
 
 export default {
   name: 'Matchday',
+
+  components: { ClubCrest },
+
+  methods: {
+    crestFor(id) {
+      return this.$store.getters.crestById(id);
+    },
+  },
 
   data() {
     return {

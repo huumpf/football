@@ -2,8 +2,8 @@
   <div v-if="match" class="match-view">
     <!-- Matchday top bar: just the two teams, no navigation. -->
     <div class="match-bar">
-      <span class="bar-team">{{ match.home.name }}</span>
-      <span class="bar-team">{{ match.away.name }}</span>
+      <span class="bar-team"><ClubCrest :crest="crestFor(match.home.id)" :id="'mv-bar-h'" :size="24"/>{{ match.home.name }}</span>
+      <span class="bar-team"><ClubCrest :crest="crestFor(match.away.id)" :id="'mv-bar-a'" :size="24"/>{{ match.away.name }}</span>
     </div>
 
     <div class="match-body">
@@ -15,13 +15,13 @@
 
       <div class="center">
         <div class="score-card">
-          <span class="team home-name">{{ match.home.name }}</span>
+          <span class="team home-name">{{ match.home.name }}<ClubCrest :crest="crestFor(match.home.id)" :id="'mv-sc-h'" :size="30"/></span>
           <div class="score">
             <span class="num">{{ homeGoals }}</span>
             <span class="dash">–</span>
             <span class="num">{{ awayGoals }}</span>
           </div>
-          <span class="team away-name">{{ match.away.name }}</span>
+          <span class="team away-name"><ClubCrest :crest="crestFor(match.away.id)" :id="'mv-sc-a'" :size="30"/>{{ match.away.name }}</span>
         </div>
 
         <div class="action">
@@ -67,13 +67,14 @@
 
 <script>
 import MatchLineupList from '@/components/MatchLineupList.vue';
+import ClubCrest from '@/components/ClubCrest.vue';
 import { simulateLiveMatch } from '@/assets/js/MatchSim.js';
 import * as CFG from '@/assets/js/Config.js';
 
 export default {
   name: 'MatchView',
 
-  components: { MatchLineupList },
+  components: { MatchLineupList, ClubCrest },
 
   data() {
     return {
@@ -177,6 +178,9 @@ export default {
   },
 
   methods: {
+    crestFor(id) {
+      return this.$store.getters.crestById(id);
+    },
     starterRows(xi) {
       return xi.map(e => ({
         player: e.player,
@@ -246,10 +250,18 @@ export default {
 }
 
 .bar-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: $font_heading;
   font-size: 20px;
   font-weight: 500;
   color: $col_text;
+}
+
+// Mirror the away side so its crest sits on the outer edge.
+.match-bar .bar-team:last-child {
+  flex-direction: row-reverse;
 }
 
 .match-body {
@@ -283,6 +295,9 @@ export default {
 }
 
 .team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   flex-shrink: 0;
   width: 200px;
   font-family: $font_heading;
@@ -291,8 +306,9 @@ export default {
   color: $col_text;
 }
 
-.home-name { text-align: right; }
-.away-name { text-align: left; }
+// Crests flank the score: home's on its right, away's on its left.
+.home-name { justify-content: flex-end; text-align: right; }
+.away-name { justify-content: flex-start; text-align: left; }
 
 .score {
   display: flex;

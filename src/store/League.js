@@ -3,6 +3,7 @@ import * as CFG from '@/assets/js/Config.js';
 import * as HLP from '@/assets/js/Helpers.js';
 import * as SCHED from '@/assets/js/Schedule.js';
 import { simulateMatch } from '@/assets/js/MatchSim.js';
+import { generateCrest } from '@/assets/js/CrestFactory.js';
 
 export const leagueModule = {
   state: {
@@ -16,6 +17,11 @@ export const leagueModule = {
   },
 
   getters: {
+    // Resolve a club's crest descriptor by standings/fixture id (null = the
+    // player's own club). Used wherever a club is shown with its badge.
+    crestById: (state, getters, rootState) => id =>
+      id === null ? rootState.club.crest : (state.clubs.find(c => c.id === id)?.crest ?? null),
+
     // The league table for all 18 clubs, aggregated from the played results:
     // points (3/1/0), goal difference and goals scored decide the order, team
     // strength breaks remaining ties (and orders the table before matchday 1).
@@ -149,11 +155,16 @@ export const leagueModule = {
   },
 
   mutations: {
-    MAKE_LEAGUE(state, reservedNames) {
+    // `used` carries crest de-dup state (patterns drawn without replacement,
+    // monogram initials made unique) shared with the player's club, so the
+    // whole 18-club league stays mutually distinguishable.
+    MAKE_LEAGUE(state, { reservedNames, used }) {
       const names = clubFactory.makeClubNames(CFG.CLUBS_PER_LEAGUE, reservedNames);
       state.clubs = [];
       for (let i = 0; i < CFG.CLUBS_PER_LEAGUE; i++) {
-        state.clubs.push(clubFactory.makeClub(i, names[i]));
+        const club = clubFactory.makeClub(i, names[i]);
+        club.crest = generateCrest(names[i], used);
+        state.clubs.push(club);
       }
     },
 
@@ -211,7 +222,11 @@ export const leagueModule = {
 
   actions: {
     makeLeague({ commit, dispatch, rootState }) {
-      commit('MAKE_LEAGUE', [rootState.club.name]);
+      // One shared de-dup pool: the player's crest is drawn first, then the 17
+      // AI clubs continue from the same pool inside MAKE_LEAGUE.
+      const used = { fields: new Set(), initials: new Set() };
+      commit('SET_CREST', generateCrest(rootState.club.name, used));
+      commit('MAKE_LEAGUE', { reservedNames: [rootState.club.name], used });
       commit('MAKE_SCHEDULE');
       dispatch('regenerateAiFormations');
       dispatch('refreshAiListings');

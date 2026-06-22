@@ -1,0 +1,98 @@
+# =============================================================================
+#  .htaccess — web document root (Vue SPA history mode + PHP API on shared host)
+#
+#  Lives in public/ so `vite build` copies it to the web root (dist/.htaccess).
+#  It does the two jobs the old Node server.js used to: serve the SPA's deep
+#  links, and keep the PHP API and its secrets safe.
+#
+#  Assumes the app is served at the DOMAIN ROOT (Vite base '/'). For a subfolder
+#  deploy, see the note at the bottom and DEPLOY.md.
+# =============================================================================
+
+Options -Indexes
+DirectoryIndex index.html
+
+# --- Protect secrets ---------------------------------------------------------
+# config.php holds the DB credentials and must never be downloadable as text —
+# not even if PHP ever stops executing on the host. Matched by basename, so this
+# covers /api/config.php. _bootstrap.php is internal-only; deny it too.
+<FilesMatch "^(config\.php|config\.sample\.php|_bootstrap\.php)$">
+    Require all denied
+</FilesMatch>
+
+# Never serve a database, raw SQL, or env file as text (defensive: prod is
+# MySQL, but be safe if a SQLite/.sql/.env file is ever present).
+<FilesMatch "\.(sqlite|sqlite3|sql|env)$">
+    Require all denied
+</FilesMatch>
+
+# Block dotfiles (.env, editor/VCS leftovers, this .htaccess itself).
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# The local SQLite scratch dir should never exist in prod; 404 it if it does.
+<IfModule mod_alias.c>
+    RedirectMatch 404 ^/api/data(/.*)?$
+</IfModule>
+
+# --- SPA history-mode routing ------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # OPTIONAL — force HTTPS. Shipped OFF by default: on some shared hosts a
+    # TLS-terminating proxy makes an .htaccess redirect loop forever, and the
+    # control panel's own "Force HTTPS / SSL redirect" toggle is the safer way.
+    # To force it here instead, uncomment the six lines below. They skip the
+    # redirect when the request is already secure by ANY signal (direct TLS,
+    # X-Forwarded-Proto, X-Forwarded-SSL, or port 443) and only then redirect.
+    # Read DEPLOY.md (Troubleshooting → redirect loop) before enabling.
+    # RewriteCond %{HTTPS} on [OR]
+    # RewriteCond %{HTTP:X-Forwarded-Proto} =https [NC,OR]
+    # RewriteCond %{HTTP:X-Forwarded-SSL} =on [NC,OR]
+    # RewriteCond %{SERVER_PORT} =443
+    # RewriteRule ^ - [S=1]
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # Never rewrite the PHP API — let the interpreter run /api/*.php (the query
+    # string, e.g. ?action=login, is not part of the matched path).
+    RewriteRule ^api/ - [L]
+
+    # Serve real files and directories (hashed JS/CSS, favicon) as-is.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Everything else -> the SPA shell, so deep links work on refresh.
+    RewriteRule ^ /index.html [L]
+</IfModule>
+
+# Fallback if mod_rewrite is unavailable (real files still win; /api unaffected).
+<IfModule !mod_rewrite.c>
+    FallbackResource /index.html
+</IfModule>
+
+# --- Caching -----------------------------------------------------------------
+# Vite fingerprints everything in /assets/, so those URLs never change content
+# -> cache hard + immutable. index.html is the unhashed shell and must be
+# revalidated so a deploy goes live immediately. 'always' keeps the header on
+# the internal history-fallback subrequest too.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|mjs|css|woff2?|ttf|otf|eot|svg|png|jpe?g|gif|webp|avif|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "^index\.html$">
+        Header always set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+    <FilesMatch "\.php$">
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    </FilesMatch>
+</IfModule>
+
+# --- SUBFOLDER deploy (not the default root) ---------------------------------
+# To serve from /app instead of the domain root:
+#   1. vite.config.mjs:  base: '/app/'
+#   2. router:           createWebHistory('/app/')
+#   3. here:             RewriteBase /app/   and fallback target  /app/index.html
+#      keep this .htaccess inside /app/ so ^api/ stays relative to it.

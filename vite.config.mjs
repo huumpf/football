@@ -22,6 +22,16 @@ export default defineConfig({
     }
   },
   server: {
-    port: Number(process.env.PORT) || 8080
+    port: Number(process.env.PORT) || 8080,
+    // In development the SPA runs on Vite and the PHP API on `php -S`; this
+    // forwards /api to it so the browser sees one same-origin server (and the
+    // session cookie just works). In production both are served from the
+    // webspace, so this proxy is dev-only.
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true
+      }
+    }
   }
 })

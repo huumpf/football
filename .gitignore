@@ -2,6 +2,10 @@
 node_modules
 /dist
 
+# API secrets and local database (never commit these)
+/api/config.php
+/api/data/
+
 
 # local env files
 .env.local

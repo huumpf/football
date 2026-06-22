@@ -315,7 +315,6 @@ export function crestToSvg(d, id = 0) {
   if (d.chief) parts.push(`<rect x="0" y="0" width="64" height="14" fill="${d.alt}"/>`);
   parts.push('</g>');
   if (d.bordure) parts.push(shapeNode(d.shape, `fill="none" stroke="${d.ink}" stroke-width="9" clip-path="url(#${clip})"`));
-  parts.push(shapeNode(d.shape, `fill="none" stroke="${d.ink}" stroke-width="2"`));
   parts.push(chargeNodes(d));
   return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
 }

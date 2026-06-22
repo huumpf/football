@@ -40,6 +40,12 @@ export default {
     // so the overlay counts the season up instead of the week.
     startWeekTransition() {
       if (this.weekTransition.active) return;
+      // A week with a match to watch routes to the match screen instead of the
+      // blur-dissolve advance; the match screen advances the week when it ends.
+      if (this.$store.getters.currentMatch) {
+        this.$router.push({ name: 'Match' });
+        return;
+      }
       const { week, season } = this.$store.state.club;
       this.weekTransition = week >= CFG.SEASON_WEEKS
         ? { active: true, mode: 'season', from: season, to: season + 1 }

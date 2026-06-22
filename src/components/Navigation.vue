@@ -20,7 +20,7 @@
 
     <div class="nav-right">
       <span class="week">Week {{ week }}</span>
-      <button class="next-week-btn" @click="advanceWeek">Next Week</button>
+      <button class="next-week-btn" @click="advanceWeek">{{ advanceLabel }}</button>
     </div>
   </nav>
 </template>
@@ -37,6 +37,9 @@ export default {
     clubName() { return this.$store.state.club.name },
     balance() { return moneyStr(this.$store.state.club.money) + ' €' },
     week() { return this.$store.state.club.week },
+    // A week the manager watches their own match advances into the match screen
+    // rather than straight to the next week, so the CTA names that.
+    advanceLabel() { return this.$store.getters.currentMatch ? 'Next Match' : 'Next Week' },
   },
 
   methods: {

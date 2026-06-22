@@ -34,20 +34,30 @@
     </div>
 
     <div class="side-col">
-      <div
-        class="card squad-card bench-card"
-        :class="{ 'drop-hover': drag.active && drag.hoverKey === 'bench' }"
-        data-drop="bench"
-      >
-        <PlayerList title="Bench" :players="bench" draggable drop-key="bench" :dragging-id="dragId" numbered/>
-      </div>
+      <div class="card squad-card">
+        <div
+          class="squad-section bench-section"
+          :class="{ 'drop-hover': drag.active && drag.hoverKey === 'bench' }"
+          data-drop="bench"
+        >
+          <PlayerList title="Bench" :players="bench" draggable drop-key="bench" :dragging-id="dragId" numbered action-width="24px">
+            <template #actions="{ player }">
+              <PlayerRowMenu :player="player"/>
+            </template>
+          </PlayerList>
+        </div>
 
-      <div
-        class="card squad-card reserve-card"
-        :class="{ 'drop-hover': drag.active && drag.hoverKey === 'reserve' }"
-        data-drop="reserve"
-      >
-        <PlayerList title="Reserve" :players="reserve" draggable drop-key="reserve" :dragging-id="dragId" numbered/>
+        <div
+          class="squad-section reserve-section"
+          :class="{ 'drop-hover': drag.active && drag.hoverKey === 'reserve' }"
+          data-drop="reserve"
+        >
+          <PlayerList title="Reserve" :players="reserve" draggable drop-key="reserve" :dragging-id="dragId" numbered action-width="24px">
+            <template #actions="{ player }">
+              <PlayerRowMenu :player="player"/>
+            </template>
+          </PlayerList>
+        </div>
       </div>
     </div>
 
@@ -71,6 +81,7 @@ import * as HLP from '../assets/js/Helpers.js';
 import Lineup from '@/components/Lineup.vue';
 import LineupItem from '@/components/LineupItem.vue';
 import PlayerList from '@/components/PlayerList.vue';
+import PlayerRowMenu from '@/components/PlayerRowMenu.vue';
 import DropdownMenu from '@/components/DropdownMenu.vue';
 
 // Matchday subs bench capacity; everyone outside the XI and the bench sits in
@@ -374,6 +385,7 @@ export default {
     Lineup,
     LineupItem,
     PlayerList,
+    PlayerRowMenu,
     DropdownMenu,
   }
 }
@@ -422,33 +434,41 @@ export default {
   }
 }
 
-// Right column: the Bench card hugs its (capped) contents, the Reserve card
-// takes the remaining height and scrolls.
+// Right column holds one squad card. Inside it the Bench section hugs its
+// (capped) contents and the Reserve section takes the remaining height and
+// scrolls; either can shrink and scroll if the column gets too short.
 .side-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   min-height: 0;
 }
 
 .squad-card {
-  min-height: 0;
-}
-
-.bench-card {
-  flex: 0 1 auto;
-  overflow: auto;
-}
-
-.reserve-card {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
+  min-height: 0;
+  // Gap between the Bench and Reserve sections within the single card.
+  gap: 12px;
+}
+
+.bench-section {
+  flex: 0 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 
-// Outline the card the dragged player is hovering over (drop = add to bucket).
-.squad-card.drop-hover {
+.reserve-section {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+// Outline the section the dragged player is hovering over (drop = add to bucket).
+.squad-section.drop-hover {
   outline: 2px dashed $col_cta;
   outline-offset: -2px;
+  border-radius: 8px;
 }
 
 @media screen and (max-width: $breakpoint_tablet) {
@@ -457,9 +477,9 @@ export default {
     height: auto;
   }
 
-  // Stacked layout: cards grow with their content and the page scrolls.
-  .bench-card,
-  .reserve-card {
+  // Stacked layout: sections grow with their content and the page scrolls.
+  .bench-section,
+  .reserve-section {
     overflow: visible;
   }
 }

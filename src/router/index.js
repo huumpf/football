@@ -35,6 +35,13 @@ const routes = [
     name: 'ClubLineup',
     meta: { showNav: true },
     component: () => import('../views/ClubLineup.vue')
+  },
+  {
+    // The watched match runs full-screen with its own matchday top bar, so the
+    // standard navigation is hidden here.
+    path: '/match',
+    name: 'Match',
+    component: () => import('../views/MatchView.vue')
   }
 ]
 

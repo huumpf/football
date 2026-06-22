@@ -81,9 +81,30 @@ export const SECOND_HALF_START_WEEK = 35;
 
 // Match simulation: the expected goals of a match are split between the two
 // teams by their share of total strength. The exponent stretches the share,
-// so a modest skill gap still favours the stronger team noticeably.
+// so a modest skill gap still favours the stronger team noticeably. Used by
+// the instant simulateMatch (the other 8 matches of a watched matchday).
 export const MATCH_AVG_GOALS = 2.8;
 export const MATCH_SKILL_EXPONENT = 4;
+
+// Live match (the one the manager watches): each minute every team rolls once
+// for a goal. Evenly matched, a team's per-minute chance is GOAL_CHANCE_PER_MINUTE
+// (1/60 -> ~1.5 goals over 90'); the strength share (same exponent as above)
+// shifts it toward the stronger side. Stoppage adds 0..MATCH_MAX_STOPPAGE
+// minutes, rolled per match. A goal carries an assist GOAL_ASSIST_CHANCE of the
+// time (else a solo goal).
+export const GOAL_CHANCE_PER_MINUTE = 1 / 60;
+export const MATCH_MAX_STOPPAGE = 6;
+export const GOAL_ASSIST_CHANCE = 0.75;
+
+// Live player match ratings (goals-only): everyone on the pitch starts at
+// MATCH_RATING_BASE; a goal adds MATCH_RATING_GOAL to the scorer and
+// MATCH_RATING_ASSIST to the assister. Clamped to 1..10.
+export const MATCH_RATING_BASE = 6;
+export const MATCH_RATING_GOAL = 1;
+export const MATCH_RATING_ASSIST = 0.5;
+
+// Playback speed: real milliseconds per simulated minute (~11s for a full match).
+export const MATCH_TICK_MS = 120;
 
 // Club finances
 export const CLUB_STARTING_MONEY = 600000;

@@ -1,0 +1,91 @@
+name: Deploy
+
+# Build the SPA + PHP API and FTP-sync them to the shared webspace on every push
+# to master (and on demand). Only changed files are uploaded; nothing on the
+# server is deleted — see the safety notes on the deploy step.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# One deploy at a time: the FTP action keeps a sync-state file on the server, and
+# overlapping runs could corrupt it.
+concurrency:
+  group: ftp-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SPA
+        run: npm run build
+
+      # `vite build` emits the SPA to dist/ — including the web-root .htaccess,
+      # which it copies from public/. It does NOT include the PHP api/, so stage
+      # it next to the SPA so the upload tree mirrors the web root:
+      #   dist/ -> /,  dist/api/ -> /api,  dist/.htaccess -> /.htaccess
+      # Drop config.php (prod DB creds — uploaded by hand, never in git), the
+      # local data/ dir, and repo-only docs (config.sample.php, schema.sql).
+      - name: Stage API alongside built SPA
+        run: |
+          mkdir -p dist/api
+          cp -R api/. dist/api/
+          rm -f  dist/api/config.php
+          rm -f  dist/api/config.sample.php
+          rm -f  dist/api/schema.sql
+          rm -rf dist/api/data
+
+      # Fail fast rather than silently shipping a broken tree. Clean-slate is off
+      # (below), so a bad deploy would otherwise "succeed". Assert the SPA shell,
+      # the web-root .htaccess (SPA routing + secret protection), and the staged
+      # API are present, and that config.php did NOT leak into the upload set.
+      - name: Verify staged tree
+        run: |
+          test -f dist/index.html         || { echo "::error::dist/index.html missing — build failed?"; exit 1; }
+          test -f dist/.htaccess          || { echo "::error::dist/.htaccess missing — is public/.htaccess present?"; exit 1; }
+          test -f dist/api/_bootstrap.php  || { echo "::error::dist/api missing — API was not staged"; exit 1; }
+          test ! -f dist/api/config.php   || { echo "::error::config.php leaked into the upload set"; exit 1; }
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # Encrypted FTP (explicit TLS, port 21). If the host only offers
+          # implicit TLS use `ftps-legacy` (and add `port: 990`); plain `ftp`
+          # disables encryption. Wrong protocol is the #1 cause of a failed run.
+          protocol: ftps
+          # Upload the staged tree (built SPA + .htaccess + api/) ...
+          local-dir: ./dist/
+          # ... into the web root. Defaults to ./ ; set the FTP_SERVER_DIR secret
+          # to a subfolder (trailing slash, e.g. "public_html/") if the FTP login
+          # lands above the web root.
+          server-dir: ${{ secrets.FTP_SERVER_DIR || './' }}
+          # SAFETY: clean-slate OFF (also the default). The action only uploads
+          # changed files and NEVER deletes server files it didn't create — this
+          # is what keeps the hand-uploaded api/config.php and any /api/data safe.
+          dangerous-clean-slate: false
+          # NOTE: a custom `exclude` REPLACES the action defaults, so .git* and
+          # node_modules are re-listed here on purpose. config.php is already
+          # stripped above; excluding it again is belt-and-suspenders (prevents
+          # upload — deletion is already impossible with clean-slate off).
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/config.php
+            **/data/**

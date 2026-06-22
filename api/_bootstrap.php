@@ -70,13 +70,19 @@ function db(): PDO
 // (php -S) still keeps a session.
 $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'httponly' => true,
-    'secure' => $https,
-    'samesite' => 'Lax',
-]);
+if (PHP_VERSION_ID >= 70300) {
+    // PHP 7.3+ supports the array form (and the SameSite attribute).
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'httponly' => true,
+        'secure' => $https,
+        'samesite' => 'Lax',
+    ]);
+} else {
+    // Older PHP: positional args only (no SameSite).
+    session_set_cookie_params(0, '/', '', $https, true);
+}
 session_name('FBSESS');
 session_start();
 
@@ -98,7 +104,7 @@ function json_input(): array
     return is_array($data) ? $data : [];
 }
 
-function current_user_id(): ?int
+function current_user_id()
 {
     return isset($_SESSION['uid']) ? (int) $_SESSION['uid'] : null;
 }

@@ -2,7 +2,11 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Production is served from windwalk.de/foot/, so built asset URLs (and, via
+  // import.meta.env.BASE_URL, the router and API client) are prefixed with
+  // /foot/. The dev server stays at the root so local development is unchanged.
+  base: command === 'build' ? '/foot/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {
@@ -34,4 +38,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))

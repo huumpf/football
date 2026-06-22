@@ -22,13 +22,17 @@ async function request(url, method, body) {
   return data;
 }
 
+// The API lives alongside the SPA, so it inherits the Vite base path: '/api' at
+// the domain root, '/foot/api' when deployed under windwalk.de/foot/.
+const API = `${import.meta.env.BASE_URL}api`;
+
 export const api = {
   register: (email, password) =>
-    request('/api/auth.php?action=register', 'POST', { email, password }),
+    request(`${API}/auth.php?action=register`, 'POST', { email, password }),
   login: (email, password) =>
-    request('/api/auth.php?action=login', 'POST', { email, password }),
-  logout: () => request('/api/auth.php?action=logout', 'POST'),
-  me: () => request('/api/auth.php?action=me', 'GET'),
-  loadSave: () => request('/api/save.php', 'GET'),
-  putSave: (state) => request('/api/save.php', 'PUT', { state }),
+    request(`${API}/auth.php?action=login`, 'POST', { email, password }),
+  logout: () => request(`${API}/auth.php?action=logout`, 'POST'),
+  me: () => request(`${API}/auth.php?action=me`, 'GET'),
+  loadSave: () => request(`${API}/save.php`, 'GET'),
+  putSave: (state) => request(`${API}/save.php`, 'PUT', { state }),
 };

@@ -60,16 +60,20 @@ export function createPersistence(store) {
       enabled = true;
       return !!state;
     },
-    // Discard the in-memory game (back to the new-game baseline).
+    // Discard the in-memory game (back to the new-game baseline). The save on
+    // the server is untouched — it's reloaded on the next login.
     reset() {
       replaceGame(clone(initial));
     },
-    // Stop autosaving and wipe the game — used on logout.
-    end() {
+    // Logout: stop autosaving, persist any change still inside the debounce
+    // window (so nothing recent is lost), then wipe the local game. Must run
+    // while the session is still valid, i.e. before clearing it server-side.
+    async end() {
       enabled = false;
       if (timer) {
         clearTimeout(timer);
         timer = null;
+        await flush();
       }
       controller.reset();
     },

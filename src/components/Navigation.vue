@@ -59,11 +59,12 @@ export default {
       this.$router.push({ name: 'Draft' });
     },
 
-    // End the session: clear the user, stop autosaving, and wipe the game so the
-    // next account on this browser starts clean.
+    // End the session. Flush any pending save and wipe the local game *first*
+    // (while the session cookie is still valid), then clear the session
+    // server-side. The saved game stays in the account and reloads on next login.
     async logout() {
+      await this.persistence.end();
       await this.$store.dispatch('auth/logout');
-      this.persistence.end();
       this.$router.replace({ name: 'Login' });
     },
 

@@ -46,9 +46,17 @@ function db(): PDO
         return $pdo;
     }
 
+    // Accept 'host' => 'db.example' (with an optional separate 'port'), or a
+    // combined 'host:port' string (a common copy-paste from control panels).
+    $host = $config['host'];
+    $port = $config['port'] ?? null;
+    if (strpos($host, ':') !== false) {
+        list($host, $port) = explode(':', $host, 2);
+    }
     $dsn = sprintf(
-        'mysql:host=%s;dbname=%s;charset=%s',
-        $config['host'],
+        'mysql:host=%s;%sdbname=%s;charset=%s',
+        $host,
+        $port ? 'port=' . $port . ';' : '',
         $config['name'],
         $config['charset'] ?? 'utf8mb4'
     );
@@ -72,7 +80,7 @@ session_set_cookie_params([
 session_name('FBSESS');
 session_start();
 
-function json_response(mixed $data, int $code = 200): never
+function json_response($data, $code = 200)
 {
     http_response_code($code);
     header('Content-Type: application/json');

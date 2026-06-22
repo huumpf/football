@@ -24,7 +24,7 @@ switch ($action) {
         json_response(['error' => 'unknown_action'], 404);
 }
 
-function register(): never
+function register()
 {
     $in = json_input();
     $email = strtolower(trim((string) ($in['email'] ?? '')));
@@ -54,7 +54,7 @@ function register(): never
     json_response(['user' => ['id' => $uid, 'email' => $email]]);
 }
 
-function login(): never
+function login()
 {
     $in = json_input();
     $email = strtolower(trim((string) ($in['email'] ?? '')));
@@ -74,7 +74,7 @@ function login(): never
     json_response(['user' => ['id' => (int) $row['id'], 'email' => $email]]);
 }
 
-function logout(): never
+function logout()
 {
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
@@ -92,7 +92,7 @@ function logout(): never
     json_response(['ok' => true]);
 }
 
-function me(): never
+function me()
 {
     $uid = current_user_id();
     if ($uid === null) {

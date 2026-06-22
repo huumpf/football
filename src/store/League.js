@@ -74,6 +74,49 @@ export const leagueModule = {
         || b.skill - a.skill
       );
     },
+
+    // The player's match for the current week, resolved for the match screen:
+    // both sides as { id, name, xi, bench, strength } (id null = player's club),
+    // ordered by position. Null when this week has no matchday or it has already
+    // been played. The XI and bench are split from each squad by the strongest
+    // formation, the same line-up the result is rolled from.
+    currentMatch(state, getters, rootState) {
+      const matchday = SCHED.matchdayForWeek(rootState.club.week);
+      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return null;
+
+      const fixture = state.fixtures[matchday].find(m => m.home === null || m.away === null);
+      if (!fixture) return null;
+
+      // Each line-up entry is { player, position }: position is the slot the
+      // player fills (the XI) or their own primary (the bench). Both are ordered
+      // by position so the lists read GK first down to the strikers.
+      const byPosition = entries => entries.sort((a, b) => a.player.positions.sort - b.player.positions.sort);
+      const resolveSide = id => {
+        const club = id === null ? null : state.clubs.find(c => c.id === id);
+        const name = club ? club.name : rootState.club.name;
+        const formation = club ? club.formation : getters.recommendedFormation;
+        const squad = club ? club.players : rootState.team.players;
+
+        const xi = byPosition(
+          Object.entries(formation.players).flatMap(([pos, players]) =>
+            players.map(player => ({ player, position: pos.toUpperCase() }))
+          )
+        );
+        const xiIds = new Set(xi.map(e => e.player.id));
+        const bench = byPosition(
+          squad
+            .filter(p => !xiIds.has(p.id))
+            .map(player => ({ player, position: player.positions.position }))
+        );
+        return { id, name, xi, bench, strength: formation.skillSum };
+      };
+
+      return {
+        matchday,
+        home: resolveSide(fixture.home),
+        away: resolveSide(fixture.away),
+      };
+    },
   },
 
   mutations: {
@@ -150,6 +193,26 @@ export const leagueModule = {
         away,
         ...simulateMatch(strengthOf(home), strengthOf(away)),
       }));
+      commit('RECORD_MATCHDAY', { matchday, results });
+    },
+
+    // Records the matchday around the match the manager just watched: the
+    // player's fixture takes the live score, the other 8 are instant-simulated
+    // as usual. Same guard as playMatchday so a replayed matchday is ignored.
+    playPlayerMatchday({ commit, state, getters, rootState }, live) {
+      const matchday = SCHED.matchdayForWeek(rootState.club.week);
+      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
+
+      const strengthOf = id => id === null
+        ? getters.recommendedFormation.skillSum
+        : state.clubs.find(c => c.id === id).formation.skillSum;
+
+      const results = state.fixtures[matchday].map(({ home, away }) => {
+        if (home === null || away === null) {
+          return { home, away, homeGoals: live.homeGoals, awayGoals: live.awayGoals };
+        }
+        return { home, away, ...simulateMatch(strengthOf(home), strengthOf(away)) };
+      });
       commit('RECORD_MATCHDAY', { matchday, results });
     },
   },

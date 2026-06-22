@@ -29,12 +29,27 @@ export const clubModule = {
     pay({ commit }, amount) {
       commit('PAY', amount);
     },
-    // The game's main tick: the current week's matchday (if any) is played
-    // first, then the transfer market gets its weekly round (fresh AI
-    // listings, one buy opportunity per AI club), then time moves on. After
-    // week 52 a new season starts.
-    advanceWeek({ commit, dispatch, state }) {
+    // The normal week tick (match-free weeks, and the fallback path): the
+    // current week's matchday is instant-played if any, then the calendar moves
+    // on. On a week the manager watches their match, the match screen drives
+    // finishMatch instead, so playMatchday no-ops here.
+    advanceWeek({ dispatch }) {
       dispatch('playMatchday');
+      dispatch('advanceCalendar');
+    },
+
+    // Closes out the watched match: the live score is recorded into the
+    // matchday (the other 8 fixtures instant-simulated), then the calendar
+    // moves on exactly as a normal week would.
+    finishMatch({ dispatch }, liveResult) {
+      dispatch('playPlayerMatchday', liveResult);
+      dispatch('advanceCalendar');
+    },
+
+    // The weekly tail shared by advanceWeek and finishMatch: the transfer market
+    // gets its round (fresh AI listings, one buy opportunity per AI club), then
+    // time moves on. After week 52 a new season starts.
+    advanceCalendar({ commit, dispatch, state }) {
       dispatch('refreshAiListings');
       dispatch('runAiTransfers');
       if (state.week >= CFG.SEASON_WEEKS) {

@@ -34,7 +34,7 @@
         :class="['club', 'sortable', { active: sortKey === 'club' }]"
         @click="sortBy('club')"
       >Club<span class="arrow">{{ arrow('club') }}</span></div>
-      <div v-if="$slots.actions" class="action-col"></div>
+      <div v-if="$slots.actions" class="action-col" :style="{ width: actionWidth }"></div>
     </ListRow>
 
     <ListRow
@@ -70,7 +70,7 @@
       <div v-if="showSalary" class="metric salary">{{ formatSalary(player.salary) }}</div>
       <div v-if="showValue" class="metric value">{{ formatValue(player) }}</div>
       <div v-if="showClub" class="club">{{ player.clubName }}</div>
-      <div v-if="$slots.actions" class="action-col">
+      <div v-if="$slots.actions" class="action-col" :style="{ width: actionWidth }">
         <slot name="actions" :player="player"/>
       </div>
     </ListRow>
@@ -114,6 +114,10 @@ export default {
     // Prepend a 1-based rank column (like the League standings), so each row is
     // numbered by its place in the current order.
     numbered: { type: Boolean, default: false },
+    // Width of the trailing actions cell. Wide enough for the market's text
+    // buttons by default; lists with just the dots menu pass a snug value so the
+    // button sits close to the column beside it.
+    actionWidth: { type: String, default: '76px' },
   },
 
   data: () => {
@@ -259,11 +263,11 @@ export default {
   text-overflow: ellipsis;
 }
 
-// Per-row action cell (dots menu, buy button); fixed so header and rows align.
+// Per-row action cell (dots menu, buy button). Width comes from the actionWidth
+// prop (applied to header and rows alike, so the columns stay aligned).
 .action-col {
   display: flex;
   justify-content: flex-end;
-  width: 76px;
   flex-shrink: 0;
 }
 

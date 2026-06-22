@@ -40,8 +40,8 @@ export default {
     side: { type: String, required: true },
     // Starting XI rows: { player, position, rating:Number, scored:Boolean }.
     starters: { type: Array, required: true },
-    // Bench/reserve rows: { player, position }. They never come on, so their
-    // rating shows as a dash.
+    // Bench rows: { player, position }. They don't take the pitch, so their
+    // rating shows as a dash. (Reserve players aren't passed to the match.)
     bench: { type: Array, default: () => [] },
   },
 

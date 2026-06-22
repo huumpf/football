@@ -39,6 +39,8 @@ export default {
 
   watch: {
     draftIsCompleted: function () {
+      // Fill every formation's team sheet once, now the squad is complete.
+      this.$store.dispatch('initFormations');
       this.$router.push({ name: "Team" });
     }
   }

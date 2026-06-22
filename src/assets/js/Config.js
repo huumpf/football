@@ -112,6 +112,11 @@ export const CLUB_STARTING_MONEY = 600000;
 // A club may not sell below this squad size (starting XI plus 5 bench).
 export const MIN_SQUAD_SIZE = 16;
 
+// Matchday bench capacity: everyone outside the XI and the bench sits in the
+// (unbounded) reserve. Shared by the team-page editor, the auto-filled team
+// sheets and the AI sheet generation so the editor and the match agree.
+export const BENCH_SIZE = 9;
+
 // Market value: blend of current skill and the projected skill a few years
 // ahead (same idea as AI draft picks), raised to an exponent so stars cost
 // disproportionately more. MV_BASE is the value of an average player

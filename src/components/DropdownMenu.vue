@@ -8,6 +8,7 @@
       :class="{ secondary: option.secondary, selected: option.selected }"
       @click="$emit('select', option)"
     >
+      <img v-if="option.selected" class="opt-check" src="../assets/img/icons/CheckCircle-white.svg" alt=""/>
       <span class="opt-label">{{ option.label }}</span>
       <span class="opt-value">{{ option.value }}</span>
     </button>
@@ -131,7 +132,16 @@ export default {
   background-color: $col_110;
 }
 
+// Default-formation marker, sat at the start of the row before the label.
+.opt-check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
 .opt-label {
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

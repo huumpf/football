@@ -30,7 +30,7 @@ export const leagueModule = {
         {
           id: null,
           name: rootState.club.name,
-          skill: getters.recommendedFormation.skillSum,
+          skill: getters.activeFormationSkill,
           own: true,
         },
       ].map(entry => ({
@@ -78,8 +78,9 @@ export const leagueModule = {
     // The player's match for the current week, resolved for the match screen:
     // both sides as { id, name, xi, bench, strength } (id null = player's club),
     // ordered by position. Null when this week has no matchday or it has already
-    // been played. The XI and bench are split from each squad by the strongest
-    // formation, the same line-up the result is rolled from.
+    // been played. Each side plays its saved team sheet: the player's club its
+    // active formation (Team view), an AI club its weekly-generated sheet. The
+    // bench is the matchday subs (greyed in the sidebar); the reserve is dropped.
     currentMatch(state, getters, rootState) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return null;
@@ -91,24 +92,52 @@ export const leagueModule = {
       // player fills (the XI) or their own primary (the bench). Both are ordered
       // by position so the lists read GK first down to the strikers.
       const byPosition = entries => entries.sort((a, b) => a.player.positions.sort - b.player.positions.sort);
-      const resolveSide = id => {
-        const club = id === null ? null : state.clubs.find(c => c.id === id);
-        const name = club ? club.name : rootState.club.name;
-        const formation = club ? club.formation : getters.recommendedFormation;
-        const squad = club ? club.players : rootState.team.players;
+      // Slotted lineup ({pos:[player|null]} or {pos:[player]}) -> XI entries.
+      const flattenLineup = lineup =>
+        Object.entries(lineup).flatMap(([pos, players]) =>
+          players.filter(Boolean).map(player => ({ player, position: pos.toUpperCase() }))
+        );
+      const benchRows = players =>
+        byPosition(players.map(player => ({ player, position: player.positions.position })));
 
-        const xi = byPosition(
-          Object.entries(formation.players).flatMap(([pos, players]) =>
-            players.map(player => ({ player, position: pos.toUpperCase() }))
-          )
-        );
-        const xiIds = new Set(xi.map(e => e.player.id));
-        const bench = byPosition(
-          squad
-            .filter(p => !xiIds.has(p.id))
-            .map(player => ({ player, position: player.positions.position }))
-        );
-        return { id, name, xi, bench, strength: formation.skillSum };
+      const resolveSide = id => {
+        if (id === null) {
+          // The player's club fields its saved active formation.
+          const name = rootState.club.name;
+          const sheet = rootState.team.formations[rootState.team.activeFormation];
+          if (sheet) {
+            return {
+              id, name,
+              xi: byPosition(flattenLineup(sheet.lineup)),
+              bench: benchRows(sheet.bench),
+              strength: HLP.lineupSkill(sheet.lineup),
+            };
+          }
+          // Defensive fallback before the sheets are initialised: auto optimum.
+          const formation = getters.recommendedFormation;
+          const xi = byPosition(flattenLineup(formation.players));
+          const xiIds = new Set(xi.map(e => e.player.id));
+          const bench = HLP.selectBench(
+            rootState.team.players.filter(p => !xiIds.has(p.id)),
+            formation.positions,
+            CFG.BENCH_SIZE,
+          );
+          return { id, name, xi, bench: benchRows(bench), strength: formation.skillSum };
+        }
+
+        // An AI club fields its weekly-generated sheet.
+        const club = state.clubs.find(c => c.id === id);
+        const xi = byPosition(flattenLineup(club.formation.players));
+        let bench = club.bench;
+        if (!bench) {
+          const xiIds = new Set(xi.map(e => e.player.id));
+          bench = HLP.selectBench(
+            club.players.filter(p => !xiIds.has(p.id)),
+            club.formation.positions,
+            CFG.BENCH_SIZE,
+          );
+        }
+        return { id, name: club.name, xi, bench: benchRows(bench), strength: club.formation.skillSum };
       };
 
       return {
@@ -167,13 +196,32 @@ export const leagueModule = {
       club.money -= price;
       club.formation = HLP.getRecommendedFormation(club.players);
     },
+
+    // Regenerates each AI club's full matchday sheet from its current squad: the
+    // strongest formation plus a positionally aware bench and the reserve.
+    REGENERATE_AI_FORMATIONS(state) {
+      for (const club of state.clubs) {
+        const { formation, bench, reserve } = HLP.buildClubSheet(club.players, CFG.BENCH_SIZE);
+        club.formation = formation;
+        club.bench = bench;
+        club.reserve = reserve;
+      }
+    },
   },
 
   actions: {
     makeLeague({ commit, dispatch, rootState }) {
       commit('MAKE_LEAGUE', [rootState.club.name]);
       commit('MAKE_SCHEDULE');
+      dispatch('regenerateAiFormations');
       dispatch('refreshAiListings');
+    },
+
+    // Rebuilds every AI club's matchday sheet (formation + bench + reserve) from
+    // its current squad. Run at league creation and after the weekly transfer
+    // round so the sheet a match shows reflects the post-transfer squad.
+    regenerateAiFormations({ commit }) {
+      commit('REGENERATE_AI_FORMATIONS');
     },
 
     // Simulates the current week's matchday, if the week has one, a schedule
@@ -185,7 +233,7 @@ export const leagueModule = {
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
 
       const strengthOf = id => id === null
-        ? getters.recommendedFormation.skillSum
+        ? getters.activeFormationSkill
         : state.clubs.find(c => c.id === id).formation.skillSum;
 
       const results = state.fixtures[matchday].map(({ home, away }) => ({
@@ -204,7 +252,7 @@ export const leagueModule = {
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
 
       const strengthOf = id => id === null
-        ? getters.recommendedFormation.skillSum
+        ? getters.activeFormationSkill
         : state.clubs.find(c => c.id === id).formation.skillSum;
 
       const results = state.fixtures[matchday].map(({ home, away }) => {

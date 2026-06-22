@@ -7,6 +7,12 @@ import {
   assignLineup,
   getFormationsWithPlayers,
   getRecommendedFormation,
+  lineupSkill,
+  selectBench,
+  buildSheet,
+  buildFormationSheets,
+  buildClubSheet,
+  reconcileSheet,
 } from '../src/assets/js/Helpers.js';
 import * as CFG from '../src/assets/js/Config.js';
 
@@ -16,6 +22,21 @@ function player(skill, primary, secondary = []) {
     skill,
     positions: { position: primary[0], primary, secondary },
   };
+}
+
+// Like player() but with a unique id (the sheet helpers key players by id).
+let _id = 0;
+function p(skill, primary, secondary = []) {
+  return { id: ++_id, skill, positions: { position: primary[0], primary, secondary, sort: 0 } };
+}
+
+// All player ids currently sitting in a sheet's three buckets.
+function sheetIds(sheet) {
+  return [
+    ...Object.values(sheet.lineup).flat(),
+    ...sheet.bench,
+    ...sheet.reserve,
+  ].filter(Boolean).map(pl => pl.id);
 }
 
 describe('moneyStr', () => {
@@ -141,5 +162,135 @@ describe('getFormationsWithPlayers / getRecommendedFormation', () => {
     const best = getRecommendedFormation(squad);
     const max = Math.max(...getFormationsWithPlayers(squad).map(f => f.skillSum));
     expect(best.skillSum).toBe(max);
+  });
+});
+
+describe('lineupSkill', () => {
+  it('sums the effective skill of the slotted players', () => {
+    expect(lineupSkill({ gk: [p(70, ['GK'])], st: [p(80, ['ST'])] })).toBe(150);
+  });
+
+  it('skips empty slots', () => {
+    expect(lineupSkill({ gk: [p(70, ['GK'])], st: [null] })).toBe(70);
+  });
+
+  it('counts an out-of-position player as zero (symmetric with the optimum)', () => {
+    expect(lineupSkill({ cb: [p(80, ['ST'])] })).toBe(0);
+  });
+});
+
+describe('selectBench', () => {
+  it('takes one backup per position before raw skill (incl. a backup GK)', () => {
+    const gk = p(40, ['GK']);
+    const st1 = p(90, ['ST']);
+    const st2 = p(85, ['ST']);
+    const st3 = p(30, ['ST']);
+    // Two bench slots, two distinct positions: the low-skill GK still earns a
+    // slot over the higher-skill second striker.
+    const bench = selectBench([gk, st1, st2, st3], { gk: 1, st: 1 }, 2);
+    expect(bench).toContain(gk);
+    expect(bench).toContain(st1);
+    expect(bench).not.toContain(st2);
+    expect(bench.length).toBe(2);
+  });
+
+  it('does not stack one position when others can be covered', () => {
+    const gk = p(50, ['GK']);
+    const st = p(55, ['ST']);
+    const cbs = Array.from({ length: 10 }, (_, i) => p(60 + i, ['CB']));
+    const bench = selectBench([gk, st, ...cbs], { gk: 1, cb: 2, st: 1 }, 9);
+    expect(bench).toContain(gk);
+    expect(bench).toContain(st);
+    expect(bench.length).toBe(9);
+    expect(bench.every(pl => pl.positions.position === 'CB')).toBe(false);
+  });
+
+  it('fills remaining slots by skill once positions are covered', () => {
+    const gk = p(50, ['GK']);
+    const st = p(60, ['ST']);
+    const cbHigh = p(80, ['CB']);
+    const cbLow = p(55, ['CB']);
+    const bench = selectBench([gk, st, cbHigh, cbLow], { gk: 1, st: 1 }, 4);
+    // Covers gk + st + best cb, then the leftover cb by skill.
+    expect(bench.length).toBe(4);
+    expect(bench).toContain(cbHigh);
+    expect(bench).toContain(cbLow);
+  });
+
+  it('tolerates a squad smaller than the bench', () => {
+    const bench = selectBench([p(50, ['GK'])], { gk: 1, cb: 2 }, 9);
+    expect(bench.length).toBe(1);
+  });
+});
+
+describe('buildSheet', () => {
+  it('partitions the squad into lineup, bench and reserve with no overlap', () => {
+    const squad = [p(70, ['GK']), p(80, ['ST']), p(75, ['ST']), p(60, ['ST'])];
+    const sheet = buildSheet(squad, { gk: 1, st: 1 }, 1);
+    // GK + best ST on the pitch, one ST on the bench, one in reserve.
+    expect(sheet.lineup.gk[0].positions.position).toBe('GK');
+    expect(sheet.bench.length).toBe(1);
+    expect(sheet.reserve.length).toBe(1);
+    const ids = sheetIds(sheet);
+    expect(new Set(ids).size).toBe(squad.length); // every player once
+  });
+});
+
+describe('buildFormationSheets', () => {
+  it('builds a partitioning sheet for every formation and names the strongest default', () => {
+    const squad = [
+      p(70, ['GK']), p(72, ['LB']), p(74, ['CB']), p(73, ['CB']), p(71, ['RB']),
+      p(75, ['CM']), p(76, ['CM']), p(77, ['LM']), p(78, ['RM']),
+      p(82, ['ST']), p(80, ['ST']), p(60, ['CB']), p(58, ['GK']),
+    ];
+    const { sheets, defaultName } = buildFormationSheets(squad, CFG.BENCH_SIZE);
+    expect(Object.keys(sheets).length).toBe(CFG.formations.length);
+    expect(defaultName).toBe(getRecommendedFormation(squad).name);
+    for (const sheet of Object.values(sheets)) {
+      expect(new Set(sheetIds(sheet)).size).toBe(squad.length);
+    }
+  });
+});
+
+describe('buildClubSheet', () => {
+  it('uses the strongest formation and partitions the squad', () => {
+    const squad = [
+      p(70, ['GK']), p(72, ['CB']), p(74, ['CB']), p(73, ['CB']),
+      p(75, ['CM']), p(76, ['CM']), p(77, ['CM']),
+      p(82, ['ST']), p(80, ['ST']), p(60, ['LB']), p(58, ['RB']),
+      p(55, ['GK']), p(54, ['CB']),
+    ];
+    const { formation, bench, reserve } = buildClubSheet(squad, CFG.BENCH_SIZE);
+    expect(formation.name).toBe(getRecommendedFormation(squad).name);
+    const placed = Object.values(formation.players).flat();
+    const ids = [...placed, ...bench, ...reserve].map(pl => pl.id);
+    expect(new Set(ids).size).toBe(squad.length);
+  });
+});
+
+describe('reconcileSheet', () => {
+  const a = p(70, ['GK']);
+  const b = p(80, ['ST']);
+  const c = p(60, ['CB']);
+  const base = () => ({ lineup: { gk: [a], st: [b] }, bench: [c], reserve: [] });
+
+  it('vacates a pitch slot when its player leaves the squad', () => {
+    const r = reconcileSheet(base(), [a, c]);
+    expect(r.lineup.st[0]).toBeNull();
+    expect(r.lineup.gk[0]).toBe(a);
+    expect(sheetIds(r)).not.toContain(b.id);
+  });
+
+  it('appends a new signing to the reserve', () => {
+    const d = p(50, ['LB']);
+    const r = reconcileSheet(base(), [a, b, c, d]);
+    expect(r.reserve.map(pl => pl.id)).toContain(d.id);
+    expect(r.lineup.st[0]).toBe(b);
+  });
+
+  it('dedupes a player that appears in more than one bucket', () => {
+    const dup = { lineup: { gk: [a] }, bench: [a], reserve: [a] };
+    const r = reconcileSheet(dup, [a]);
+    expect(sheetIds(r).filter(id => id === a.id).length).toBe(1);
   });
 });

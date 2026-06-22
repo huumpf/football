@@ -212,6 +212,139 @@ export function getRecommendedFormation (players) {
   for (let i = 1; i < formations.length; i++) {
     if (formations[i].skillSum >= recommendedFormation.skillSum) recommendedFormation = formations[i];
   }
-  
+
   return recommendedFormation;
+}
+
+// The effective skill the placed players bring to their slots — the strength a
+// slot-aligned lineup actually fields. Same metric assignPlayersToFormation
+// sums into skillSum, so a saved lineup stays comparable with a formation's
+// skillSum and with the AI side's strength.
+export function lineupSkill(lineup) {
+  let sum = 0;
+  for (const [pos, slots] of Object.entries(lineup)) {
+    const POS = pos.toUpperCase();
+    for (const player of slots) {
+      if (player) sum += effectiveSkill(player, POS);
+    }
+  }
+  return sum;
+}
+
+// Picks the matchday bench from the players left over after the XI: first one
+// backup for each distinct formation position (the best effective skill there,
+// GK first by key order), then the strongest remaining players fill the rest of
+// the bench. Returns up to benchSize players, positionally varied rather than
+// just the top scorers; the caller treats whoever is left as reserve. Tolerates
+// squads too small to fill the bench.
+export function selectBench(nonXi, positionCounts, benchSize) {
+  const chosen = [];
+  const used = new Set();
+
+  for (const pos of Object.keys(positionCounts)) {
+    if (chosen.length >= benchSize) break;
+    const POS = pos.toUpperCase();
+    let best = null;
+    let bestSkill = 0;
+    for (const player of nonXi) {
+      if (used.has(player.id)) continue;
+      const skill = effectiveSkill(player, POS);
+      if (skill > bestSkill) {
+        bestSkill = skill;
+        best = player;
+      }
+    }
+    if (best) {
+      chosen.push(best);
+      used.add(best.id);
+    }
+  }
+
+  const rest = nonXi
+    .filter(player => !used.has(player.id))
+    .sort((a, b) => b.skill - a.skill);
+  for (const player of rest) {
+    if (chosen.length >= benchSize) break;
+    chosen.push(player);
+  }
+
+  return chosen;
+}
+
+// Ids of the players currently slotted in a {pos:[player|null]} lineup.
+function placedIds(lineup) {
+  const ids = new Set();
+  for (const slots of Object.values(lineup)) {
+    for (const player of slots) if (player) ids.add(player.id);
+  }
+  return ids;
+}
+
+// Splits the squad outside the XI into a bench (positionally aware) and the
+// reserve (everyone else).
+function benchAndReserve(players, placed, positionCounts, benchSize) {
+  const nonXi = players.filter(p => !placed.has(p.id));
+  const bench = selectBench(nonXi, positionCounts, benchSize);
+  const benchIds = new Set(bench.map(p => p.id));
+  const reserve = nonXi.filter(p => !benchIds.has(p.id));
+  return { bench, reserve };
+}
+
+// One saved team sheet for a squad in a formation: the optimal slot-aligned XI,
+// a positionally aware bench, and the rest in reserve.
+export function buildSheet(players, positionCounts, benchSize) {
+  const lineup = assignLineup(players, positionCounts);
+  const { bench, reserve } = benchAndReserve(players, placedIds(lineup), positionCounts, benchSize);
+  return { lineup, bench, reserve };
+}
+
+// A saved sheet for every formation, keyed by name, plus the strongest
+// formation's name as the default. Run once to seed the player's club.
+export function buildFormationSheets(players, benchSize) {
+  const sheets = {};
+  for (const formation of getFormationsWithPlayers(players)) {
+    sheets[formation.name] = buildSheet(players, formation.positions, benchSize);
+  }
+  return { sheets, defaultName: getRecommendedFormation(players).name };
+}
+
+// An AI club's matchday sheet: its strongest formation (with its slotted XI and
+// skillSum) plus a positionally aware bench and the reserve. The single-
+// formation counterpart to buildFormationSheets — the AI never switches or
+// hand-edits, so it is regenerated wholesale each week.
+export function buildClubSheet(players, benchSize) {
+  const formation = getRecommendedFormation(players);
+  const { bench, reserve } = benchAndReserve(players, placedIds(formation.players), formation.positions, benchSize);
+  return { formation, bench, reserve };
+}
+
+// Realigns a saved sheet with the current squad after a transfer or retirement:
+// drops players no longer in the squad (vacating their pitch slot or removing
+// their row), dedupes so each player sits in exactly one bucket, and drops any
+// squad player left in none into the reserve. Never reorders or re-optimises, so
+// the manager's arrangement survives squad churn.
+export function reconcileSheet(sheet, players) {
+  const byId = new Map(players.map(p => [p.id, p]));
+  const seen = new Set();
+
+  const take = player => {
+    if (player && byId.has(player.id) && !seen.has(player.id)) {
+      seen.add(player.id);
+      return byId.get(player.id);
+    }
+    return null;
+  };
+
+  const lineup = {};
+  for (const [pos, slots] of Object.entries(sheet.lineup)) {
+    lineup[pos] = slots.map(take);
+  }
+  const bench = sheet.bench.map(take).filter(Boolean);
+  const reserve = sheet.reserve.map(take).filter(Boolean);
+
+  for (const player of players) {
+    if (!seen.has(player.id)) reserve.push(player);
+  }
+
+  return { lineup, bench, reserve };
 }

@@ -57,6 +57,9 @@ export const clubModule = {
       } else {
         commit('ADVANCE_WEEK');
       }
+      // Re-roll every AI club's sheet now that the transfer round (and any
+      // season-change aging) is done, so next matchday plays the current squads.
+      dispatch('regenerateAiFormations');
     },
 
     // Closes the season: every player ages a year (the AI clubs re-pick their

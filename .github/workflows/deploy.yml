@@ -46,6 +46,7 @@ jobs:
           rm -f  dist/api/config.php
           rm -f  dist/api/config.sample.php
           rm -f  dist/api/schema.sql
+          rm -f  dist/api/diag.php
           rm -rf dist/api/data
 
       # Fail fast rather than silently shipping a broken tree. Clean-slate is off
@@ -59,6 +60,13 @@ jobs:
           test -f dist/api/_bootstrap.php  || { echo "::error::dist/api missing — API was not staged"; exit 1; }
           test ! -f dist/api/config.php   || { echo "::error::config.php leaked into the upload set"; exit 1; }
 
+      # The SPA and .htaccess are built for the /foot/ subfolder, so deploying
+      # into the wrong directory ships a broken tree (and could overwrite files
+      # in the FTP root). Fail fast instead of silently defaulting to './'.
+      - name: Require FTP_SERVER_DIR
+        run: |
+          test -n "${{ secrets.FTP_SERVER_DIR }}" || { echo "::error::FTP_SERVER_DIR secret is not set — refusing to deploy into the FTP root"; exit 1; }
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -71,10 +79,10 @@ jobs:
           protocol: ftps
           # Upload the staged tree (built SPA + .htaccess + api/) ...
           local-dir: ./dist/
-          # ... into the web root. Defaults to ./ ; set the FTP_SERVER_DIR secret
-          # to a subfolder (trailing slash, e.g. "public_html/") if the FTP login
-          # lands above the web root.
-          server-dir: ${{ secrets.FTP_SERVER_DIR || './' }}
+          # ... into the app's /foot/ folder. Required (asserted above): the
+          # path to it as seen from the FTP login, with a trailing slash, e.g.
+          # "foot/" or "public_html/foot/".
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
           # SAFETY: clean-slate OFF (also the default). The action only uploads
           # changed files and NEVER deletes server files it didn't create — this
           # is what keeps the hand-uploaded api/config.php and any /api/data safe.

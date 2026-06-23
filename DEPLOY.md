@@ -22,6 +22,8 @@ foot/api/config.php   DB credentials — uploaded ONCE by hand, never by a deplo
 1. **Database** — in your host's control panel, create a MySQL database; note the
    host, database name, user, and password.
 2. **Schema** — import `api/schema.sql` once (e.g. via phpMyAdmin) into that DB.
+   It is idempotent (`CREATE TABLE IF NOT EXISTS`), so re-import it after a schema
+   change to pick up new tables.
 3. **config.php** — copy `api/config.sample.php` → `api/config.php`, set
    `'driver' => 'mysql'`, and fill in the credentials.
 4. **Upload `config.php` once, by hand** (FTP/SFTP) into the `foot/api/` folder
@@ -32,9 +34,11 @@ foot/api/config.php   DB credentials — uploaded ONCE by hand, never by a deplo
    - `FTP_SERVER` — e.g. `ftp.your-host.example`
    - `FTP_USERNAME`
    - `FTP_PASSWORD`
-   - `FTP_SERVER_DIR` — the path to the **`foot/` folder** as seen from the FTP
-     login, **with a trailing slash**. If the login lands in the web root, that's
-     `foot/`; if it lands above it, e.g. `public_html/foot/` or `windwalk.de/foot/`.
+   - `FTP_SERVER_DIR` — **required** — the path to the **`foot/` folder** as seen
+     from the FTP login, **with a trailing slash**. If the login lands in the web
+     root, that's `foot/`; if it lands above it, e.g. `public_html/foot/` or
+     `windwalk.de/foot/`. The deploy fails fast if this is unset (it refuses to
+     ship the `/foot/`-built tree into the FTP root).
 6. **HTTPS** — enable "Force HTTPS / SSL redirect" in your hosting control panel
    (the safest option — it's proxy-aware). Alternatively, uncomment the HTTPS
    block in `public/.htaccess` (tested loop-safe for direct-TLS and

@@ -26,20 +26,27 @@ if ($method === 'PUT') {
         json_response(['error' => 'bad_request'], 422);
     }
 
-    $state = json_encode($in['state']);
+    $state = json_encode($in['state'], JSON_UNESCAPED_UNICODE);
+    if ($state === false) {
+        json_response(['error' => 'bad_state'], 422);
+    }
     $now = gmdate('Y-m-d H:i:s');
     $pdo = db();
 
-    // Portable upsert (works on both MySQL and SQLite).
-    $stmt = $pdo->prepare('SELECT 1 FROM saves WHERE user_id = ?');
-    $stmt->execute([$uid]);
-    if ($stmt->fetch()) {
-        $stmt = $pdo->prepare('UPDATE saves SET state = ?, updated_at = ? WHERE user_id = ?');
-        $stmt->execute([$state, $now, $uid]);
+    // Atomic upsert — no SELECT-then-write race (two concurrent first saves can
+    // no longer both INSERT and collide on the primary key).
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $stmt = $pdo->prepare(
+            'INSERT INTO saves (user_id, state, updated_at) VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE state = VALUES(state), updated_at = VALUES(updated_at)'
+        );
     } else {
-        $stmt = $pdo->prepare('INSERT INTO saves (user_id, state, updated_at) VALUES (?, ?, ?)');
-        $stmt->execute([$uid, $state, $now]);
+        $stmt = $pdo->prepare(
+            'INSERT INTO saves (user_id, state, updated_at) VALUES (?, ?, ?)
+             ON CONFLICT(user_id) DO UPDATE SET state = excluded.state, updated_at = excluded.updated_at'
+        );
     }
+    $stmt->execute([$uid, $state, $now]);
     json_response(['ok' => true, 'updated_at' => $now]);
 }
 

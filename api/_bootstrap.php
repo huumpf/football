@@ -5,6 +5,21 @@
 
 declare(strict_types=1);
 
+// Production error hygiene: never render PHP errors or exception messages (which
+// can embed the DB host/credentials) to the client. Log them server-side and
+// return a generic JSON 500 instead.
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+set_exception_handler(function ($e) {
+    error_log('[api] ' . $e);
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+    }
+    echo json_encode(['error' => 'server_error']);
+    exit;
+});
+
 $config = require __DIR__ . '/config.php';
 
 // Lazily-opened PDO handle. Driver-configurable so the same code runs against
@@ -41,6 +56,13 @@ function db(): PDO
                 state TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )'
+        );
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS auth_attempts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
             )'
         );
         return $pdo;
@@ -80,11 +102,24 @@ if (PHP_VERSION_ID >= 70300) {
         'samesite' => 'Lax',
     ]);
 } else {
-    // Older PHP: positional args only (no SameSite).
-    session_set_cookie_params(0, '/', '', $https, true);
+    // Older PHP: positional args only. Smuggle SameSite onto the path argument
+    // (PHP doesn't validate it) so the attribute isn't lost on exactly the old
+    // hosts this branch targets.
+    session_set_cookie_params(0, '/; samesite=Lax', '', $https, true);
 }
 session_name('FBSESS');
 session_start();
+
+// CSRF defense-in-depth on top of the SameSite cookie: reject state-changing
+// requests the browser tells us originated on another site. An absent header
+// (older browsers, non-browser clients) falls back to the SameSite cookie.
+$request_method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+if ($request_method !== 'GET' && $request_method !== 'HEAD' && $request_method !== 'OPTIONS') {
+    $fetch_site = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? '';
+    if ($fetch_site === 'cross-site' || $fetch_site === 'cross-origin') {
+        json_response(['error' => 'forbidden'], 403);
+    }
+}
 
 function json_response($data, $code = 200)
 {

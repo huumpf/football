@@ -7,7 +7,8 @@
 //   FTP_USER        (required)
 //   FTP_PASSWORD    (required)
 //   FTP_SERVER_DIR  (optional)  remote web root, default "/"
-//   FTP_SECURE      (optional)  "true" -> explicit FTPS over TLS (default false)
+//   FTP_SECURE      (optional)  explicit FTPS over TLS; on by default, set
+//                               "false" only if the host has no FTPS support
 //
 // Steps: build -> stage api/ into dist/api (minus config.php, the sample, the
 // schema, and data/) -> upload dist/ over FTP. `vite build` already places the
@@ -34,6 +35,7 @@ const API_EXCLUDES = new Set([
   resolve(apiSrcDir, 'config.php'),
   resolve(apiSrcDir, 'config.sample.php'),
   resolve(apiSrcDir, 'schema.sql'),
+  resolve(apiSrcDir, 'diag.php'),
   resolve(apiSrcDir, 'data'),
 ])
 
@@ -83,7 +85,9 @@ async function upload() {
   const user = requireEnv('FTP_USER')
   const password = requireEnv('FTP_PASSWORD')
   const serverDir = (process.env.FTP_SERVER_DIR || '/').trim()
-  const secure = /^(1|true|yes)$/i.test((process.env.FTP_SECURE || '').trim())
+  // Secure (FTPS) by default; only an explicit false/0/no opts out of TLS so a
+  // missing/empty var never silently sends the password in cleartext.
+  const secure = !/^(0|false|no)$/i.test((process.env.FTP_SECURE || 'true').trim())
 
   const client = new Client()
   client.ftp.verbose = false

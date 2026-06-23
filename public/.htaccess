@@ -17,7 +17,7 @@ DirectoryIndex index.html
 # config.php holds the DB credentials and must never be downloadable as text —
 # not even if PHP ever stops executing on the host. Matched by basename, so this
 # covers /api/config.php. _bootstrap.php is internal-only; deny it too.
-<FilesMatch "^(config\.php|config\.sample\.php|_bootstrap\.php)$">
+<FilesMatch "^(config\.php|config\.sample\.php|_bootstrap\.php|diag\.php)$">
     Require all denied
 </FilesMatch>
 

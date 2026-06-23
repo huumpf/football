@@ -81,15 +81,26 @@ export default {
       if (this.busy) return;
       this.busy = true;
       this.error = '';
+
       try {
         const action = this.isRegister ? 'auth/register' : 'auth/login';
         await this.$store.dispatch(action, { email: this.email, password: this.password });
+      } catch (e) {
+        this.error = MESSAGES[e.code] || 'Something went wrong. Please try again.';
+        this.busy = false;
+        return;
+      }
+
+      // Auth succeeded; loading the save is a separate phase. If it fails, roll
+      // back to signed-out so the user isn't stranded authenticated on /login.
+      try {
         await this.persistence.resume();
         // Draft.vue forwards a returning manager to the team once the squad is
         // complete, so we can always land on the start route.
         this.$router.replace({ name: 'Draft' });
       } catch (e) {
-        this.error = MESSAGES[e.code] || 'Something went wrong. Please try again.';
+        this.$store.commit('auth/SET_USER', null);
+        this.error = 'Signed in, but could not load your saved game. Please try again.';
         this.busy = false;
       }
     },

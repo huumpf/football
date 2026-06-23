@@ -7,9 +7,6 @@ export const authModule = {
 
   state: {
     user: null,
-    // True once the initial /me check has resolved, so the router guard waits
-    // for a real answer instead of bouncing to /login on first load.
-    ready: false,
   },
 
   getters: {
@@ -20,16 +17,12 @@ export const authModule = {
     SET_USER(state, user) {
       state.user = user;
     },
-    SET_READY(state, ready) {
-      state.ready = ready;
-    },
   },
 
   actions: {
     async fetchMe({ commit }) {
       const { user } = await api.me();
       commit('SET_USER', user);
-      commit('SET_READY', true);
       return user;
     },
     async register({ commit }, { email, password }) {

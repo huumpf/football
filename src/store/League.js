@@ -193,17 +193,44 @@ export const leagueModule = {
       for (const club of state.clubs) HLP.applySeasonRatings(club.players, ratings);
     },
 
-    // Season change: every AI club's players age a year, players past the age
-    // limit retire, and the club re-picks its strongest formation. Careers may
-    // shrink a squad below MIN_SQUAD_SIZE — the minimum only blocks sales.
-    AGE_CLUBS(state) {
+    // One week of development for every AI club squad (full squad, not just the
+    // XI). The team module defines the same mutation for the own squad, so a
+    // single commit('DEVELOP_WEEK') develops the whole league identically.
+    DEVELOP_WEEK(state, { ratings }) {
+      for (const club of state.clubs) HLP.developPlayers(club.players, ratings);
+    },
+
+    // Birthdays for the given week: AI players born this week age a year. Aging
+    // is staggered, but a player who passes the age limit keeps playing until the
+    // season ends (retirement happens at the rollover, see RETIRE_AGED).
+    AGE_BIRTHDAYS(state, { week }) {
       for (const club of state.clubs) {
         for (const player of club.players) {
-          HLP.agePlayer(player);
-          player.season = { games: 0, ratingSum: 0 };
+          if ((player.birthWeek ?? 1) === week) HLP.agePlayer(player);
         }
+      }
+    },
+
+    // Season change: AI players past the age limit retire and the affected clubs
+    // re-pick their formation. Done once at the rollover so a player who turns 35
+    // mid-season still finishes the season.
+    RETIRE_AGED(state) {
+      for (const club of state.clubs) {
+        const before = club.players.length;
         club.players = club.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
-        club.formation = HLP.getRecommendedFormation(club.players);
+        if (club.players.length !== before) club.formation = HLP.getRecommendedFormation(club.players);
+      }
+    },
+
+    // Season change: reset every AI player's season note log and snapshot the
+    // skill they start the new season with (for the UI development delta). Aging
+    // is staggered on birthdays; retirement is RETIRE_AGED, also at the rollover.
+    RESET_SEASON_STATS(state) {
+      for (const club of state.clubs) {
+        for (const player of club.players) {
+          player.season = { games: 0, ratingSum: 0 };
+          player.seasonStartSkill = player.skill;
+        }
       }
     },
 
@@ -262,7 +289,7 @@ export const leagueModule = {
     // resulting ratings are folded into every player's season log.
     playMatchday({ commit, state, getters, rootState }) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
-      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
+      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return {};
 
       const ratings = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
@@ -272,6 +299,8 @@ export const leagueModule = {
       });
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
+      commit('DEVELOP_WEEK', { ratings });
+      return ratings;
     },
 
     // Records the matchday around the match the manager just watched: the
@@ -279,7 +308,7 @@ export const leagueModule = {
     // instant-simulated. Same guard as playMatchday so a replay is ignored.
     playPlayerMatchday({ commit, state, getters, rootState }, live) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
-      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
+      if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return {};
 
       const ratings = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
@@ -293,6 +322,8 @@ export const leagueModule = {
       });
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
+      commit('DEVELOP_WEEK', { ratings });
+      return ratings;
     },
   },
 }

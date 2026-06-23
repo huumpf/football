@@ -1,6 +1,9 @@
 <template>
   <div class="player-list">
-    <div v-if="title" class="list-headline">{{ title }}</div>
+    <div v-if="title || $slots['header-actions']" class="list-header">
+      <span v-if="title" class="list-headline">{{ title }}</span>
+      <span v-if="$slots['header-actions']" class="header-actions"><slot name="header-actions"/></span>
+    </div>
     <ListRow header>
       <div v-if="numbered" class="rank">#</div>
       <div
@@ -15,6 +18,12 @@
         :class="['metric', 'sortable', { active: sortKey === 'skill' }]"
         @click="sortBy('skill')"
       >Skill<span class="arrow">{{ arrow('skill') }}</span></div>
+      <div
+        v-if="showDevelopment"
+        :class="['metric', 'dev', 'sortable', { active: sortKey === 'development' }]"
+        :title="devColumnTitle"
+        @click="sortBy('development')"
+      >Dev<span class="arrow">{{ arrow('development') }}</span></div>
       <div
         :class="['metric', 'sortable', { active: sortKey === 'age' }]"
         @click="sortBy('age')"
@@ -66,6 +75,9 @@
         />
       </div>
       <div class="metric">{{ player.skill }}</div>
+      <div v-if="showDevelopment" class="metric dev">
+        <span :class="['dev-delta', devClass(player)]">{{ devLabel(player) }}</span>
+      </div>
       <div class="metric">{{ player.age }}</div>
       <div v-if="showSalary" class="metric salary">{{ formatSalary(player.salary) }}</div>
       <div v-if="showValue" class="metric value">{{ formatValue(player) }}</div>
@@ -79,11 +91,12 @@
 
 <script>
 import ListRow from './ListRow.vue';
-import { moneyStr, marketValue } from '../assets/js/Helpers.js';
+import { moneyStr, marketValue, developmentDelta } from '../assets/js/Helpers.js';
+import { DEV_TIMEFRAMES } from '../assets/js/Config.js';
 
 // Default sort direction per column. Position reads ascending (GK → RF),
-// while skill/salary/value read best-first.
-const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', age: 'asc', salary: 'desc', value: 'desc', club: 'asc' };
+// while skill/development/salary/value read best-first.
+const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', development: 'desc', age: 'asc', salary: 'desc', value: 'desc', club: 'asc' };
 
 export default {
   name: 'PlayerList',
@@ -102,6 +115,10 @@ export default {
     showValue: { type: Boolean, default: false },
     // Selling club column; reads `clubName` off the player entries.
     showClub: { type: Boolean, default: false },
+    // Squad page: skill-change ("Dev") column, measured over `timeframe`.
+    showDevelopment: { type: Boolean, default: false },
+    // A DEV_TIMEFRAMES key the development delta is measured over.
+    timeframe: { type: String, default: 'season' },
     // Ids of players listed on the transfer market (marked with an icon).
     listedIds: { type: Object, default: null },
     // Team page: make rows drag handles + swap targets for the lineup editor.
@@ -128,6 +145,11 @@ export default {
   },
 
   computed: {
+    devColumnTitle() {
+      const label = (DEV_TIMEFRAMES.find(t => t.key === this.timeframe) || {}).label || '';
+      return `Skill change · ${label}`;
+    },
+
     sortedPlayers() {
       const dir = this.sortDir === 'asc' ? 1 : -1;
       return [...this.players].sort((a, b) => {
@@ -153,6 +175,7 @@ export default {
         case 'position': return a.positions.sort - b.positions.sort;
         case 'name': return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
         case 'skill': return a.skill - b.skill;
+        case 'development': return developmentDelta(a, this.timeframe) - developmentDelta(b, this.timeframe);
         case 'age': return a.age - b.age;
         case 'salary': return a.salary - b.salary;
         case 'value': return marketValue(a) - marketValue(b);
@@ -184,6 +207,19 @@ export default {
 
     formatValue(player) {
       return moneyStr(marketValue(player)) + ' €';
+    },
+
+    // Skill change over the selected timeframe, for the "Dev" column.
+    devDelta(player) {
+      return developmentDelta(player, this.timeframe);
+    },
+    devLabel(player) {
+      const d = this.devDelta(player);
+      return d > 0 ? `+${d}` : String(d);
+    },
+    devClass(player) {
+      const d = this.devDelta(player);
+      return d > 0 ? 'up' : d < 0 ? 'down' : 'zero';
     },
   },
 }
@@ -248,6 +284,31 @@ export default {
   width: 42px;
   flex-shrink: 0;
   text-align: center;
+}
+
+// Skill-change column: green when up, red when down, default text at zero.
+.metric.dev {
+  width: 38px;
+}
+
+.dev-delta {
+  font-weight: 600;
+
+  &.up { color: $col_2000; }
+  &.down { color: #d64545; }
+}
+
+// Title row: list headline on the left, optional header controls on the right.
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  padding-right: 8px;
 }
 
 .salary,

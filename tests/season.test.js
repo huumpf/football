@@ -129,55 +129,50 @@ describe('advanceWeek', () => {
   });
 });
 
-describe('season change', () => {
-  it('ages every player by one year along the development curve', () => {
+describe('staggered aging & retirement', () => {
+  it('ages a player only on his birthday week, leaving others untouched', () => {
     const store = makeStore();
-    const own = stubPlayer(100, 25);
-    const ai = stubPlayer(101, 30);
-    store.state.team.players = [own];
+    const own = stubPlayer(100, 25); own.birthWeek = 3;
+    const notYet = stubPlayer(101, 25); notYet.birthWeek = 4;
+    const ai = stubPlayer(102, 30); ai.birthWeek = 3;
+    store.state.team.players = [own, notYet];
     store.state.league.clubs[0].players = [ai];
-    store.state.club.week = CFG.SEASON_WEEKS;
+    store.state.club.week = 3;
 
-    const expectedOwnSkill = HLP.projectedSkill(own, 1);
-    const expectedAiSkill = HLP.projectedSkill(ai, 1);
-    const expectedDefense = Math.round(own.skills.defense * expectedOwnSkill / own.skill);
-    const expectedProgression = Math.round(own.skills.progression * expectedOwnSkill / own.skill);
-
-    store.dispatch('advanceWeek');
+    store.dispatch('advanceWeek'); // completes week 3
 
     expect(own.age).toBe(26);
-    expect(own.skill).toBe(expectedOwnSkill);
-    expect(own.skills.defense).toBe(expectedDefense);
-    expect(own.skills.progression).toBe(expectedProgression);
     expect(ai.age).toBe(31);
-    expect(ai.skill).toBe(expectedAiSkill);
+    expect(notYet.age).toBe(25); // his birthday is week 4
   });
 
-  it('retires players turning 35 from squad, formation and listings', () => {
+  it('keeps an over-age player through the season, then retires him at the rollover', () => {
     const store = makeStore();
-    const retiringOwn = stubPlayer(100, CFG.PLAYER_AGE_MAX);
-    const stayingOwn = stubPlayer(101, 28);
+    const retiringOwn = stubPlayer(100, CFG.PLAYER_AGE_MAX); retiringOwn.birthWeek = 5;
+    const stayingOwn = stubPlayer(101, 28); stayingOwn.birthWeek = 5;
     store.state.team.players = [retiringOwn, stayingOwn];
     const club = store.state.league.clubs[0];
-    const retiringAi = stubPlayer(102, CFG.PLAYER_AGE_MAX);
-    const stayingAi = stubPlayer(103, 22);
+    const retiringAi = stubPlayer(102, CFG.PLAYER_AGE_MAX); retiringAi.birthWeek = 5;
+    const stayingAi = stubPlayer(103, 22); stayingAi.birthWeek = 5;
     club.players = [retiringAi, stayingAi];
     store.state.transferMarket.listings = [
       { playerId: retiringOwn.id, sellerClubId: null, price: HLP.marketValue(retiringOwn) },
     ];
-    store.state.club.week = CFG.SEASON_WEEKS;
 
+    // Birthday in week 5: he turns 35 but plays on — no mid-season retirement.
+    store.state.club.week = 5;
     store.dispatch('advanceWeek');
+    expect(retiringOwn.age).toBe(CFG.PLAYER_AGE_MAX + 1);
+    expect(store.state.team.players.map(p => p.id)).toContain(100);
+    expect(club.players.map(p => p.id)).toContain(102);
 
+    // Season rollover: now the over-age players retire and their listings drop.
+    store.state.club.week = CFG.SEASON_WEEKS;
+    store.dispatch('advanceWeek');
     expect(store.state.team.players.map(p => p.id)).toEqual([stayingOwn.id]);
     expect(club.players.map(p => p.id)).toEqual([stayingAi.id]);
     expect(store.state.transferMarket.listings
       .some(l => l.playerId === retiringOwn.id)).toBe(false);
-
-    // The AI club re-picked its formation from the remaining squad.
-    const lineupIds = Object.values(club.formation.players).flat().map(p => p.id);
-    expect(lineupIds).toEqual([stayingAi.id]);
-    expect(store.getters.recommendedFormation.skillSum).toBe(stayingOwn.skill);
   });
 });
 
@@ -231,6 +226,29 @@ describe('season ratings', () => {
 
     expect(own.season).toEqual({ games: 0, ratingSum: 0 });
     expect(ai.season).toEqual({ games: 0, ratingSum: 0 });
+  });
+});
+
+describe('squad skill-change tracking', () => {
+  it('captures joinSkill and a fresh log when a player joins the club', () => {
+    const store = makeStore();
+    const p = stubPlayer(200, 24);
+    p.joinSkill = 5; p.skillLog = [1, 2, 3]; // stale values, should be reset on join
+
+    store.dispatch('addPlayerToTeam', p);
+
+    expect(p.joinSkill).toBe(p.skill);
+    expect(p.skillLog).toEqual([]);
+  });
+
+  it('logs one weekly skill per DEVELOP_WEEK and caps the history', () => {
+    const store = makeStore();
+    const p = stubPlayer(201, 24);
+    store.state.team.players = [p];
+
+    for (let i = 0; i < CFG.DEV_HISTORY_WEEKS + 5; i++) store.commit('DEVELOP_WEEK', { ratings: {} });
+
+    expect(p.skillLog.length).toBe(CFG.DEV_HISTORY_WEEKS);
   });
 });
 

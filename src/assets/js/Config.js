@@ -13,6 +13,38 @@ export const PLAYER_OPTAGE_MIN = 28;
 export const PLAYER_OPTAGE_MAX = 31;
 export const AGE_FACTOR = .95;
 
+// --- Continuous player development (applied every week) -----------------
+// Each week a player's skill chases its natural age-curve value (projectedSkill,
+// the "target"); match weeks add a performance push, and the potential (ceiling)
+// drifts slowly. See HLP.developPlayers. Steps are tiny because they apply ~52x
+// per season (34 match weeks + ~18 training weeks).
+//
+// DEV_BASELINE is the empirical mean match rating per role, measured from a
+// no-development league sim (overall ~6.27, attackers ~6.71 vs defenders ~6.10).
+// Performance is `rating - DEV_BASELINE[role]`, so the push is league-wide
+// zero-sum and the flat 6.0 baseline's positive/attacking bias is removed.
+export const DEV_BASELINE = { GK: 6.15, DEF: 6.10, MID: 6.28, ATT: 6.71 };
+export const DEV_CONVERGE = 0.05;        // fraction of the gap to target closed per week (natural growth)
+export const DEV_PERF_RATE = 0.10;       // skill push per (rating point over baseline) on a match week
+export const DEV_PERF_CAP = 2.0;         // clamp rating-baseline to +/- this
+export const DEV_TRAIN_WEIGHT = 0.3;     // convergence weight for bench/reserve (no minutes)
+export const DEV_POT_RATE = 0.045;       // potential drift per (rating point over baseline) on a match week
+export const DEV_POT_REVERSION = 0.012;  // weekly pull of potential back toward its drawn value
+
+// Skill-change column in the squad list: the timeframe the change is measured
+// over, chosen from the list header's flyout. "Last N weeks" reads a rolling
+// per-player weekly skill log (kept DEV_HISTORY_WEEKS long, the longest window);
+// "This season" and "Since joining" read the seasonStartSkill / joinSkill marks.
+export const DEV_TIMEFRAMES = [
+  { key: 'w5', label: 'Last 5 weeks', weeks: 5 },
+  { key: 'w10', label: 'Last 10 weeks', weeks: 10 },
+  { key: 'w20', label: 'Last 20 weeks', weeks: 20 },
+  { key: 'season', label: 'This season' },
+  { key: 'join', label: 'Since joining my club' },
+];
+export const DEV_HISTORY_WEEKS = 20;
+export const DEV_DEFAULT_TIMEFRAME = 'season';
+
 // Salary: SALARY_BASE is the pay of an average player (skill =
 // DRAFT_AVG_POTENTIAL), raised superlinearly so stars demand disproportionate
 // pay — flatter than MV_EXPONENT, so salaries spread less than prices. Greed

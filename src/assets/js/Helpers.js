@@ -50,16 +50,89 @@ export function projectedSkill(player, years) {
   return Math.floor(player.potential * Math.pow(CFG.AGE_FACTOR, distance));
 }
 
-// Ages a player by one year (season change): the skill follows the development
-// curve (projectedSkill one year out) and the stat profile scales with it.
+// Ages a player by one year, on his birthday week. Skill is no longer snapped to
+// the age curve here — continuous weekly development (developPlayers) tracks it;
+// aging just shifts the curve target a year older, which development then chases.
 export function agePlayer(player) {
-  const newSkill = projectedSkill(player, 1);
-  const factor = player.skill > 0 ? newSkill / player.skill : 0;
-  for (const key of Object.keys(player.skills)) {
-    player.skills[key] = Math.round(player.skills[key] * factor);
-  }
   player.age += 1;
+}
+
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+
+// Applies a fractional skill value to a player. The exact value lives in
+// `skillExact` so the tiny weekly development steps accumulate instead of
+// rounding away, while the integer `skill` (read everywhere else) and the stat
+// profile (read by the match engine) follow it rounded to whole numbers.
+function setSkill(player, exact) {
+  player.skillExact = exact;
+  const newSkill = Math.round(exact);
+  if (player.skills) {
+    const sum = Object.values(player.skills).reduce((s, v) => s + v, 0);
+    if (sum > 0) {
+      const factor = newSkill / sum;
+      for (const key of Object.keys(player.skills)) player.skills[key] = Math.round(player.skills[key] * factor);
+    }
+  }
   player.skill = newSkill;
+}
+
+// Develops a whole squad for one week from a matchday ratings map
+// ({ [playerId]: rating }, empty in training/match-free weeks). For every player:
+//  - skill chases its natural age-curve value (training/aging) — applies to all,
+//    bench/reserve at DEV_TRAIN_WEIGHT;
+//  - a player who featured gets a performance push of (rating - role baseline):
+//    above the role's empirical mean pushes skill over the curve and drifts
+//    potential up, below pushes them down;
+//  - potential reverts gently toward its drawn value (bounds long-run drift).
+// All bounded to [0, 100]. Shared by the team and league APPLY/DEVELOP paths so
+// the own squad and every AI club develop identically.
+export function developPlayers(players, ratings = {}) {
+  for (const player of players) {
+    if (player.drawnPotential == null) player.drawnPotential = player.potential;
+    if (player.skillExact == null) player.skillExact = player.skill;
+    const rating = ratings[player.id];
+    const played = rating != null;
+    const weight = played ? 1 : CFG.DEV_TRAIN_WEIGHT;
+
+    // Convergence toward the natural curve (training / aging) for everyone.
+    let delta = (projectedSkill(player, 0) - player.skillExact) * CFG.DEV_CONVERGE * weight;
+
+    if (played) {
+      const role = CFG.POSITION_ROLE[player.positions.position] || 'MID';
+      const baseline = CFG.DEV_BASELINE[role] ?? CFG.MATCH_RATING_BASE;
+      const perf = clamp(rating - baseline, -CFG.DEV_PERF_CAP, CFG.DEV_PERF_CAP);
+      delta += perf * CFG.DEV_PERF_RATE;
+      player.potential = clamp(player.potential + perf * CFG.DEV_POT_RATE * weight, 0, 100);
+    }
+
+    player.potential = clamp(
+      player.potential + (player.drawnPotential - player.potential) * CFG.DEV_POT_REVERSION,
+      0, 100,
+    );
+    setSkill(player, clamp(player.skillExact + delta, 0, 100));
+  }
+}
+
+// The integer skill change a player has made over a timeframe (a DEV_TIMEFRAMES
+// key), for the squad list's "Dev" column. "Last N weeks" reads the rolling
+// skillLog; "season"/"join" read the snapshot marks. Missing data (old saves,
+// players with no history yet) reads as no change.
+export function developmentDelta(player, timeframe) {
+  const now = Math.round(player.skill);
+  if (timeframe === 'season') {
+    return player.seasonStartSkill == null ? 0 : now - Math.round(player.seasonStartSkill);
+  }
+  if (timeframe === 'join') {
+    return player.joinSkill == null ? 0 : now - Math.round(player.joinSkill);
+  }
+  // "Last N weeks": the log holds one skill value per past week (most recent
+  // last). Compare to the value `weeks` entries back, or the oldest we have.
+  const spec = CFG.DEV_TIMEFRAMES.find(t => t.key === timeframe);
+  const log = player.skillLog;
+  if (!spec || !spec.weeks || !log || !log.length) return 0;
+  const idx = log.length - 1 - spec.weeks;
+  const past = idx >= 0 ? log[idx] : log[0];
+  return now - Math.round(past);
 }
 
 // A player's transfer market value: blends current skill with the projected

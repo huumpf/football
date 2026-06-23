@@ -1,5 +1,6 @@
 <template>
   <div class="dropdown" :class="{ up }" @click.stop>
+    <div v-if="heading" class="dropdown-heading">{{ heading }}</div>
     <button
       v-for="(option, index) in options"
       :key="index"
@@ -29,6 +30,8 @@ export default {
     // so parents can attach their payload (player, formation, …).
     options: { type: Array, required: true },
     emptyText: { type: String, default: 'No options' },
+    // Optional label shown above the options.
+    heading: { type: String, default: '' },
   },
 
   emits: ['select', 'close'],
@@ -108,6 +111,15 @@ export default {
   border-radius: 8px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   cursor: default;
+}
+
+// Optional title above the options.
+.dropdown-heading {
+  padding: 4px 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: $col_text_secondary;
+  white-space: nowrap;
 }
 
 .option {

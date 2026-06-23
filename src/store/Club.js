@@ -1,5 +1,6 @@
 import { makeClubName } from '@/assets/js/ClubFactory.js';
 import * as CFG from '@/assets/js/Config.js';
+import * as SCHED from '@/assets/js/Schedule.js';
 
 export const clubModule = {
   state: {
@@ -51,10 +52,19 @@ export const clubModule = {
       dispatch('advanceCalendar');
     },
 
-    // The weekly tail shared by advanceWeek and finishMatch: the transfer market
-    // gets its round (fresh AI listings, one buy opportunity per AI club), then
-    // time moves on. After week 52 a new season starts.
-    advanceCalendar({ commit, dispatch, state }) {
+    // The weekly tail shared by advanceWeek and finishMatch. Development runs
+    // every week: on a match week the matchday actions already committed
+    // DEVELOP_WEEK with the real ratings, so here we only develop the
+    // training-only (match-free) weeks; birthdays (aging) are processed every
+    // week. Then the transfer round runs and time moves on (a new season after
+    // week 52).
+    advanceCalendar({ commit, dispatch, state, rootState }) {
+      const matchday = SCHED.matchdayForWeek(state.week);
+      const playedThisWeek = matchday !== null && rootState.league.results[matchday];
+      if (!playedThisWeek) commit('DEVELOP_WEEK', { ratings: {} });
+
+      commit('AGE_BIRTHDAYS', { week: state.week });
+
       dispatch('refreshAiListings');
       dispatch('runAiTransfers');
       if (state.week >= CFG.SEASON_WEEKS) {
@@ -63,22 +73,22 @@ export const clubModule = {
         commit('ADVANCE_WEEK');
       }
       // Re-roll every AI club's sheet now that the transfer round (and any
-      // season-change aging) is done, so next matchday plays the current squads.
+      // retirements) are done, so next matchday plays the current squads.
       dispatch('regenerateAiFormations');
     },
 
-    // Closes the season: every player ages a year (the AI clubs re-pick their
-    // formation, the own club's recommendedFormation getter follows the squad
-    // anyway), the market drops listings of retired players, and the next
-    // season starts with a fresh schedule and a cleared table.
+    // Closes the season: players past the age limit retire (kept until the
+    // rollover so they finish the season), the market drops their listings, then
+    // season logs reset and a fresh schedule/cleared table starts. Aging itself
+    // is staggered across birthdays during the season.
     startNewSeason({ commit, rootState }) {
-      commit('AGE_TEAM');
-      commit('AGE_CLUBS');
+      commit('RETIRE_AGED');
       const activeIds = new Set([
         ...rootState.team.players.map(p => p.id),
         ...rootState.league.clubs.flatMap(c => c.players.map(p => p.id)),
       ]);
       commit('PRUNE_LISTINGS', activeIds);
+      commit('RESET_SEASON_STATS');
       commit('START_NEW_SEASON');
       commit('MAKE_SCHEDULE');
     },

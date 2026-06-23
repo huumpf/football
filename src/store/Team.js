@@ -12,6 +12,8 @@ export const teamModule = {
     formations: {},
     // Name of the current default formation — the one played in matches.
     activeFormation: null,
+    // Squad list's skill-change column timeframe (a DEV_TIMEFRAMES key).
+    devTimeframe: CFG.DEV_DEFAULT_TIMEFRAME,
   },
 
   getters: {
@@ -37,6 +39,10 @@ export const teamModule = {
 
   mutations: {
     ADD_TO_TEAM(state, player) {
+      // Mark where the player's tenure at this club starts, for the "since
+      // joining" change and a fresh weekly log (pre-join weeks weren't tracked).
+      player.joinSkill = player.skill;
+      player.skillLog = [];
       state.players.push(player);
       state.positionCount = getTeamPositionCount(state.players);
       state.players.sort((a, b) => a.positions.sort - b.positions.sort || b.skill - a.skill);
@@ -58,16 +64,53 @@ export const teamModule = {
       HLP.applySeasonRatings(state.players, ratings);
     },
 
-    // Season change: every player ages a year and their season log resets;
-    // players past the age limit end their career and leave the squad.
-    AGE_TEAM(state) {
+    // One week of development for the own squad (full squad; bench/reserve at a
+    // reduced training weight). League defines the same mutation for AI clubs.
+    // After developing, each player's weekly skill is logged (capped) so the
+    // squad list can show the change over the last N weeks.
+    DEVELOP_WEEK(state, { ratings }) {
+      HLP.developPlayers(state.players, ratings);
       for (const player of state.players) {
-        HLP.agePlayer(player);
-        player.season = { games: 0, ratingSum: 0 };
+        if (!player.skillLog) player.skillLog = [];
+        player.skillLog.push(player.skill);
+        if (player.skillLog.length > CFG.DEV_HISTORY_WEEKS) player.skillLog.shift();
       }
+    },
+
+    // Persists the squad list's skill-change timeframe (a DEV_TIMEFRAMES key).
+    SET_DEV_TIMEFRAME(state, timeframe) {
+      state.devTimeframe = timeframe;
+    },
+
+    // Birthdays for the given week: own players born this week age a year. Aging
+    // is staggered, but a player who passes the age limit keeps playing until the
+    // season ends (retirement happens at the rollover, see RETIRE_AGED).
+    AGE_BIRTHDAYS(state, { week }) {
+      for (const player of state.players) {
+        if ((player.birthWeek ?? 1) === week) HLP.agePlayer(player);
+      }
+    },
+
+    // Season change: players past the age limit end their career and leave the
+    // squad, with the sheets reconciled. Done once at the rollover so a player
+    // who turns 35 mid-season still finishes the season.
+    RETIRE_AGED(state) {
+      const before = state.players.length;
       state.players = state.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
-      state.positionCount = getTeamPositionCount(state.players);
-      reconcileFormations(state);
+      if (state.players.length !== before) {
+        state.positionCount = getTeamPositionCount(state.players);
+        reconcileFormations(state);
+      }
+    },
+
+    // Season change: reset the own squad's season note logs and snapshot the
+    // skill each player starts the season with (for the UI development delta).
+    // Aging is staggered on birthdays; retirement is RETIRE_AGED, also here.
+    RESET_SEASON_STATS(state) {
+      for (const player of state.players) {
+        player.season = { games: 0, ratingSum: 0 };
+        player.seasonStartSkill = player.skill;
+      }
     },
 
     // Fills every formation with a saved team sheet from the current squad and

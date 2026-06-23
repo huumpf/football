@@ -25,6 +25,9 @@ export function makePlayer() {
   const potential = HLP.getBiasedRnd(0, 100, CFG.DRAFT_AVG_POTENTIAL, 1, 0.7);
   const age = randomInt(CFG.PLAYER_AGE_MIN, CFG.PLAYER_AGE_MAX);
   const optimalAge = randomInt(CFG.PLAYER_OPTAGE_MIN, CFG.PLAYER_OPTAGE_MAX);
+  // The calendar week (1..SEASON_WEEKS) the player has his birthday — he ages
+  // one year on that week, so the league's players age staggered, not all at once.
+  const birthWeek = randomInt(1, CFG.SEASON_WEEKS);
 
   // Skill: potential decayed by AGE_FACTOR per year of distance to the optimal age.
   const skill = Math.floor(potential * Math.pow(CFG.AGE_FACTOR, Math.abs(age - optimalAge)));
@@ -51,15 +54,29 @@ export function makePlayer() {
     firstName: randomItem(Names.firstNames),
     lastName: randomItem(Names.lastNames),
     age,
+    birthWeek,
     potential,
+    // The potential the player was drawn with; development drifts `potential`
+    // away from it and reverts gently back toward it, bounding league drift.
+    drawnPotential: potential,
     optimalAge,
     greed,
     skill,
+    // The exact (fractional) skill that continuous weekly development accumulates
+    // into; `skill` is its rounded mirror, read everywhere else.
+    skillExact: skill,
+    // Skill at the start of the current season, snapshot for the UI's season
+    // development delta; reset at every season change.
+    seasonStartSkill: skill,
+    // Skill when the player joined the manager's club (set on ADD_TO_TEAM), and a
+    // rolling weekly skill log — both feed the squad list's skill-change column.
+    joinSkill: skill,
+    skillLog: [],
     positions,
     skills: getSkills(position, skill),
     salary,
-    // Per-season match-rating log; feeds the season average (and later player
-    // development). Reset at every season change.
+    // Per-season match-rating log; feeds the displayed season average note.
+    // Reset at every season change.
     season: { games: 0, ratingSum: 0 },
   };
 }

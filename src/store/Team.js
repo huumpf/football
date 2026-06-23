@@ -103,13 +103,15 @@ export const teamModule = {
       }
     },
 
-    // Season change: reset the own squad's season note logs and snapshot the
-    // skill each player starts the season with (for the UI development delta).
-    // Aging is staggered on birthdays; retirement is RETIRE_AGED, also here.
+    // Season change: reset the own squad's season note logs, snapshot the skill
+    // each player starts the season with (for the UI development delta), and
+    // restore everyone to full fitness — every season starts fresh. Aging is
+    // staggered on birthdays; retirement is RETIRE_AGED, also here.
     RESET_SEASON_STATS(state) {
       for (const player of state.players) {
         player.season = { games: 0, ratingSum: 0 };
         player.seasonStartSkill = player.skill;
+        player.fitness = CFG.STAMINA_MAX;
       }
     },
 

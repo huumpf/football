@@ -121,6 +121,25 @@ export default {
       return computeRatings(this.timeline, this.match.home, this.match.away, this.minute);
     },
 
+    // Player id -> live fitness, draining from each starter's match-start value
+    // toward (start - FITNESS_MATCH_DRAIN) as the clock runs — this is in-match
+    // fatigue only. The weekly tick (updateFitness) afterwards recovers part of
+    // that drain, so the squad screens then show a higher, post-recovery value.
+    // Before kick-off this reads the stored value (fitness as of match start).
+    fitnessByPlayer() {
+      const map = {};
+      if (!this.match) return map;
+      const frac = this.timeline && this.timeline.totalMinutes
+        ? Math.min(1, this.minute / this.timeline.totalMinutes)
+        : 0;
+      const drain = CFG.FITNESS_MATCH_DRAIN * frac;
+      for (const e of [...this.match.home.xi, ...this.match.away.xi]) {
+        const start = e.player.fitness ?? CFG.STAMINA_MAX;
+        map[e.player.id] = Math.max(0, start - drain);
+      }
+      return map;
+    },
+
     scoredIds() {
       const ids = new Set();
       for (const ev of this.goalEvents) ids.add(ev.player.id);
@@ -188,6 +207,7 @@ export default {
         player: e.player,
         position: e.position,
         rating: this.ratingByPlayer[e.player.id],
+        fitness: this.fitnessByPlayer[e.player.id],
         scored: this.scoredIds.has(e.player.id),
         assisted: this.assistedIds.has(e.player.id),
         card: this.cardByPlayer[e.player.id] || null,

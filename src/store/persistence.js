@@ -4,7 +4,7 @@ import { api } from '@/assets/js/api.js';
 const GAME_MODULES = ['club', 'team', 'draft', 'league', 'transferMarket'];
 // Bump when the saved game's shape changes incompatibly: a save stamped with a
 // different version is discarded (new game) instead of hydrated into garbage.
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 3;
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 // Owns the save lifecycle: hydrate the store from the server on login, autosave

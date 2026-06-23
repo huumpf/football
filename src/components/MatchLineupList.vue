@@ -12,6 +12,7 @@
         <img v-if="row.card === 'red'" class="icon" src="../assets/img/icons/redCard.svg" alt="Red card"/>
         <span class="name">{{ row.player.lastName }}</span>
       </div>
+      <FitnessRing class="fitness" :value="row.fitness" :size="14"/>
       <span class="rating">{{ formatRating(row.rating) }}</span>
       <span class="position">{{ row.position }}</span>
     </div>
@@ -25,6 +26,7 @@
         <div class="name-group">
           <span class="name">{{ row.player.lastName }}</span>
         </div>
+        <FitnessRing class="fitness" :value="row.player.fitness" :size="14"/>
         <span class="rating">–</span>
         <span class="position">{{ row.position }}</span>
       </div>
@@ -33,15 +35,19 @@
 </template>
 
 <script>
+import FitnessRing from '@/components/FitnessRing.vue';
+
 export default {
   name: 'MatchLineupList',
+
+  components: { FitnessRing },
 
   props: {
     // 'home' mirrors the row (name first, hugging the right edge toward the
     // pitch); 'away' reads position-first from the left edge.
     side: { type: String, required: true },
-    // Starting XI rows: { player, position, rating:Number, scored:Boolean,
-    // assisted:Boolean, card:'yellow'|'red'|null }.
+    // Starting XI rows: { player, position, rating:Number, fitness:Number,
+    // scored:Boolean, assisted:Boolean, card:'yellow'|'red'|null }.
     starters: { type: Array, required: true },
     // Bench rows: { player, position }. They don't take the pitch, so their
     // rating shows as a dash. (Reserve players aren't passed to the match.)
@@ -75,7 +81,7 @@ export default {
 .player {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   width: 200px;
   padding: 4px 8px;
   border-radius: 4px;
@@ -84,9 +90,13 @@ export default {
 .name-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.fitness {
+  flex-shrink: 0;
 }
 
 .name {

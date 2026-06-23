@@ -49,6 +49,37 @@ export const DEV_TIMEFRAMES = [
 export const DEV_HISTORY_WEEKS = 20;
 export const DEV_DEFAULT_TIMEFRAME = 'season';
 
+// --- Player stamina & fitness -------------------------------------------
+// `stamina` is a player's conditioning ceiling (the corridor-drawn attribute);
+// `fitness` is his current condition (0..stamina), shown as the row's ring. A
+// full match drains fitness; every week it recovers a fraction of the gap back
+// up toward `stamina`. The balance (regen vs drain) is tuned so a well-
+// conditioned player sustains a match a week while a poorly-conditioned or old
+// one must be rested to recover. Older players draw a lower ceiling.
+export const STAMINA_MAX = 100;          // hard ceiling for stamina and fitness
+export const STAMINA_MEAN = 88;          // mean conditioning ceiling at the prime age
+export const STAMINA_SPREAD = 0.13;      // ±13% cross-player divergence (~26% extreme-to-extreme)
+export const STAMINA_MIN_ROLL = 50;      // floor for the rolled ceiling
+export const STAMINA_PRIME_AGE = 24;     // no age penalty up to this age
+export const STAMINA_AGE_PENALTY = 1.2;  // ceiling points lost per year past the prime age
+// Every player starts each season at full fitness (STAMINA_MAX) and holds it
+// through the match-free pre-season. A full match then drains FITNESS_MATCH_DRAIN
+// and each week he recovers FITNESS_REGEN_RATE of the gap back up toward his
+// ceiling. So once matches begin a weekly starter settles at
+// stamina - FITNESS_MATCH_DRAIN: young/strong players sit in the yellow band
+// (sustainable), older/weaker ones sink into the red and must be rested.
+export const FITNESS_MATCH_DRAIN = 30;   // fitness a full match costs a starter
+export const FITNESS_REGEN_RATE = 0.5;   // fraction of the gap to the ceiling recovered each week
+// Performance malus: at/above FITNESS_PERF_FULL a player is at full strength; it
+// scales his effective skill down linearly to FITNESS_PERF_MIN at zero fitness.
+// Kept below the weekly-starter equilibrium band so a fresh player is unpenalised
+// and an in-rotation one only mildly so, while a red (overplayed) one is hit hard.
+export const FITNESS_PERF_FULL = 72;
+export const FITNESS_PERF_MIN = 0.6;
+// Ring colour tiers (fitness, 0..100): >= GOOD green, >= OK yellow, else red.
+export const FITNESS_TIER_GOOD = 85;
+export const FITNESS_TIER_OK = 40;
+
 // Salary: SALARY_BASE is the pay of an average player (skill =
 // DRAFT_AVG_POTENTIAL), raised superlinearly so stars demand disproportionate
 // pay — flatter than MV_EXPONENT, so salaries spread less than prices. Greed

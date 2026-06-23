@@ -1,4 +1,5 @@
 import * as CFG from './Config.js';
+import * as HLP from './Helpers.js';
 
 // Standard Poisson sample (Knuth): multiplies uniform draws until they fall
 // under e^-lambda; the number of draws needed is the sample.
@@ -48,8 +49,12 @@ function weightedPick(items, weightFn) {
 }
 
 const roleOf = entry => CFG.POSITION_ROLE[entry.position] || 'MID';
-// A player's attacking output for the duel maths: shot leads, progression helps.
-const offence = entry => entry.player.skills.shot + CFG.ATTACK_PROGRESSION_WEIGHT * entry.player.skills.progression;
+// A player's duel inputs, each dampened by his current fitness (a tired player
+// attacks, defends and keeps worse — which then drags his match rating down too).
+// shot leads the attacking output, progression helps.
+const offence = entry => (entry.player.skills.shot + CFG.ATTACK_PROGRESSION_WEIGHT * entry.player.skills.progression) * HLP.fitnessFactor(entry.player);
+const effDefence = entry => entry.player.skills.defense * HLP.fitnessFactor(entry.player);
+const effKeeping = entry => entry.player.skills.goalkeeping * HLP.fitnessFactor(entry.player);
 
 // Resolves one created chance for `atkSide` against `defSide` into a goal, a
 // keeper save or a defender block, recording the displayed goal event and the
@@ -68,14 +73,14 @@ function resolveChance(minute, side, atkSide, defSide, out, events, contribs) {
   let defender = null;
   if (defenders.length) {
     // Target the weaker defenders: a defence below the line's average is picked
-    // more often, so a strong striker exploits a weak centre-back.
-    const avgDef = defenders.reduce((s, e) => s + e.player.skills.defense, 0) / defenders.length;
-    defender = weightedPick(defenders, e => Math.max(0.2, 2 * avgDef - e.player.skills.defense));
+    // more often, so a strong striker exploits a weak (or tired) centre-back.
+    const avgDef = defenders.reduce((s, e) => s + effDefence(e), 0) / defenders.length;
+    defender = weightedPick(defenders, e => Math.max(0.2, 2 * avgDef - effDefence(e)));
   }
 
   const O = Math.max(1, offence(attacker));
-  const D = Math.max(1, (defender ? defender.player.skills.defense : 0)
-    + CFG.GK_DUEL_FACTOR * (keeper ? keeper.player.skills.goalkeeping : 0));
+  const D = Math.max(1, (defender ? effDefence(defender) : 0)
+    + CFG.GK_DUEL_FACTOR * (keeper ? effKeeping(keeper) : 0));
   const Ok = Math.pow(O, CFG.DUEL_EXPONENT);
   const Dk = Math.pow(D, CFG.DUEL_EXPONENT);
   const pGoal = CFG.CONVERSION_BASE * Ok / (Ok + Dk);
@@ -94,8 +99,8 @@ function resolveChance(minute, side, atkSide, defSide, out, events, contribs) {
   // A stopped chance: still credit the attacker for the danger, then hand the
   // stop to the keeper or the defender (weighted by who is better placed).
   contribs.push({ minute, playerId: attacker.player.id, kind: 'shot' });
-  const blockW = defender ? defender.player.skills.defense : 0;
-  const saveW = CFG.GK_DUEL_FACTOR * (keeper ? keeper.player.skills.goalkeeping : 0);
+  const blockW = defender ? effDefence(defender) : 0;
+  const saveW = CFG.GK_DUEL_FACTOR * (keeper ? effKeeping(keeper) : 0);
   if (defender && Math.random() < blockW / (blockW + saveW || 1)) {
     contribs.push({ minute, playerId: defender.player.id, kind: 'duelWon' });
   } else if (keeper) {

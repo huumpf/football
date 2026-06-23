@@ -51,10 +51,20 @@ export const teamModule = {
       // is left empty for the manager to fill).
       reconcileFormations(state);
     },
-    // Season change: every player ages a year; players past the age limit
-    // end their career and leave the squad.
+    // Folds a matchday's per-player ratings into the own squad's season logs.
+    // The league module defines the same mutation for the AI clubs, so one
+    // commit('APPLY_RATINGS') covers the whole league (modules aren't namespaced).
+    APPLY_RATINGS(state, { ratings }) {
+      HLP.applySeasonRatings(state.players, ratings);
+    },
+
+    // Season change: every player ages a year and their season log resets;
+    // players past the age limit end their career and leave the squad.
     AGE_TEAM(state) {
-      for (const player of state.players) HLP.agePlayer(player);
+      for (const player of state.players) {
+        HLP.agePlayer(player);
+        player.season = { games: 0, ratingSum: 0 };
+      }
       state.players = state.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
       state.positionCount = getTeamPositionCount(state.players);
       reconcileFormations(state);

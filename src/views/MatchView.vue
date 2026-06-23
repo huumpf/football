@@ -36,19 +36,19 @@
         <transition-group name="event" tag="div" class="timeline">
           <div
             v-for="ev in revealedReversed"
-            :key="`${ev.side}-${ev.minute}-${ev.scorer.id}`"
+            :key="`${ev.type}-${ev.side}-${ev.minute}-${ev.player.id}`"
             class="event-row"
             :class="ev.side"
           >
             <div class="event">
               <template v-if="ev.side === 'home'">
                 <span class="ev-minute">{{ ev.minute }}’</span>
-                <span class="ev-text">{{ scorerText(ev) }}</span>
-                <img class="ev-ball" src="../assets/img/icons/goal-white.svg" alt=""/>
+                <span class="ev-text">{{ eventText(ev) }}</span>
+                <img class="ev-ball" :src="eventIcon(ev)" alt=""/>
               </template>
               <template v-else>
-                <img class="ev-ball" src="../assets/img/icons/goal-white.svg" alt=""/>
-                <span class="ev-text">{{ scorerText(ev) }}</span>
+                <img class="ev-ball" :src="eventIcon(ev)" alt=""/>
+                <span class="ev-text">{{ eventText(ev) }}</span>
                 <span class="ev-minute">{{ ev.minute }}’</span>
               </template>
             </div>
@@ -68,7 +68,7 @@
 <script>
 import MatchLineupList from '@/components/MatchLineupList.vue';
 import ClubCrest from '@/components/ClubCrest.vue';
-import { simulateLiveMatch } from '@/assets/js/MatchSim.js';
+import { simulateLiveMatch, computeRatings } from '@/assets/js/MatchSim.js';
 import * as CFG from '@/assets/js/Config.js';
 
 export default {
@@ -101,45 +101,47 @@ export default {
       return [...this.revealedEvents].reverse();
     },
 
+    goalEvents() {
+      return this.revealedEvents.filter(e => e.type === 'goal');
+    },
+
     homeGoals() {
-      return this.revealedEvents.filter(e => e.side === 'home').length;
+      return this.goalEvents.filter(e => e.side === 'home').length;
     },
 
     awayGoals() {
-      return this.revealedEvents.filter(e => e.side === 'away').length;
+      return this.goalEvents.filter(e => e.side === 'away').length;
     },
 
-    // Player id -> live 0..10 rating. Every starter sits at the base; goals and
-    // assists from revealed events lift the scorer and assister.
+    // Player id -> live 0..10 rating, folded from everything up to the current
+    // minute (duels, goals, cards, the running scoreline), so ratings move up
+    // and down as the match plays out. Empty until the match is rolled.
     ratingByPlayer() {
-      const tally = {};
-      for (const e of [...this.match.home.xi, ...this.match.away.xi]) {
-        tally[e.player.id] = { goals: 0, assists: 0 };
-      }
-      for (const ev of this.revealedEvents) {
-        if (tally[ev.scorer.id]) tally[ev.scorer.id].goals += 1;
-        if (ev.assist && tally[ev.assist.id]) tally[ev.assist.id].assists += 1;
-      }
-      const ratings = {};
-      for (const id in tally) {
-        const raw = CFG.MATCH_RATING_BASE
-          + CFG.MATCH_RATING_GOAL * tally[id].goals
-          + CFG.MATCH_RATING_ASSIST * tally[id].assists;
-        ratings[id] = Math.min(10, Math.max(1, raw));
-      }
-      return ratings;
+      if (!this.timeline) return {};
+      return computeRatings(this.timeline, this.match.home, this.match.away, this.minute);
     },
 
     scoredIds() {
       const ids = new Set();
-      for (const ev of this.revealedEvents) ids.add(ev.scorer.id);
+      for (const ev of this.goalEvents) ids.add(ev.player.id);
       return ids;
     },
 
     assistedIds() {
       const ids = new Set();
-      for (const ev of this.revealedEvents) if (ev.assist) ids.add(ev.assist.id);
+      for (const ev of this.goalEvents) if (ev.assist) ids.add(ev.assist.id);
       return ids;
+    },
+
+    // Player id -> 'yellow' | 'red' from revealed card events (a red supersedes
+    // an earlier yellow), used for the per-player marker in the line-up lists.
+    cardByPlayer() {
+      const cards = {};
+      for (const ev of this.revealedEvents) {
+        if (ev.type === 'yellow' && cards[ev.player.id] !== 'red') cards[ev.player.id] = 'yellow';
+        else if (ev.type === 'red') cards[ev.player.id] = 'red';
+      }
+      return cards;
     },
 
     homeStarters() {
@@ -188,23 +190,29 @@ export default {
         rating: this.ratingByPlayer[e.player.id],
         scored: this.scoredIds.has(e.player.id),
         assisted: this.assistedIds.has(e.player.id),
+        card: this.cardByPlayer[e.player.id] || null,
       }));
     },
 
-    scorerText(ev) {
-      const base = `${ev.scorer.lastName} scored`;
+    // Icon and one-line text for a timeline event (goal / yellow / red card).
+    eventIcon(ev) {
+      if (ev.type === 'yellow') return new URL('../assets/img/icons/yellowCard.svg', import.meta.url).href;
+      if (ev.type === 'red') return new URL('../assets/img/icons/redCard.svg', import.meta.url).href;
+      return new URL('../assets/img/icons/goal-white.svg', import.meta.url).href;
+    },
+
+    eventText(ev) {
+      if (ev.type === 'yellow') return `${ev.player.lastName} booked`;
+      if (ev.type === 'red') return `${ev.player.lastName} sent off`;
+      const base = `${ev.player.lastName} scored`;
       return ev.assist ? `${base} (assist by ${ev.assist.lastName})` : base;
     },
 
-    // Roll the whole match up front, then reveal it minute by minute. Strength
-    // and the scoring XI come from each side's strongest formation.
+    // Roll the whole match up front, then reveal it minute by minute. The duel
+    // engine reads each side's { xi: [{player, position}], strength } directly,
+    // so the same line-up entries drive the live ratings.
     start() {
-      const toSide = side => ({
-        name: side.name,
-        xi: side.xi.map(e => e.player),
-        strength: side.strength,
-      });
-      this.timeline = simulateLiveMatch(toSide(this.match.home), toSide(this.match.away));
+      this.timeline = simulateLiveMatch(this.match.home, this.match.away);
       this.phase = 'playing';
       this.minute = 0;
       this.timer = setInterval(() => {
@@ -219,11 +227,13 @@ export default {
     },
 
     // Record the watched result into the matchday (the other 8 instant-played)
-    // and advance the week, then head to the league table to see it land.
+    // and advance the week, then head to the league table to see it land. The
+    // final ratings ride along so the watched players' season log updates too.
     continueMatch() {
       this.$store.dispatch('finishMatch', {
         homeGoals: this.timeline.homeGoals,
         awayGoals: this.timeline.awayGoals,
+        ratings: computeRatings(this.timeline, this.match.home, this.match.away),
       });
       this.$router.push({ name: 'League' });
     },

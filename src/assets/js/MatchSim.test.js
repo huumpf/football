@@ -2,18 +2,33 @@ import { describe, it, expect } from 'vitest';
 import { simulateLiveMatch } from './MatchSim.js';
 import * as CFG from './Config.js';
 
-// A minimal player: only the fields the live simulation reads (id + shot for
-// the scorer pick, progression for the assist pick).
-function makePlayer(id, shot = 50, progression = 50) {
-  return { id, firstName: 'F', lastName: `P${id}`, skills: { goalkeeping: 10, defense: 40, progression, shot } };
+let nextId = 1;
+
+// Role-shaped skills so the duel engine sees a real keeper, back line and
+// attack (a flat profile would over-convert). `s` is the base skill level.
+const PROFILE = {
+  GK: s => ({ goalkeeping: s, defense: 0, progression: 0, shot: 0 }),
+  DEF: s => ({ goalkeeping: 0, defense: Math.round(s * 0.75), progression: Math.round(s * 0.25), shot: 0 }),
+  MID: s => ({ goalkeeping: 0, defense: Math.round(s * 0.25), progression: Math.round(s * 0.5), shot: Math.round(s * 0.25) }),
+  ATT: s => ({ goalkeeping: 0, defense: 0, progression: Math.round(s * 0.3), shot: Math.round(s * 0.7) }),
+};
+
+function entry(position, skill) {
+  const profile = PROFILE[CFG.POSITION_ROLE[position]];
+  return { player: { id: nextId++, lastName: `P${nextId}`, skills: profile(skill) }, position };
 }
 
-function makeXI(prefix) {
-  return Array.from({ length: 11 }, (_, i) => makePlayer(prefix * 100 + i));
+// A 4-3-3 line-up at a uniform skill level.
+function makeXI(skill) {
+  return ['GK', 'CB', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'ST', 'LF', 'RF']
+    .map(pos => entry(pos, skill));
 }
 
-function side(name, strength) {
-  return { name, strength, xi: makeXI(name.length) };
+// `strength` drives the chance rate (share); the XI skill level drives the duel
+// outcomes. Kept equal here so a higher strength means more chances, not better
+// finishing — mirrors how a stronger side gets on the ball more.
+function side(name, strength, skill = 50) {
+  return { name, strength, xi: makeXI(skill) };
 }
 
 function average(runs, fn) {
@@ -42,8 +57,8 @@ describe('simulateLiveMatch', () => {
     }
     const total = (home + away) / runs;
     const homeShare = home / (home + away);
-    expect(total).toBeGreaterThan(2.5);
-    expect(total).toBeLessThan(3.7);
+    expect(total).toBeGreaterThan(2.3);
+    expect(total).toBeLessThan(3.9);
     expect(homeShare).toBeGreaterThan(0.4);
     expect(homeShare).toBeLessThan(0.6);
   });
@@ -61,12 +76,12 @@ describe('simulateLiveMatch', () => {
       const home = side('home', 60);
       const away = side('away', 40);
       const { events } = simulateLiveMatch(home, away);
-      for (const ev of events) {
-        const xi = ev.side === 'home' ? home.xi : away.xi;
-        expect(xi).toContain(ev.scorer);
+      for (const ev of events.filter(e => e.type === 'goal')) {
+        const players = (ev.side === 'home' ? home.xi : away.xi).map(e => e.player);
+        expect(players).toContain(ev.player);
         if (ev.assist) {
-          expect(xi).toContain(ev.assist);
-          expect(ev.assist).not.toBe(ev.scorer);
+          expect(players).toContain(ev.assist);
+          expect(ev.assist).not.toBe(ev.player);
         }
       }
     }

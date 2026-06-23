@@ -58,6 +58,9 @@ export function makePlayer() {
     positions,
     skills: getSkills(position, skill),
     salary,
+    // Per-season match-rating log; feeds the season average (and later player
+    // development). Reset at every season change.
+    season: { games: 0, ratingSum: 0 },
   };
 }
 

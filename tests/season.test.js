@@ -181,6 +181,59 @@ describe('season change', () => {
   });
 });
 
+describe('season ratings', () => {
+  it('folds a matchday\'s ratings into each player\'s season log', () => {
+    const store = makeStore();
+    const own = stubPlayer(100, 25);
+    const ai = stubPlayer(101, 27);
+    store.state.team.players = [own];
+    store.state.league.clubs[0].players = [ai];
+
+    store.commit('APPLY_RATINGS', { ratings: { 100: 7.0, 101: 6.0 } });
+    expect(own.season).toEqual({ games: 1, ratingSum: 7.0 });
+    expect(ai.season).toEqual({ games: 1, ratingSum: 6.0 });
+
+    store.commit('APPLY_RATINGS', { ratings: { 100: 8.0 } });
+    expect(own.season).toEqual({ games: 2, ratingSum: 15.0 });
+    expect(HLP.seasonAvgRating(own)).toBeCloseTo(7.5);
+    // A player who didn't feature this round keeps last round's log.
+    expect(ai.season).toEqual({ games: 1, ratingSum: 6.0 });
+  });
+
+  it('carries the watched match ratings through playPlayerMatchday', () => {
+    const store = makeStore();
+    const own = stubPlayer(100, 25);
+    const opp = stubPlayer(200, 26);
+    store.state.team.players = [own];
+    store.state.league.clubs[0].players = [opp];
+    store.state.club.week = CFG.FIRST_HALF_START_WEEK;
+
+    store.dispatch('playPlayerMatchday', {
+      homeGoals: 2, awayGoals: 1, ratings: { 100: 7.5, 200: 5.5 },
+    });
+
+    expect(own.season).toEqual({ games: 1, ratingSum: 7.5 });
+    expect(opp.season).toEqual({ games: 1, ratingSum: 5.5 });
+    expect(store.state.league.results[0].length).toBe(9);
+  });
+
+  it('resets every season log at the season change', () => {
+    const store = makeStore();
+    const own = stubPlayer(100, 25);
+    const ai = stubPlayer(101, 27);
+    own.season = { games: 3, ratingSum: 21 };
+    ai.season = { games: 2, ratingSum: 13 };
+    store.state.team.players = [own];
+    store.state.league.clubs[0].players = [ai];
+    store.state.club.week = CFG.SEASON_WEEKS;
+
+    store.dispatch('advanceWeek');
+
+    expect(own.season).toEqual({ games: 0, ratingSum: 0 });
+    expect(ai.season).toEqual({ games: 0, ratingSum: 0 });
+  });
+});
+
 describe('standings', () => {
   it('aggregates points and goals from the results', () => {
     const store = makeStore();

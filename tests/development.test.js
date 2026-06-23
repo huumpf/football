@@ -72,6 +72,19 @@ describe('developPlayers', () => {
     expect(old.skill).toBeLessThan(60);
   });
 
+  it('develops a young player faster than an older one from the same performance', () => {
+    // Both start on their own age curve; only their age (vs optimalAge) differs.
+    const young = devPlayer({ age: 20, optimalAge: 30, potential: 72, position: 'ST' });
+    const old = devPlayer({ age: 30, optimalAge: 30, potential: 72, position: 'ST' });
+    const youngStart = young.skill, oldStart = old.skill;
+    const rating = CFG.DEV_BASELINE.ATT + 1.5;
+    runWeeks(young, 30, rating);
+    runWeeks(old, 30, rating);
+    expect(young.skill - youngStart).toBeGreaterThan(old.skill - oldStart);
+    // The youth bonus also lifts the ceiling more.
+    expect(young.potential - 72).toBeGreaterThan(old.potential - 72);
+  });
+
   it('drifts potential up on strong play and reverts it toward the drawn value', () => {
     const p = devPlayer({ position: 'ST' });
     runWeeks(p, 34, CFG.DEV_BASELINE.ATT + 2);   // a strong season

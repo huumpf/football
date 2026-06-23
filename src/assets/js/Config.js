@@ -30,6 +30,10 @@ export const DEV_PERF_CAP = 2.0;         // clamp rating-baseline to +/- this
 export const DEV_TRAIN_WEIGHT = 0.3;     // convergence weight for bench/reserve (no minutes)
 export const DEV_POT_RATE = 0.045;       // potential drift per (rating point over baseline) on a match week
 export const DEV_POT_REVERSION = 0.012;  // weekly pull of potential back toward its drawn value
+// Younger players learn more from playing: the performance push and potential
+// drift are scaled by 1 + DEV_YOUTH_BONUS * max(0, (optimalAge - age) / 12), so a
+// teenager gains up to ~+50-60% per good game, a peak/declining player gets none.
+export const DEV_YOUTH_BONUS = 0.5;
 
 // Skill-change column in the squad list: the timeframe the change is measured
 // over, chosen from the list header's flyout. "Last N weeks" reads a rolling

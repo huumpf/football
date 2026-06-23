@@ -101,8 +101,11 @@ export function developPlayers(players, ratings = {}) {
       const role = CFG.POSITION_ROLE[player.positions.position] || 'MID';
       const baseline = CFG.DEV_BASELINE[role] ?? CFG.MATCH_RATING_BASE;
       const perf = clamp(rating - baseline, -CFG.DEV_PERF_CAP, CFG.DEV_PERF_CAP);
-      delta += perf * CFG.DEV_PERF_RATE;
-      player.potential = clamp(player.potential + perf * CFG.DEV_POT_RATE * weight, 0, 100);
+      // Youth learn more from playing: full bonus for teenagers, none at/after peak.
+      const optimalAge = player.optimalAge ?? player.age;
+      const youthFactor = 1 + CFG.DEV_YOUTH_BONUS * Math.max(0, (optimalAge - player.age) / 12);
+      delta += perf * CFG.DEV_PERF_RATE * youthFactor;
+      player.potential = clamp(player.potential + perf * CFG.DEV_POT_RATE * youthFactor, 0, 100);
     }
 
     player.potential = clamp(

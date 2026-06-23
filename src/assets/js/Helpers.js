@@ -6,6 +6,25 @@ export function moneyStr(amount) {
   return amount.toLocaleString('de-DE');
 }
 
+// Folds a matchday's per-player ratings ({ [playerId]: rating }) into a season
+// log on each player it finds, creating the log lazily. Called per squad by the
+// APPLY_RATINGS mutations of the team and league modules.
+export function applySeasonRatings(players, ratings) {
+  for (const player of players) {
+    const rating = ratings[player.id];
+    if (rating == null) continue;
+    if (!player.season) player.season = { games: 0, ratingSum: 0 };
+    player.season.games += 1;
+    player.season.ratingSum += rating;
+  }
+}
+
+// A player's season average match rating, or null before they have played.
+export function seasonAvgRating(player) {
+  if (!player.season || !player.season.games) return null;
+  return player.season.ratingSum / player.season.games;
+}
+
 export function getBiasedRnd (min, max, bias, influence, mixfactor) {
   let rnd = Math.random() * (max - min) + min;
   let mix = mixfactor * influence;

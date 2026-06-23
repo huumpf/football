@@ -80,28 +80,84 @@ export const FIRST_HALF_START_WEEK = 11;
 export const SECOND_HALF_START_WEEK = 35;
 
 // Match simulation: the expected goals of a match are split between the two
-// teams by their share of total strength. The exponent stretches the share,
-// so a modest skill gap still favours the stronger team noticeably. Used by
-// the instant simulateMatch (the other 8 matches of a watched matchday).
+// teams by their share of total strength. The exponent stretches the share, so
+// a modest skill gap still favours the stronger team noticeably. The share maths
+// drive both the fallback Poisson simulateMatch and the live duel engine's
+// per-minute chance rate.
 export const MATCH_AVG_GOALS = 2.8;
 export const MATCH_SKILL_EXPONENT = 4;
 
-// Live match (the one the manager watches): each minute every team rolls once
-// for a goal. Evenly matched, a team's per-minute chance is GOAL_CHANCE_PER_MINUTE
-// (1/60 -> ~1.5 goals over 90'); the strength share (same exponent as above)
-// shifts it toward the stronger side. Stoppage adds 0..MATCH_MAX_STOPPAGE
-// minutes, rolled per match. A goal carries an assist GOAL_ASSIST_CHANCE of the
-// time (else a solo goal).
-export const GOAL_CHANCE_PER_MINUTE = 1 / 60;
+// Live match (the one the manager watches): played minute by minute by the duel
+// engine below. Stoppage adds 0..MATCH_MAX_STOPPAGE minutes, rolled per match. A
+// goal carries an assist GOAL_ASSIST_CHANCE of the time (else a solo goal).
 export const MATCH_MAX_STOPPAGE = 6;
 export const GOAL_ASSIST_CHANCE = 0.75;
 
-// Live player match ratings (goals-only): everyone on the pitch starts at
-// MATCH_RATING_BASE; a goal adds MATCH_RATING_GOAL to the scorer and
-// MATCH_RATING_ASSIST to the assister. Clamped to 1..10.
+// --- Live match engine: per-minute duels --------------------------------
+// Each minute every team rolls (at CHANCE_PER_MINUTE, scaled by its strength
+// share like the goal chance used to be) for a goal-scoring chance. A chance is
+// a duel: an attacker (weighted by shot+progression) takes on a defender of the
+// opposing side and their keeper. The chance converts to a goal with
+//   pGoal = CONVERSION_BASE * O^k / (O^k + D^k)
+// where O is the attacker's offence, D the defender's defence plus the keeper's
+// goalkeeping scaled by GK_DUEL_FACTOR, and k = DUEL_EXPONENT. A non-goal is
+// split into a keeper save or a defender block. Weaker defenders are targeted
+// more often (see the engine), so fielding a strong striker against a weak
+// centre-back yields more goals and shifts both players' ratings.
+export const CHANCE_PER_MINUTE = 1 / 13;
+export const DUEL_EXPONENT = 1.7;
+export const GK_DUEL_FACTOR = 0.5;
+export const CONVERSION_BASE = 0.9;
+// An attacker's offence and a defender's defence for the duel maths: shot leads,
+// progression helps a little.
+export const ATTACK_PROGRESSION_WEIGHT = 0.4;
+
+// Cards: each minute a team may concede a foul (FOUL_CHANCE_PER_MINUTE); the
+// fouling player (weighted toward defenders/midfielders) is booked. A fraction
+// of bookings are straight/second-yellow reds (YELLOW_TO_RED_FRACTION). A red
+// removes the player from the pitch (no further positive contributions) and
+// multiplies that side's effective strength by RED_CARD_STRENGTH_FACTOR for the
+// rest of the match, so the team creates fewer chances and concedes more.
+export const FOUL_CHANCE_PER_MINUTE = 1 / 45;
+export const YELLOW_TO_RED_FRACTION = 0.12;
+export const RED_CARD_STRENGTH_FACTOR = 0.8;
+
+// --- Live player match ratings ------------------------------------------
+// Everyone on the pitch starts at MATCH_RATING_BASE. The duel outcomes, goals,
+// cards and the running scoreline move each player's rating up and down; the
+// weights below are per role (a position maps to a role via POSITION_ROLE) so a
+// keeper's clean sheet and saves matter while a striker lives off goals. The
+// final rating is BASE + sum(weight * count) + result modifier, clamped to 1..10.
 export const MATCH_RATING_BASE = 6;
-export const MATCH_RATING_GOAL = 1;
-export const MATCH_RATING_ASSIST = 0.5;
+
+// Position -> role bucket used to pick the rating weight set.
+export const POSITION_ROLE = {
+  GK: 'GK',
+  CB: 'DEF', LB: 'DEF', RB: 'DEF',
+  CDM: 'MID', CM: 'MID', CAM: 'MID', LM: 'MID', RM: 'MID',
+  ST: 'ATT', LF: 'ATT', RF: 'ATT',
+};
+
+// Per-role rating weights. Keys:
+//  goal/assist        - attacking returns
+//  shot               - a chance taken that didn't score (small credit for danger)
+//  save               - a chance the keeper stopped
+//  duelWon/duelLost   - the duel's defender blocked it / was beaten
+//  concededPerGoal    - team-wide penalty per goal conceded (keepers/defenders)
+//  cleanSheet         - bonus when the side concedes nothing
+//  yellow/red         - card penalties
+export const RATING_WEIGHTS = {
+  GK:  { goal: 1.0, assist: 0.6, shot: 0.0,  save: 0.22, duelWon: 0.0,  duelLost: 0.0,   concededPerGoal: -0.40, cleanSheet: 1.4, yellow: -0.5, red: -2.0 },
+  DEF: { goal: 1.2, assist: 0.7, shot: 0.05, save: 0.0,  duelWon: 0.22, duelLost: -0.20, concededPerGoal: -0.15, cleanSheet: 1.1, yellow: -0.5, red: -2.0 },
+  MID: { goal: 1.0, assist: 0.6, shot: 0.10, save: 0.0,  duelWon: 0.12, duelLost: -0.10, concededPerGoal: -0.05, cleanSheet: 0.4, yellow: -0.5, red: -2.0 },
+  ATT: { goal: 1.0, assist: 0.5, shot: 0.18, save: 0.0,  duelWon: 0.08, duelLost: -0.04, concededPerGoal: 0.0,   cleanSheet: 0.1, yellow: -0.5, red: -2.0 },
+};
+
+// Team-wide scoreline modifier added to every player: the goal difference (at
+// the minute being rated) times RESULT_PER_GOAL_DIFF, clamped to +/-RESULT_MAX.
+// Lets ratings drift up when ahead and dip when behind.
+export const RESULT_PER_GOAL_DIFF = 0.2;
+export const RESULT_MAX = 0.7;
 
 // Playback speed: real milliseconds per simulated minute (~11s for a full match).
 export const MATCH_TICK_MS = 120;

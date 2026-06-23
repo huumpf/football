@@ -2,8 +2,27 @@ import * as clubFactory from '@/assets/js/ClubFactory.js';
 import * as CFG from '@/assets/js/Config.js';
 import * as HLP from '@/assets/js/Helpers.js';
 import * as SCHED from '@/assets/js/Schedule.js';
-import { simulateMatch } from '@/assets/js/MatchSim.js';
+import { simulateMatch, simulateInstant } from '@/assets/js/MatchSim.js';
 import { generateCrest } from '@/assets/js/CrestFactory.js';
+
+// Line-up entry helpers shared by the match-side builder. Each entry is
+// { player, position }: `position` is the slot the player fills (the XI) or
+// their own primary (the bench), and rows are ordered GK-first to strikers.
+const byPosition = entries => entries.sort((a, b) => a.player.positions.sort - b.player.positions.sort);
+const flattenLineup = lineup =>
+  Object.entries(lineup).flatMap(([pos, players]) =>
+    players.filter(Boolean).map(player => ({ player, position: pos.toUpperCase() }))
+  );
+const benchRows = players =>
+  byPosition(players.map(player => ({ player, position: player.positions.position })));
+
+// Plays one fixture: the duel engine when both sides field a line-up (so per-
+// player ratings come out), falling back to the strength-only Poisson roll if a
+// side has no usable XI (no ratings then). Returns { homeGoals, awayGoals, ratings }.
+function playFixture(home, away) {
+  if (home.xi.length && away.xi.length) return simulateInstant(home, away);
+  return { ...simulateMatch(home.strength, away.strength), ratings: {} };
+}
 
 export const leagueModule = {
   state: {
@@ -81,12 +100,52 @@ export const leagueModule = {
       );
     },
 
-    // The player's match for the current week, resolved for the match screen:
-    // both sides as { id, name, xi, bench, strength } (id null = player's club),
-    // ordered by position. Null when this week has no matchday or it has already
-    // been played. Each side plays its saved team sheet: the player's club its
-    // active formation (Team view), an AI club its weekly-generated sheet. The
+    // Resolves any club id (null = the player's own club) into a match side:
+    // { id, name, xi:[{player,position}], bench, strength }, ordered by position.
+    // The own club fields its saved active formation (auto optimum as a fallback
+    // before the sheets exist); an AI club fields its weekly-generated sheet. The
     // bench is the matchday subs (greyed in the sidebar); the reserve is dropped.
+    matchSideById: (state, getters, rootState) => id => {
+      if (id === null) {
+        const name = rootState.club.name;
+        const sheet = rootState.team.formations[rootState.team.activeFormation];
+        if (sheet) {
+          return {
+            id, name,
+            xi: byPosition(flattenLineup(sheet.lineup)),
+            bench: benchRows(sheet.bench),
+            strength: HLP.lineupSkill(sheet.lineup),
+          };
+        }
+        // Defensive fallback before the sheets are initialised: auto optimum.
+        const formation = getters.recommendedFormation;
+        const xi = byPosition(flattenLineup(formation.players));
+        const xiIds = new Set(xi.map(e => e.player.id));
+        const bench = HLP.selectBench(
+          rootState.team.players.filter(p => !xiIds.has(p.id)),
+          formation.positions,
+          CFG.BENCH_SIZE,
+        );
+        return { id, name, xi, bench: benchRows(bench), strength: formation.skillSum };
+      }
+
+      // An AI club fields its weekly-generated sheet.
+      const club = state.clubs.find(c => c.id === id);
+      const xi = byPosition(flattenLineup(club.formation.players));
+      let bench = club.bench;
+      if (!bench) {
+        const xiIds = new Set(xi.map(e => e.player.id));
+        bench = HLP.selectBench(
+          club.players.filter(p => !xiIds.has(p.id)),
+          club.formation.positions,
+          CFG.BENCH_SIZE,
+        );
+      }
+      return { id, name: club.name, xi, bench: benchRows(bench), strength: club.formation.skillSum };
+    },
+
+    // The player's match for the current week, resolved for the match screen.
+    // Null when this week has no matchday or it has already been played.
     currentMatch(state, getters, rootState) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return null;
@@ -94,62 +153,10 @@ export const leagueModule = {
       const fixture = state.fixtures[matchday].find(m => m.home === null || m.away === null);
       if (!fixture) return null;
 
-      // Each line-up entry is { player, position }: position is the slot the
-      // player fills (the XI) or their own primary (the bench). Both are ordered
-      // by position so the lists read GK first down to the strikers.
-      const byPosition = entries => entries.sort((a, b) => a.player.positions.sort - b.player.positions.sort);
-      // Slotted lineup ({pos:[player|null]} or {pos:[player]}) -> XI entries.
-      const flattenLineup = lineup =>
-        Object.entries(lineup).flatMap(([pos, players]) =>
-          players.filter(Boolean).map(player => ({ player, position: pos.toUpperCase() }))
-        );
-      const benchRows = players =>
-        byPosition(players.map(player => ({ player, position: player.positions.position })));
-
-      const resolveSide = id => {
-        if (id === null) {
-          // The player's club fields its saved active formation.
-          const name = rootState.club.name;
-          const sheet = rootState.team.formations[rootState.team.activeFormation];
-          if (sheet) {
-            return {
-              id, name,
-              xi: byPosition(flattenLineup(sheet.lineup)),
-              bench: benchRows(sheet.bench),
-              strength: HLP.lineupSkill(sheet.lineup),
-            };
-          }
-          // Defensive fallback before the sheets are initialised: auto optimum.
-          const formation = getters.recommendedFormation;
-          const xi = byPosition(flattenLineup(formation.players));
-          const xiIds = new Set(xi.map(e => e.player.id));
-          const bench = HLP.selectBench(
-            rootState.team.players.filter(p => !xiIds.has(p.id)),
-            formation.positions,
-            CFG.BENCH_SIZE,
-          );
-          return { id, name, xi, bench: benchRows(bench), strength: formation.skillSum };
-        }
-
-        // An AI club fields its weekly-generated sheet.
-        const club = state.clubs.find(c => c.id === id);
-        const xi = byPosition(flattenLineup(club.formation.players));
-        let bench = club.bench;
-        if (!bench) {
-          const xiIds = new Set(xi.map(e => e.player.id));
-          bench = HLP.selectBench(
-            club.players.filter(p => !xiIds.has(p.id)),
-            club.formation.positions,
-            CFG.BENCH_SIZE,
-          );
-        }
-        return { id, name: club.name, xi, bench: benchRows(bench), strength: club.formation.skillSum };
-      };
-
       return {
         matchday,
-        home: resolveSide(fixture.home),
-        away: resolveSide(fixture.away),
+        home: getters.matchSideById(fixture.home),
+        away: getters.matchSideById(fixture.away),
       };
     },
   },
@@ -179,12 +186,22 @@ export const leagueModule = {
       state.results[matchday] = results;
     },
 
+    // Folds a matchday's per-player ratings into every AI club player's season
+    // log. The team module defines the same mutation for the own squad, so a
+    // single commit('APPLY_RATINGS') covers the whole league.
+    APPLY_RATINGS(state, { ratings }) {
+      for (const club of state.clubs) HLP.applySeasonRatings(club.players, ratings);
+    },
+
     // Season change: every AI club's players age a year, players past the age
     // limit retire, and the club re-picks its strongest formation. Careers may
     // shrink a squad below MIN_SQUAD_SIZE — the minimum only blocks sales.
     AGE_CLUBS(state) {
       for (const club of state.clubs) {
-        for (const player of club.players) HLP.agePlayer(player);
+        for (const player of club.players) {
+          HLP.agePlayer(player);
+          player.season = { games: 0, ratingSum: 0 };
+        }
         club.players = club.players.filter(p => p.age <= CFG.PLAYER_AGE_MAX);
         club.formation = HLP.getRecommendedFormation(club.players);
       }
@@ -240,43 +257,42 @@ export const leagueModule = {
     },
 
     // Simulates the current week's matchday, if the week has one, a schedule
-    // exists (the league is only made once the draft is visited) and it has
-    // not been played yet. Every club enters with its strongest formation's
-    // total skill.
+    // exists (the league is only made once the draft is visited) and it has not
+    // been played yet. Every fixture runs the per-player duel engine; the
+    // resulting ratings are folded into every player's season log.
     playMatchday({ commit, state, getters, rootState }) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
 
-      const strengthOf = id => id === null
-        ? getters.activeFormationSkill
-        : state.clubs.find(c => c.id === id).formation.skillSum;
-
-      const results = state.fixtures[matchday].map(({ home, away }) => ({
-        home,
-        away,
-        ...simulateMatch(strengthOf(home), strengthOf(away)),
-      }));
+      const ratings = {};
+      const results = state.fixtures[matchday].map(({ home, away }) => {
+        const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
+        Object.assign(ratings, outcome.ratings);
+        return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
+      });
       commit('RECORD_MATCHDAY', { matchday, results });
+      commit('APPLY_RATINGS', { ratings });
     },
 
     // Records the matchday around the match the manager just watched: the
-    // player's fixture takes the live score, the other 8 are instant-simulated
-    // as usual. Same guard as playMatchday so a replayed matchday is ignored.
+    // player's fixture takes the live score and ratings, the other 8 are
+    // instant-simulated. Same guard as playMatchday so a replay is ignored.
     playPlayerMatchday({ commit, state, getters, rootState }, live) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return;
 
-      const strengthOf = id => id === null
-        ? getters.activeFormationSkill
-        : state.clubs.find(c => c.id === id).formation.skillSum;
-
+      const ratings = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
         if (home === null || away === null) {
+          Object.assign(ratings, live.ratings || {});
           return { home, away, homeGoals: live.homeGoals, awayGoals: live.awayGoals };
         }
-        return { home, away, ...simulateMatch(strengthOf(home), strengthOf(away)) };
+        const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
+        Object.assign(ratings, outcome.ratings);
+        return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
       });
       commit('RECORD_MATCHDAY', { matchday, results });
+      commit('APPLY_RATINGS', { ratings });
     },
   },
 }

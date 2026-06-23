@@ -8,6 +8,8 @@
       <div class="name-group">
         <img v-if="row.scored" class="icon" src="../assets/img/icons/goal-white.svg" alt="Goal"/>
         <img v-if="row.assisted" class="icon" src="../assets/img/icons/assist-white.svg" alt="Assist"/>
+        <img v-if="row.card === 'yellow'" class="icon" src="../assets/img/icons/yellowCard.svg" alt="Yellow card"/>
+        <img v-if="row.card === 'red'" class="icon" src="../assets/img/icons/redCard.svg" alt="Red card"/>
         <span class="name">{{ row.player.lastName }}</span>
       </div>
       <span class="rating">{{ formatRating(row.rating) }}</span>
@@ -38,7 +40,8 @@ export default {
     // 'home' mirrors the row (name first, hugging the right edge toward the
     // pitch); 'away' reads position-first from the left edge.
     side: { type: String, required: true },
-    // Starting XI rows: { player, position, rating:Number, scored:Boolean }.
+    // Starting XI rows: { player, position, rating:Number, scored:Boolean,
+    // assisted:Boolean, card:'yellow'|'red'|null }.
     starters: { type: Array, required: true },
     // Bench rows: { player, position }. They don't take the pitch, so their
     // rating shows as a dash. (Reserve players aren't passed to the match.)

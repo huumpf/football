@@ -230,6 +230,7 @@ export const leagueModule = {
         for (const player of club.players) {
           player.season = { games: 0, ratingSum: 0 };
           player.seasonStartSkill = player.skill;
+          player.fitness = CFG.STAMINA_MAX;
         }
       }
     },
@@ -253,10 +254,12 @@ export const leagueModule = {
     },
 
     // Regenerates each AI club's full matchday sheet from its current squad: the
-    // strongest formation plus a positionally aware bench and the reserve.
+    // strongest formation plus a positionally aware bench and the reserve. Player
+    // selection is fitness-aware (aiSelectionSkill), so a tired player is rotated
+    // out for a fresher one and recovers on the bench — the AI's rest mechanic.
     REGENERATE_AI_FORMATIONS(state) {
       for (const club of state.clubs) {
-        const { formation, bench, reserve } = HLP.buildClubSheet(club.players, CFG.BENCH_SIZE);
+        const { formation, bench, reserve } = HLP.buildClubSheet(club.players, CFG.BENCH_SIZE, HLP.aiSelectionSkill);
         club.formation = formation;
         club.bench = bench;
         club.reserve = reserve;

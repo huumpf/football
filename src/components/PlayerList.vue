@@ -19,6 +19,12 @@
         @click="sortBy('skill')"
       >Skill<span class="arrow">{{ arrow('skill') }}</span></div>
       <div
+        v-if="showFitness"
+        :class="['metric', 'sortable', { active: sortKey === 'fitness' }]"
+        title="Fitness"
+        @click="sortBy('fitness')"
+      >Fit<span class="arrow">{{ arrow('fitness') }}</span></div>
+      <div
         v-if="showDevelopment"
         :class="['metric', 'dev', 'sortable', { active: sortKey === 'development' }]"
         :title="devColumnTitle"
@@ -75,6 +81,9 @@
         />
       </div>
       <div class="metric">{{ player.skill }}</div>
+      <div v-if="showFitness" class="metric fitness-cell">
+        <FitnessRing :value="player.fitness" :size="16"/>
+      </div>
       <div v-if="showDevelopment" class="metric dev">
         <span :class="['dev-delta', devClass(player)]">{{ devLabel(player) }}</span>
       </div>
@@ -91,18 +100,20 @@
 
 <script>
 import ListRow from './ListRow.vue';
+import FitnessRing from './FitnessRing.vue';
 import { moneyStr, marketValue, developmentDelta } from '../assets/js/Helpers.js';
 import { DEV_TIMEFRAMES } from '../assets/js/Config.js';
 
 // Default sort direction per column. Position reads ascending (GK → RF),
-// while skill/development/salary/value read best-first.
-const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', development: 'desc', age: 'asc', salary: 'desc', value: 'desc', club: 'asc' };
+// while skill/fitness/development/salary/value read best-first.
+const DEFAULT_DIR = { position: 'asc', name: 'asc', skill: 'desc', fitness: 'desc', development: 'desc', age: 'asc', salary: 'desc', value: 'desc', club: 'asc' };
 
 export default {
   name: 'PlayerList',
 
   components: {
     ListRow,
+    FitnessRing,
   },
 
   props: {
@@ -115,6 +126,8 @@ export default {
     showValue: { type: Boolean, default: false },
     // Selling club column; reads `clubName` off the player entries.
     showClub: { type: Boolean, default: false },
+    // Fitness ring column (squad bench/reserve and the players list).
+    showFitness: { type: Boolean, default: false },
     // Squad page: skill-change ("Dev") column, measured over `timeframe`.
     showDevelopment: { type: Boolean, default: false },
     // A DEV_TIMEFRAMES key the development delta is measured over.
@@ -175,6 +188,7 @@ export default {
         case 'position': return a.positions.sort - b.positions.sort;
         case 'name': return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
         case 'skill': return a.skill - b.skill;
+        case 'fitness': return (a.fitness ?? 0) - (b.fitness ?? 0);
         case 'development': return developmentDelta(a, this.timeframe) - developmentDelta(b, this.timeframe);
         case 'age': return a.age - b.age;
         case 'salary': return a.salary - b.salary;
@@ -284,6 +298,13 @@ export default {
   width: 42px;
   flex-shrink: 0;
   text-align: center;
+}
+
+// The fitness ring sits centred in its metric column.
+.metric.fitness-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 // Skill-change column: green when up, red when down, default text at zero.

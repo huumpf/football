@@ -16,6 +16,7 @@
         <p class="position">{{ position }}</p>
         <p class="name"><template v-if="player"><span class="first-initial">{{ player.firstName.charAt(0) }}.&nbsp;</span>{{ player.lastName }}</template></p>
       </div>
+      <FitnessRing v-if="player" class="fitness" :value="player.fitness" :size="14"/>
       <p class="skill">{{ player ? skillValue : '' }}</p>
     </template>
 
@@ -33,6 +34,7 @@
 <script>
 import { effectiveSkill, fieldSkill } from '../assets/js/Helpers.js';
 import DropdownMenu from '@/components/DropdownMenu.vue';
+import FitnessRing from '@/components/FitnessRing.vue';
 
 export default {
   name: 'LineupItem',
@@ -123,6 +125,7 @@ export default {
 
   components: {
     DropdownMenu,
+    FitnessRing,
   },
 }
 </script>

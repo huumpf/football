@@ -5,6 +5,7 @@
         title="Squad"
         :players="players"
         :listed-ids="listedIds"
+        show-fitness
         show-salary
         show-value
         show-development

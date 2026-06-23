@@ -31,11 +31,11 @@ export function getBiasedRnd (min, max, bias, influence, mixfactor) {
   return rnd * (1 - mix) + bias * mix;
 }
 
-export function getFormationsWithPlayers (players) {
+export function getFormationsWithPlayers (players, skillFn = effectiveSkill) {
   let formations = JSON.parse(JSON.stringify(CFG.formations));
 
   for (let formation of formations) {
-    const { assigned, skillSum } = assignPlayersToFormation(players, formation.positions);
+    const { assigned, skillSum } = assignPlayersToFormation(players, formation.positions, skillFn);
     formation.players = assigned;
     formation.skillSum = skillSum;
   }
@@ -55,9 +55,61 @@ export function projectedSkill(player, years) {
 // aging just shifts the curve target a year older, which development then chases.
 export function agePlayer(player) {
   player.age += 1;
+  // Aging past the prime gradually lowers the conditioning ceiling, so a player
+  // gets less fit as his career winds down. Current fitness is left alone (only
+  // matches drain it); it simply can no longer recover as high afterwards.
+  if (player.stamina != null && player.age > CFG.STAMINA_PRIME_AGE) {
+    player.stamina = Math.max(CFG.STAMINA_MIN_ROLL, player.stamina - CFG.STAMINA_AGE_PENALTY);
+  }
 }
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+
+// The conditioning ceiling lost to age: zero up to the prime age, then
+// STAMINA_AGE_PENALTY points per year older. Applied both at creation and on
+// every birthday (agePlayer), so older players are generally less fit.
+export function staminaAgePenalty(age) {
+  return CFG.STAMINA_AGE_PENALTY * Math.max(0, age - CFG.STAMINA_PRIME_AGE);
+}
+
+// Rolls a player's stamina (conditioning ceiling) for an age: a corridor around
+// STAMINA_MEAN with ~±STAMINA_SPREAD cross-player divergence, lowered by the age
+// penalty, bounded to [STAMINA_MIN_ROLL, STAMINA_MAX].
+export function rollStamina(age) {
+  const spread = 1 + (Math.random() * 2 - 1) * CFG.STAMINA_SPREAD;
+  return clamp(CFG.STAMINA_MEAN * spread - staminaAgePenalty(age), CFG.STAMINA_MIN_ROLL, CFG.STAMINA_MAX);
+}
+
+// Match-performance multiplier from a player's current fitness: 1 at/above
+// FITNESS_PERF_FULL, falling linearly to FITNESS_PERF_MIN at zero fitness.
+// Missing fitness (test fixtures) reads as full — no malus.
+export function fitnessFactor(player) {
+  const fitness = player.fitness ?? CFG.STAMINA_MAX;
+  const slope = (1 - CFG.FITNESS_PERF_MIN) / CFG.FITNESS_PERF_FULL;
+  return clamp(1 - Math.max(0, CFG.FITNESS_PERF_FULL - fitness) * slope, CFG.FITNESS_PERF_MIN, 1);
+}
+
+// The ring colour tier for a fitness value: 'good' (green), 'ok' (yellow), 'low' (red).
+export function fitnessTier(fitness) {
+  if (fitness >= CFG.FITNESS_TIER_GOOD) return 'good';
+  if (fitness >= CFG.FITNESS_TIER_OK) return 'ok';
+  return 'low';
+}
+
+// One week of fitness change for a player: a starter (played) first loses
+// FITNESS_MATCH_DRAIN, then he recovers FITNESS_REGEN_RATE of the gap back up
+// toward his stamina ceiling. Recovery only ever raises fitness — a match is the
+// only thing that lowers it — so a player who starts the season fresh above his
+// ceiling (see RESET_SEASON_STATS) stays there until he plays. A high-ceiling
+// player nets out about even on a match a week; a low-ceiling one slips and must
+// be rested. Bounded to [0, STAMINA_MAX].
+export function updateFitness(player, played) {
+  const ceiling = player.stamina ?? CFG.STAMINA_MAX;
+  let fitness = player.fitness ?? ceiling;
+  if (played) fitness -= CFG.FITNESS_MATCH_DRAIN;
+  if (fitness < ceiling) fitness += (ceiling - fitness) * CFG.FITNESS_REGEN_RATE;
+  player.fitness = clamp(fitness, 0, CFG.STAMINA_MAX);
+}
 
 // Applies a fractional skill value to a player. The exact value lives in
 // `skillExact` so the tiny weekly development steps accumulate instead of
@@ -113,6 +165,9 @@ export function developPlayers(players, ratings = {}) {
       0, 100,
     );
     setSkill(player, clamp(player.skillExact + delta, 0, 100));
+
+    // Fitness recovers (and starters drain) once a week, on the same tick.
+    updateFitness(player, played);
   }
 }
 
@@ -170,12 +225,20 @@ export function fieldSkill(player, position) {
   return eff > 0 ? eff : Math.round(player.skill * (1 - CFG.OUT_OF_POSITION_PENALTY));
 }
 
+// The selection skill an AI club uses to pick its matchday XI and bench:
+// effective skill dampened by current fitness, so a tired player is auto-rotated
+// out in favour of a fresher comparable one. Only the AI uses this — the human
+// sets his line-up by hand and judges fitness from the rings.
+export function aiSelectionSkill(player, position) {
+  return effectiveSkill(player, position) * fitnessFactor(player);
+}
+
 // Optimally fills a formation's slots with the available players, maximising the
 // summed effective skill. Each player takes at most one slot, considering every
 // position they can play (primary at full skill, secondary penalised). Solved as
 // a max-weight bipartite assignment so a player isn't greedily locked into a slot
 // where another player could not be replaced.
-function assignPlayersToFormation(players, positionCounts) {
+function assignPlayersToFormation(players, positionCounts, skillFn = effectiveSkill) {
   const assigned = {};
   for (const pos of Object.keys(positionCounts)) assigned[pos] = [];
 
@@ -190,7 +253,7 @@ function assignPlayersToFormation(players, positionCounts) {
   }
 
   // Weight matrix: slots (rows) x players (cols).
-  const weight = slots.map(pos => players.map(p => effectiveSkill(p, pos)));
+  const weight = slots.map(pos => players.map(p => skillFn(p, pos)));
 
   const slotToPlayer = maxWeightAssignment(weight);
 
@@ -299,9 +362,9 @@ function maxWeightAssignment(weight) {
   return rowToCol;
 }
 
-export function getRecommendedFormation (players) {
+export function getRecommendedFormation (players, skillFn = effectiveSkill) {
 
-  const formations = getFormationsWithPlayers(players);
+  const formations = getFormationsWithPlayers(players, skillFn);
   let recommendedFormation = formations[0];
 
   for (let i = 1; i < formations.length; i++) {
@@ -332,7 +395,7 @@ export function lineupSkill(lineup) {
 // the bench. Returns up to benchSize players, positionally varied rather than
 // just the top scorers; the caller treats whoever is left as reserve. Tolerates
 // squads too small to fill the bench.
-export function selectBench(nonXi, positionCounts, benchSize) {
+export function selectBench(nonXi, positionCounts, benchSize, skillFn = effectiveSkill) {
   const chosen = [];
   const used = new Set();
 
@@ -343,7 +406,7 @@ export function selectBench(nonXi, positionCounts, benchSize) {
     let bestSkill = 0;
     for (const player of nonXi) {
       if (used.has(player.id)) continue;
-      const skill = effectiveSkill(player, POS);
+      const skill = skillFn(player, POS);
       if (skill > bestSkill) {
         bestSkill = skill;
         best = player;
@@ -377,9 +440,9 @@ function placedIds(lineup) {
 
 // Splits the squad outside the XI into a bench (positionally aware) and the
 // reserve (everyone else).
-function benchAndReserve(players, placed, positionCounts, benchSize) {
+function benchAndReserve(players, placed, positionCounts, benchSize, skillFn = effectiveSkill) {
   const nonXi = players.filter(p => !placed.has(p.id));
-  const bench = selectBench(nonXi, positionCounts, benchSize);
+  const bench = selectBench(nonXi, positionCounts, benchSize, skillFn);
   const benchIds = new Set(bench.map(p => p.id));
   const reserve = nonXi.filter(p => !benchIds.has(p.id));
   return { bench, reserve };
@@ -407,9 +470,9 @@ export function buildFormationSheets(players, benchSize) {
 // skillSum) plus a positionally aware bench and the reserve. The single-
 // formation counterpart to buildFormationSheets — the AI never switches or
 // hand-edits, so it is regenerated wholesale each week.
-export function buildClubSheet(players, benchSize) {
-  const formation = getRecommendedFormation(players);
-  const { bench, reserve } = benchAndReserve(players, placedIds(formation.players), formation.positions, benchSize);
+export function buildClubSheet(players, benchSize, skillFn = effectiveSkill) {
+  const formation = getRecommendedFormation(players, skillFn);
+  const { bench, reserve } = benchAndReserve(players, placedIds(formation.players), formation.positions, benchSize, skillFn);
   return { formation, bench, reserve };
 }
 

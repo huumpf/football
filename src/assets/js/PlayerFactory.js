@@ -35,6 +35,10 @@ export function makePlayer() {
   // Greed: a flat per-player pay modifier, independent of skill.
   const greed = 1 + (Math.random() * 2 - 1) * CFG.PLAYER_GREED_SPREAD;
 
+  // Stamina: the conditioning ceiling drawn for this player's age. Fitness (his
+  // current condition) starts full and drains/recovers from here on.
+  const stamina = HLP.rollStamina(age);
+
   // Position & skills: the primary position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
   // stat profile fitting that position.
@@ -61,6 +65,11 @@ export function makePlayer() {
     drawnPotential: potential,
     optimalAge,
     greed,
+    // Conditioning ceiling (the "stamina" attribute) and current condition;
+    // a player starts fully fresh and fitness drains in matches, recovering
+    // weekly toward stamina.
+    stamina,
+    fitness: CFG.STAMINA_MAX,
     skill,
     // The exact (fractional) skill that continuous weekly development accumulates
     // into; `skill` is its rounded mirror, read everywhere else.

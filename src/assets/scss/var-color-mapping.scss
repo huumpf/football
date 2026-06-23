@@ -24,4 +24,10 @@ $col_field_background: $col_grad_1;
 
 $col_visualisation: $col_300;
 
-$col_highlight: $col_300
+$col_highlight: $col_300;
+
+// Fitness ring tiers (green good / yellow ok / red low) over a faint track.
+$col_fitness_good: $col_2000;
+$col_fitness_ok: $col_300;
+$col_fitness_low: $col_400;
+$col_fitness_track: $col_190_t10;

@@ -40,7 +40,7 @@
           :class="{ 'drop-hover': drag.active && drag.hoverKey === 'bench' }"
           data-drop="bench"
         >
-          <PlayerList title="Bench" :players="bench" draggable drop-key="bench" :dragging-id="dragId" numbered action-width="24px">
+          <PlayerList title="Bench" :players="bench" draggable drop-key="bench" :dragging-id="dragId" numbered show-fitness action-width="24px">
             <template #actions="{ player }">
               <PlayerRowMenu :player="player"/>
             </template>
@@ -52,7 +52,7 @@
           :class="{ 'drop-hover': drag.active && drag.hoverKey === 'reserve' }"
           data-drop="reserve"
         >
-          <PlayerList title="Reserve" :players="reserve" draggable drop-key="reserve" :dragging-id="dragId" numbered action-width="24px">
+          <PlayerList title="Reserve" :players="reserve" draggable drop-key="reserve" :dragging-id="dragId" numbered show-fitness action-width="24px">
             <template #actions="{ player }">
               <PlayerRowMenu :player="player"/>
             </template>

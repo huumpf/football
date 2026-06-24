@@ -122,19 +122,21 @@ export default {
     },
 
     // Player id -> live fitness, draining from each starter's match-start value
-    // toward (start - FITNESS_MATCH_DRAIN) as the clock runs — this is in-match
-    // fatigue only. The weekly tick (updateFitness) afterwards recovers part of
-    // that drain, so the squad screens then show a higher, post-recovery value.
-    // Before kick-off this reads the stored value (fitness as of match start).
+    // toward (start - his rolled match drain) as the clock runs — this is in-match
+    // fatigue only, and the per-player drain is random (the engine's per-minute
+    // total), so they tire by different amounts. The weekly tick (updateFitness)
+    // afterwards recovers part of that drain, so the squad screens then show a
+    // higher value. Before kick-off this reads the stored match-start fitness.
     fitnessByPlayer() {
       const map = {};
       if (!this.match) return map;
       const frac = this.timeline && this.timeline.totalMinutes
         ? Math.min(1, this.minute / this.timeline.totalMinutes)
         : 0;
-      const drain = CFG.FITNESS_MATCH_DRAIN * frac;
+      const drainTotals = (this.timeline && this.timeline.drain) || {};
       for (const e of [...this.match.home.xi, ...this.match.away.xi]) {
         const start = e.player.fitness ?? CFG.STAMINA_MAX;
+        const drain = (drainTotals[e.player.id] || 0) * frac;
         map[e.player.id] = Math.max(0, start - drain);
       }
       return map;
@@ -309,6 +311,7 @@ export default {
         awayGoals: this.timeline.awayGoals,
         ratings: computeRatings(this.timeline, this.match.home, this.match.away),
         injuries: injuriesFromTimeline(this.timeline),
+        drain: this.timeline.drain,
       });
       this.$router.push({ name: 'League' });
     },

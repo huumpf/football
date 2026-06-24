@@ -130,14 +130,29 @@ export function fitnessTier(fitness) {
   return 'low';
 }
 
-// One week of fitness change for a player: a starter (played) first loses
-// FITNESS_MATCH_DRAIN, then he recovers FITNESS_REGEN_RATE of the gap back up
-// toward his stamina ceiling. Recovery only ever raises fitness — a match is the
-// only thing that lowers it — so a player who starts the season fresh above his
-// ceiling (see RESET_SEASON_STATS) stays there until he plays. A high-ceiling
-// player nets out about even on a match a week; a low-ceiling one slips and must
-// be rested. Bounded to [0, STAMINA_MAX].
-export function updateFitness(player, played) {
+// The fraction of his fitness gap a player recovers each week, scaled by his
+// conditioning (stamina): the best-conditioned third (stamina >=
+// FITNESS_REGEN_FULL_STAMINA) recover the whole gap — so they fully bounce back
+// from a match within a week — tapering down to FITNESS_REGEN_MIN at/below
+// FITNESS_REGEN_MIN_STAMINA for the least-conditioned, who keep carrying fatigue.
+export function fitnessRegenRate(stamina) {
+  const s = stamina ?? CFG.STAMINA_MAX;
+  const span = CFG.FITNESS_REGEN_FULL_STAMINA - CFG.FITNESS_REGEN_MIN_STAMINA;
+  const t = span > 0 ? (s - CFG.FITNESS_REGEN_MIN_STAMINA) / span : 1;
+  return clamp(CFG.FITNESS_REGEN_MIN + (1 - CFG.FITNESS_REGEN_MIN) * t, CFG.FITNESS_REGEN_MIN, 1);
+}
+
+// One week of fitness change for a player: he first loses `drain` (his actual
+// per-match fitness cost, accumulated minute by minute in the match engine — 0 on
+// a rest/training week), then recovers a conditioning-scaled fraction
+// (fitnessRegenRate) of the gap back up toward his stamina ceiling, capped at
+// FITNESS_RECOVER_MAX. Recovery only ever raises fitness — a match is the only
+// thing that lowers it — so a player who starts the season fresh above his ceiling
+// (see RESET_SEASON_STATS) stays there until he plays. The best-conditioned
+// recover fully from an average match, but the cap means an unlucky heavy-drain
+// match isn't erased in one week, so randomly even they may need a rest. Bounded
+// to [0, STAMINA_MAX].
+export function updateFitness(player, drain = 0) {
   // An injured player ignores normal drain/recovery: each weekly tick advances
   // his recovery by one week while his fitness stays pinned low. Once the (hidden)
   // drawn duration elapses the injury clears and fitness is restored part-way —
@@ -155,8 +170,10 @@ export function updateFitness(player, played) {
   }
   const ceiling = player.stamina ?? CFG.STAMINA_MAX;
   let fitness = player.fitness ?? ceiling;
-  if (played) fitness -= CFG.FITNESS_MATCH_DRAIN;
-  if (fitness < ceiling) fitness += (ceiling - fitness) * CFG.FITNESS_REGEN_RATE;
+  fitness -= drain;
+  if (fitness < ceiling) {
+    fitness += Math.min((ceiling - fitness) * fitnessRegenRate(ceiling), CFG.FITNESS_RECOVER_MAX);
+  }
   player.fitness = clamp(fitness, 0, CFG.STAMINA_MAX);
 }
 
@@ -192,7 +209,7 @@ function setSkill(player, exact) {
 //  - potential reverts gently toward its drawn value (bounds long-run drift).
 // All bounded to [0, 100]. Shared by the team and league APPLY/DEVELOP paths so
 // the own squad and every AI club develop identically.
-export function developPlayers(players, ratings = {}) {
+export function developPlayers(players, ratings = {}, drains = {}) {
   for (const player of players) {
     if (player.drawnPotential == null) player.drawnPotential = player.potential;
     if (player.skillExact == null) player.skillExact = player.skill;
@@ -220,8 +237,8 @@ export function developPlayers(players, ratings = {}) {
     );
     setSkill(player, clamp(player.skillExact + delta, 0, 100));
 
-    // Fitness recovers (and starters drain) once a week, on the same tick.
-    updateFitness(player, played);
+    // Fitness recovers (and drains by his actual per-match cost) once a week.
+    updateFitness(player, drains[player.id] ?? 0);
   }
 }
 

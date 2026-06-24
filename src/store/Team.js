@@ -97,8 +97,8 @@ export const teamModule = {
     // reduced training weight). League defines the same mutation for AI clubs.
     // After developing, each player's weekly skill is logged (capped) so the
     // squad list can show the change over the last N weeks.
-    DEVELOP_WEEK(state, { ratings }) {
-      HLP.developPlayers(state.players, ratings);
+    DEVELOP_WEEK(state, { ratings, drains }) {
+      HLP.developPlayers(state.players, ratings, drains);
       for (const player of state.players) {
         if (!player.skillLog) player.skillLog = [];
         player.skillLog.push(player.skill);

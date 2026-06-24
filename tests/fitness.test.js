@@ -5,6 +5,7 @@ import {
   fitnessFactor,
   fitnessTier,
   updateFitness,
+  fitnessRegenRate,
   agePlayer,
   developPlayers,
   aiSelectionSkill,
@@ -82,61 +83,111 @@ describe('fitnessTier', () => {
 });
 
 describe('updateFitness', () => {
-  it('drains a starter then recovers part of the gap', () => {
-    const p = { stamina: 88, fitness: 88 };
-    updateFitness(p, true);
-    // drains by FITNESS_MATCH_DRAIN, then recovers half the gap to the ceiling
-    expect(p.fitness).toBeCloseTo(88 - CFG.FITNESS_MATCH_DRAIN * (1 - CFG.FITNESS_REGEN_RATE), 5);
+  const DRAIN = CFG.FITNESS_MATCH_DRAIN; // an average full match's drain
+
+  it('fully recovers a top-third player from an average match (back to his ceiling)', () => {
+    const stam = CFG.FITNESS_REGEN_FULL_STAMINA; // top-third conditioning -> rate 1.0
+    const p = { stamina: stam, fitness: stam };
+    updateFitness(p, DRAIN);
+    expect(p.fitness).toBeCloseTo(stam, 5);
+  });
+
+  it('only partially recovers a played sub-threshold player (ceiling - drain*(1-rate))', () => {
+    const stam = 75; // below the top third -> rate < 1
+    const p = { stamina: stam, fitness: stam };
+    updateFitness(p, DRAIN);
+    const r = fitnessRegenRate(stam);
+    expect(r).toBeLessThan(1);
+    expect(p.fitness).toBeCloseTo(stam - DRAIN * (1 - r), 5);
+  });
+
+  it('caps weekly recovery, so a heavy-drain match leaves even a top player below his ceiling', () => {
+    const stam = 95;
+    const p = { stamina: stam, fitness: stam };
+    const heavy = CFG.FITNESS_RECOVER_MAX + 12; // exceeds the recovery cap
+    updateFitness(p, heavy);
+    expect(p.fitness).toBeCloseTo(stam - heavy + CFG.FITNESS_RECOVER_MAX, 5);
+    expect(p.fitness).toBeLessThan(stam); // can't bounce all the way back this week
   });
 
   it('leaves a fully-fit rested player at his ceiling', () => {
     const p = { stamina: 88, fitness: 88 };
-    updateFitness(p, false);
+    updateFitness(p, 0);
     expect(p.fitness).toBeCloseTo(88, 5);
   });
 
   it('recovers a rested, drained player toward his ceiling', () => {
-    const p = { stamina: 88, fitness: 40 };
-    updateFitness(p, false);
-    // 40 + (88 - 40) * 0.5 = 64
-    expect(p.fitness).toBeCloseTo(64, 5);
+    const p = { stamina: 75, fitness: 40 };
+    updateFitness(p, 0);
+    expect(p.fitness).toBeCloseTo(40 + (75 - 40) * fitnessRegenRate(75), 5);
+    expect(p.fitness).toBeGreaterThan(40);
   });
 
-  it('settles a weekly starter at a stable equilibrium (ceiling - drain)', () => {
-    const p = { stamina: 88, fitness: 88 - CFG.FITNESS_MATCH_DRAIN };
-    for (let i = 0; i < 30; i++) updateFitness(p, true);
-    expect(p.fitness).toBeCloseTo(88 - CFG.FITNESS_MATCH_DRAIN, 5);
+  it('settles a top-third weekly starter at his ceiling (full recovery from average matches)', () => {
+    const p = { stamina: 90, fitness: 90 };
+    for (let i = 0; i < 30; i++) updateFitness(p, DRAIN);
+    expect(p.fitness).toBeCloseTo(90, 5);
+  });
+
+  it('settles a weak weekly starter below his ceiling (must be rested)', () => {
+    const p = { stamina: 66, fitness: 66 };
+    for (let i = 0; i < 30; i++) updateFitness(p, DRAIN);
+    expect(p.fitness).toBeLessThan(CFG.FITNESS_TIER_OK + 5); // sinks toward the red band
   });
 
   it('keeps a strong player playable but pushes an overplayed weak one into the red', () => {
     const strong = { stamina: 95, fitness: 95 };
     const weak = { stamina: 62, fitness: 62 };
-    for (let i = 0; i < 30; i++) { updateFitness(strong, true); updateFitness(weak, true); }
+    for (let i = 0; i < 30; i++) { updateFitness(strong, DRAIN); updateFitness(weak, DRAIN); }
     expect(strong.fitness).toBeGreaterThan(CFG.FITNESS_TIER_OK); // a strong player stays playable (yellow)
     expect(weak.fitness).toBeLessThan(CFG.FITNESS_TIER_OK);      // an overplayed weak player drops into red
   });
 
   it('recovers toward but never past the ceiling', () => {
     const p = { stamina: 80, fitness: 50 };
-    for (let i = 0; i < 20; i++) updateFitness(p, false);
+    for (let i = 0; i < 20; i++) updateFitness(p, 0);
     expect(p.fitness).toBeLessThanOrEqual(80);
     expect(p.fitness).toBeCloseTo(80, 1); // converges up to the ceiling
   });
 
   it('keeps a season-fresh player above his ceiling until he plays', () => {
     const p = { stamina: 70, fitness: CFG.STAMINA_MAX }; // started the season fresh
-    updateFitness(p, false);
+    updateFitness(p, 0);
     expect(p.fitness).toBe(CFG.STAMINA_MAX); // recovery never pulls him down
-    updateFitness(p, true);                  // first match drains him
+    updateFitness(p, DRAIN);                 // first match drains him
     expect(p.fitness).toBeLessThan(CFG.STAMINA_MAX);
   });
 
   it('clamps to zero with a synthetic ceiling below the match drain', () => {
-    // Out-of-range ceiling (below FITNESS_MATCH_DRAIN) so the post-regen value
-    // would go negative — exercises the defensive lower clamp.
+    // Out-of-range ceiling (below the drain) so the post-regen value would go
+    // negative — exercises the defensive lower clamp.
     const p = { stamina: 10, fitness: 0 };
-    updateFitness(p, true); // 0 - 30 = -30, then + (10 - -30) * 0.5 = -10 -> clamp 0
+    updateFitness(p, DRAIN);
     expect(p.fitness).toBe(0);
+  });
+});
+
+describe('fitnessRegenRate', () => {
+  it('is full (1.0) at and above the top-third threshold', () => {
+    expect(fitnessRegenRate(CFG.FITNESS_REGEN_FULL_STAMINA)).toBeCloseTo(1, 5);
+    expect(fitnessRegenRate(CFG.STAMINA_MAX)).toBeCloseTo(1, 5);
+  });
+
+  it('floors at FITNESS_REGEN_MIN for the least-conditioned', () => {
+    expect(fitnessRegenRate(CFG.FITNESS_REGEN_MIN_STAMINA)).toBeCloseTo(CFG.FITNESS_REGEN_MIN, 5);
+    expect(fitnessRegenRate(CFG.FITNESS_REGEN_MIN_STAMINA - 20)).toBeCloseTo(CFG.FITNESS_REGEN_MIN, 5);
+  });
+
+  it('increases monotonically with stamina between the two anchors', () => {
+    const mid = fitnessRegenRate(76);
+    expect(fitnessRegenRate(70)).toBeLessThan(mid);
+    expect(mid).toBeLessThan(fitnessRegenRate(84));
+    expect(mid).toBeGreaterThan(CFG.FITNESS_REGEN_MIN);
+    expect(mid).toBeLessThan(1);
+  });
+
+  it('defaults a missing stamina to full recovery', () => {
+    expect(fitnessRegenRate(undefined)).toBeCloseTo(1, 5);
   });
 });
 
@@ -182,19 +233,20 @@ describe('developPlayers fitness pass', () => {
       id: 1, age: 28, optimalAge: 28, potential: 60, drawnPotential: 60,
       skill: 50, skillExact: 50, positions: { position: 'ST' },
       skills: { goalkeeping: 0, defense: 0, progression: 15, shot: 35 },
-      stamina: 88, fitness: 88, ...over,
+      // Sub-top-third conditioning, so playing leaves him short of full recovery.
+      stamina: 75, fitness: 75, ...over,
     };
   }
 
-  it('drains a player who featured this week', () => {
+  it('drains a player by his match drain when he featured this week', () => {
     const p = devPlayer();
-    developPlayers([p], { [p.id]: 6.5 });
-    expect(p.fitness).toBeLessThan(88);
+    developPlayers([p], { [p.id]: 6.5 }, { [p.id]: CFG.FITNESS_MATCH_DRAIN });
+    expect(p.fitness).toBeLessThan(75);
   });
 
-  it('recovers a rested, drained player', () => {
+  it('recovers a rested player (no drain entry) toward his ceiling', () => {
     const p = devPlayer({ fitness: 50 });
-    developPlayers([p], {});
+    developPlayers([p], {}, {});
     expect(p.fitness).toBeGreaterThan(50);
   });
 });
@@ -252,6 +304,19 @@ describe('low fitness hurts match performance', () => {
     // Away attackers and keeper are fresh in both runs, so the extra goals come
     // from the fitness malus on the defenders specifically (D term + targeting).
     expect(homeGoalsVs(20)).toBeGreaterThan(homeGoalsVs(100));
+  });
+
+  it('accrues a per-player match drain that varies and is in the nominal ballpark', () => {
+    const home = side(55, 100), away = side(55, 100);
+    const tl = simulateLiveMatch(home, away);
+    const starters = [...home.xi, ...away.xi];
+    const drains = starters.map(e => tl.drain[e.player.id]);
+    for (const d of drains) expect(d).toBeGreaterThan(0); // everyone on the pitch tires
+    const avg = drains.reduce((s, d) => s + d, 0) / drains.length;
+    expect(avg).toBeGreaterThan(CFG.FITNESS_MATCH_DRAIN * 0.6);
+    expect(avg).toBeLessThan(CFG.FITNESS_MATCH_DRAIN * 1.5);
+    // per-player intensity makes the totals differ (not a flat constant)
+    expect(Math.max(...drains) - Math.min(...drains)).toBeGreaterThan(2);
   });
 });
 

@@ -64,6 +64,35 @@ export const teamModule = {
       HLP.applySeasonRatings(state.players, ratings);
     },
 
+    // Stamps a matchday's injuries onto the own squad. League defines the same
+    // mutation for AI clubs, so one commit('APPLY_INJURIES') covers the league.
+    APPLY_INJURIES(state, { injuries }) {
+      HLP.applyInjuries(state.players, injuries);
+    },
+
+    // After a matchday, pull every injured player out of the saved sheets (vacate
+    // his pitch slot, drop him from the bench) and into the reserve — an injured
+    // player can no longer play. The vacated slot is left for the manager to fill;
+    // the match-side builder backfills it so a fixture is never a man down.
+    MOVE_INJURED_TO_RESERVE(state) {
+      for (const sheet of Object.values(state.formations)) {
+        const reserveIds = new Set(sheet.reserve.map(p => p.id));
+        const banish = (player) => {
+          if (!reserveIds.has(player.id)) { sheet.reserve.push(player); reserveIds.add(player.id); }
+        };
+        for (const pos of Object.keys(sheet.lineup)) {
+          sheet.lineup[pos] = sheet.lineup[pos].map(p => {
+            if (p && HLP.isInjured(p)) { banish(p); return null; }
+            return p;
+          });
+        }
+        sheet.bench = sheet.bench.filter(p => {
+          if (p && HLP.isInjured(p)) { banish(p); return false; }
+          return true;
+        });
+      }
+    },
+
     // One week of development for the own squad (full squad; bench/reserve at a
     // reduced training weight). League defines the same mutation for AI clubs.
     // After developing, each player's weekly skill is logged (capped) so the
@@ -111,7 +140,9 @@ export const teamModule = {
       for (const player of state.players) {
         player.season = { games: 0, ratingSum: 0 };
         player.seasonStartSkill = player.skill;
-        player.fitness = CFG.STAMINA_MAX;
+        // An injured player keeps recovering across the rollover — don't reset him
+        // to full; the weekly tick keeps him pinned until the injury clears.
+        if (!player.injury) player.fitness = CFG.STAMINA_MAX;
       }
     },
 
@@ -124,6 +155,16 @@ export const teamModule = {
       state.formations = sheets;
       state.activeFormation = defaultName;
     },
+    // Re-link the saved formation sheets to the canonical `players` objects. A
+    // save round-trip (JSON) splits team.players and the sheets into separate
+    // objects sharing only ids, so per-player state written to team.players
+    // (fitness, injuries) wouldn't reach the line-up the match and squad screens
+    // read. reconcileSheet rebuilds each sheet from the current players by id,
+    // restoring shared identity without disturbing the arrangement. Run on load.
+    RECONCILE_FORMATIONS(state) {
+      reconcileFormations(state);
+    },
+
     // Switching the formation dropdown picks the new default to play.
     SET_ACTIVE_FORMATION(state, name) {
       state.activeFormation = name;

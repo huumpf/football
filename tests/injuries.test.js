@@ -36,28 +36,28 @@ describe('updateFitness recovery for an injured player', () => {
 
   it('pins fitness low and counts elapsed up while recovering', () => {
     const p = injured(3);
-    updateFitness(p, false);
+    updateFitness(p, 0);
     expect(p.injury.elapsed).toBe(1);
     expect(p.fitness).toBe(CFG.INJURY_FITNESS_INJURED);
     expect(p.injury).not.toBeNull();
   });
 
-  it('takes no match drain even when the player is marked as having played', () => {
+  it('takes no match drain even when handed a full match drain', () => {
     const p = injured(3);
-    updateFitness(p, true);
+    updateFitness(p, CFG.FITNESS_MATCH_DRAIN);
     expect(p.fitness).toBe(CFG.INJURY_FITNESS_INJURED); // not 20 - FITNESS_MATCH_DRAIN
   });
 
   it('clears the injury and restores partial fitness once the duration elapses', () => {
     const p = injured(2, 1); // one week already recovered
-    updateFitness(p, false);  // -> elapsed 2 == weeks
+    updateFitness(p, 0);  // -> elapsed 2 == weeks
     expect(p.injury).toBeNull();
     expect(p.fitness).toBe(CFG.INJURY_FITNESS_RECOVERED);
   });
 
   it('a one-week injury clears on the next recovery tick', () => {
     const p = injured(1);
-    updateFitness(p, false);
+    updateFitness(p, 0);
     expect(p.injury).toBeNull();
     expect(p.fitness).toBe(CFG.INJURY_FITNESS_RECOVERED);
   });

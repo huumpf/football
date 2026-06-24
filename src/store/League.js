@@ -248,8 +248,8 @@ export const leagueModule = {
     // One week of development for every AI club squad (full squad, not just the
     // XI). The team module defines the same mutation for the own squad, so a
     // single commit('DEVELOP_WEEK') develops the whole league identically.
-    DEVELOP_WEEK(state, { ratings }) {
-      for (const club of state.clubs) HLP.developPlayers(club.players, ratings);
+    DEVELOP_WEEK(state, { ratings, drains }) {
+      for (const club of state.clubs) HLP.developPlayers(club.players, ratings, drains);
     },
 
     // Birthdays for the given week: AI players born this week age a year. Aging
@@ -350,16 +350,18 @@ export const leagueModule = {
 
       const ratings = {};
       const injuries = {};
+      const drains = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
         const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
         Object.assign(ratings, outcome.ratings);
         Object.assign(injuries, outcome.injuries || {});
+        Object.assign(drains, outcome.drain || {});
         return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
       });
       stampInjuries(injuries, rootState.club);
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
-      commit('DEVELOP_WEEK', { ratings });
+      commit('DEVELOP_WEEK', { ratings, drains });
       // Injuries are stamped after development so the injuring week pins the
       // player's fitness (overriding that week's match drain) and his recovery
       // clock starts next week; injured players are then moved to the reserve.
@@ -377,21 +379,24 @@ export const leagueModule = {
 
       const ratings = {};
       const injuries = {};
+      const drains = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
         if (home === null || away === null) {
           Object.assign(ratings, live.ratings || {});
           Object.assign(injuries, live.injuries || {});
+          Object.assign(drains, live.drain || {});
           return { home, away, homeGoals: live.homeGoals, awayGoals: live.awayGoals };
         }
         const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
         Object.assign(ratings, outcome.ratings);
         Object.assign(injuries, outcome.injuries || {});
+        Object.assign(drains, outcome.drain || {});
         return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
       });
       stampInjuries(injuries, rootState.club);
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
-      commit('DEVELOP_WEEK', { ratings });
+      commit('DEVELOP_WEEK', { ratings, drains });
       commit('APPLY_INJURIES', { injuries });
       commit('MOVE_INJURED_TO_RESERVE');
       return ratings;

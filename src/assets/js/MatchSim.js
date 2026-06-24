@@ -346,6 +346,23 @@ export function simulateLiveMatch(home, away) {
   let homeGoals = 0;
   let awayGoals = 0;
 
+  // Per-player fitness drain, accumulated minute by minute for whoever is on the
+  // pitch (so it scales with minutes actually played). Each player gets one random
+  // per-match intensity, drawn lazily, plus fine per-minute noise on top.
+  const drain = {};
+  const intensity = {};
+  const drainOnPitch = (state) => {
+    for (const e of state.onPitch) {
+      const id = e.player.id;
+      if (out.has(id)) continue;
+      if (intensity[id] === undefined) {
+        intensity[id] = 1 + (Math.random() * 2 - 1) * CFG.FITNESS_DRAIN_INTENSITY_SPREAD;
+      }
+      const jitter = 1 + (Math.random() * 2 - 1) * CFG.FITNESS_DRAIN_MINUTE_JITTER;
+      drain[id] = (drain[id] || 0) + Math.max(0, CFG.FITNESS_DRAIN_PER_MINUTE * intensity[id] * jitter);
+    }
+  };
+
   for (let minute = 1; minute <= totalMinutes; minute++) {
     const homeChance = 2 * CFG.CHANCE_PER_MINUTE * strengthShare(homeEff, awayEff);
     const awayChance = 2 * CFG.CHANCE_PER_MINUTE * strengthShare(awayEff, homeEff);
@@ -371,8 +388,12 @@ export function simulateLiveMatch(home, away) {
     const awayManDown = runSideSubs(minute, 'away', awayState, out, events, contribs, awayInjured);
     homeEff *= Math.pow(CFG.RED_CARD_STRENGTH_FACTOR, homeManDown);
     awayEff *= Math.pow(CFG.RED_CARD_STRENGTH_FACTOR, awayManDown);
+
+    // Tire whoever ended the minute on the pitch (post-subs, excluding sent-off).
+    drainOnPitch(homeState);
+    drainOnPitch(awayState);
   }
-  return { totalMinutes, homeGoals, awayGoals, events, contribs };
+  return { totalMinutes, homeGoals, awayGoals, events, contribs, drain };
 }
 
 // Folds a timeline into per-player ratings for both sides, considering only
@@ -470,5 +491,6 @@ export function simulateInstant(home, away) {
     awayGoals: timeline.awayGoals,
     ratings: computeRatings(timeline, home, away),
     injuries: injuriesFromTimeline(timeline),
+    drain: timeline.drain,
   };
 }

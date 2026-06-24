@@ -65,12 +65,29 @@ export const STAMINA_PRIME_AGE = 24;     // no age penalty up to this age
 export const STAMINA_AGE_PENALTY = 1.2;  // ceiling points lost per year past the prime age
 // Every player starts each season at full fitness (STAMINA_MAX) and holds it
 // through the match-free pre-season. A full match then drains FITNESS_MATCH_DRAIN
-// and each week he recovers FITNESS_REGEN_RATE of the gap back up toward his
-// ceiling. So once matches begin a weekly starter settles at
-// stamina - FITNESS_MATCH_DRAIN: young/strong players sit in the yellow band
-// (sustainable), older/weaker ones sink into the red and must be rested.
-export const FITNESS_MATCH_DRAIN = 30;   // fitness a full match costs a starter
-export const FITNESS_REGEN_RATE = 0.5;   // fraction of the gap to the ceiling recovered each week
+// and each week he recovers a fraction of the gap back up toward his ceiling.
+// That fraction scales with conditioning (see fitnessRegenRate): the best-
+// conditioned third (stamina >= FITNESS_REGEN_FULL_STAMINA) recover the whole gap
+// — so they fully bounce back from a match each week — while it tapers down to
+// FITNESS_REGEN_MIN for the least-conditioned, who sink into the red and must be
+// rested. So once matches begin a weekly starter settles between his ceiling
+// (top third) and roughly stamina - FITNESS_MATCH_DRAIN (the weakest).
+export const FITNESS_MATCH_DRAIN = 30;       // nominal fitness a full (90') match costs at average intensity
+// Match drain is accumulated minute by minute in the engine: each on-pitch player
+// loses FITNESS_DRAIN_PER_MINUTE, scaled by a per-player per-match intensity
+// (±FITNESS_DRAIN_INTENSITY_SPREAD) plus fine per-minute noise. So totals vary per
+// player (some matches take more out of you), scale with minutes actually played
+// (a sub drains less), and randomly leave even a fit player short some weeks.
+export const FITNESS_DRAIN_PER_MINUTE = FITNESS_MATCH_DRAIN / 90;
+export const FITNESS_DRAIN_INTENSITY_SPREAD = 0.35; // ±35% per-player per-match intensity
+export const FITNESS_DRAIN_MINUTE_JITTER = 0.5;     // ±50% fine per-minute noise (averages out)
+// Weekly recovery is capped at this, so a heavy-drain match isn't fully erased in
+// one week even for a top-conditioned player — that's what lets random heavy
+// matches push anyone toward needing a rest.
+export const FITNESS_RECOVER_MAX = 35;
+export const FITNESS_REGEN_MIN = 0.5;        // weekly recovery fraction for the least-conditioned
+export const FITNESS_REGEN_MIN_STAMINA = 64; // at/below this stamina, recovery is FITNESS_REGEN_MIN
+export const FITNESS_REGEN_FULL_STAMINA = 88;// at/above this stamina (~top third) recovery is full (1.0)
 // Performance malus: at/above FITNESS_PERF_FULL a player is at full strength; it
 // scales his effective skill down linearly to FITNESS_PERF_MIN at zero fitness.
 // Kept below the weekly-starter equilibrium band so a fresh player is unpenalised

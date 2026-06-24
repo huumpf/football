@@ -4,7 +4,7 @@
       <div class="select-wrapper" @click="formationsOpen = !formationsOpen">
         <span class="selectFormation">
           <span class="formation-name">{{ selectedFormation ? selectedFormation.name : 'Overview' }}</span>
-          <span v-if="selectedFormation" class="formation-skill"> · Total skill: {{ selectedFormation.skillSum }}</span>
+          <span v-if="selectedFormation" class="formation-skill"> · Total skill: {{ Math.round(selectedFormation.skillSum) }}</span>
         </span>
         <DropdownMenu
           v-if="formationsOpen"

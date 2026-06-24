@@ -26,7 +26,7 @@
         <div class="metric">{{ entry.played }}</div>
         <div class="metric">{{ entry.goalsFor }}:{{ entry.goalsAgainst }}</div>
         <div class="metric">{{ entry.points }}</div>
-        <div class="metric">{{ entry.skill }}</div>
+        <div class="metric">{{ Math.round(entry.skill) }}</div>
       </ListRow>
     </div>
 

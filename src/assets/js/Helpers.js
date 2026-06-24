@@ -25,6 +25,40 @@ export function seasonAvgRating(player) {
   return player.season.ratingSum / player.season.games;
 }
 
+// Writes a matchday's injuries ({ [playerId]: injury }) onto whichever of
+// `players` they belong to, pinning the injured player's fitness at once so the
+// squad screens reflect it immediately. The team and league APPLY_INJURIES
+// mutations call this per squad, mirroring applySeasonRatings.
+export function applyInjuries(players, injuries) {
+  for (const player of players) {
+    const injury = injuries[player.id];
+    if (!injury) continue;
+    player.injury = injury;
+    player.fitness = CFG.INJURY_FITNESS_INJURED;
+  }
+}
+
+// A monotonic week index across seasons, so a span counted in weeks is correct
+// over a season rollover (week 52 -> week 1 of the next season is one week).
+export function absoluteWeek(season, week) {
+  return (season - 1) * CFG.SEASON_WEEKS + week;
+}
+
+// Tooltip line for when a player picked up his current injury, relative to the
+// club's clock: "Today" the week it happened, otherwise "N weeks ago".
+export function injuryTimingLabel(player, club) {
+  if (!player || !player.injury || !club) return '';
+  const ago = absoluteWeek(club.season, club.week) - player.injury.injuredAtAbsWeek;
+  if (ago <= 0) return 'Today';
+  return ago === 1 ? '1 week ago' : `${ago} weeks ago`;
+}
+
+// Tooltip line for the (deliberately vague) typical duration, read straight from
+// the pool's recovery_weeks range — never the exact rolled weeks.
+export function injuryDurationLabel(player) {
+  return player && player.injury ? `typical duration: ${player.injury.recovery_weeks} weeks` : '';
+}
+
 export function getBiasedRnd (min, max, bias, influence, mixfactor) {
   let rnd = Math.random() * (max - min) + min;
   let mix = mixfactor * influence;
@@ -104,11 +138,31 @@ export function fitnessTier(fitness) {
 // player nets out about even on a match a week; a low-ceiling one slips and must
 // be rested. Bounded to [0, STAMINA_MAX].
 export function updateFitness(player, played) {
+  // An injured player ignores normal drain/recovery: each weekly tick advances
+  // his recovery by one week while his fitness stays pinned low. Once the (hidden)
+  // drawn duration elapses the injury clears and fitness is restored part-way —
+  // rest brings back more than match play, but not all the way.
+  const injury = player.injury;
+  if (injury) {
+    injury.elapsed += 1;
+    if (injury.elapsed >= injury.weeks) {
+      player.injury = null;
+      player.fitness = CFG.INJURY_FITNESS_RECOVERED;
+    } else {
+      player.fitness = CFG.INJURY_FITNESS_INJURED;
+    }
+    return;
+  }
   const ceiling = player.stamina ?? CFG.STAMINA_MAX;
   let fitness = player.fitness ?? ceiling;
   if (played) fitness -= CFG.FITNESS_MATCH_DRAIN;
   if (fitness < ceiling) fitness += (ceiling - fitness) * CFG.FITNESS_REGEN_RATE;
   player.fitness = clamp(fitness, 0, CFG.STAMINA_MAX);
+}
+
+// Whether a player currently carries an injury (can't play; greyed in the UI).
+export function isInjured(player) {
+  return !!(player && player.injury);
 }
 
 // Applies a fractional skill value to a player. The exact value lives in
@@ -230,6 +284,9 @@ export function fieldSkill(player, position) {
 // out in favour of a fresher comparable one. Only the AI uses this — the human
 // sets his line-up by hand and judges fitness from the rings.
 export function aiSelectionSkill(player, position) {
+  // An injured player can't be fielded: a zero weight drops him from the optimal
+  // assignment (and selectBench), so the AI never starts or benches him.
+  if (player.injury) return 0;
   return effectiveSkill(player, position) * fitnessFactor(player);
 }
 

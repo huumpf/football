@@ -1,0 +1,24 @@
+{
+  "injuries": [
+    { "name": "Muscle strain", "recovery_weeks": "1-2", "likelihood": 0.85 },
+    { "name": "Adductor/groin strain", "recovery_weeks": "1-3", "likelihood": 0.65 },
+    { "name": "Contusion", "recovery_weeks": "1-3", "likelihood": 0.9 },
+    { "name": "Muscle fiber tear", "recovery_weeks": "2-3", "likelihood": 0.6 },
+    { "name": "Muscle bundle tear", "recovery_weeks": "4-6", "likelihood": 0.45 },
+    { "name": "Hamstring injury", "recovery_weeks": "3-8", "likelihood": 0.7 },
+    { "name": "Calf muscle tear", "recovery_weeks": "4-8", "likelihood": 0.4 },
+    { "name": "Complete muscle rupture", "recovery_weeks": "8-16", "likelihood": 0.1 },
+    { "name": "Ankle lateral ligament sprain", "recovery_weeks": "1-4", "likelihood": 0.8 },
+    { "name": "Ankle lateral ligament tear", "recovery_weeks": "3-6", "likelihood": 0.5 },
+    { "name": "Syndesmosis tear", "recovery_weeks": "8-12", "likelihood": 0.15 },
+    { "name": "Knee medial collateral ligament tear", "recovery_weeks": "4-8", "likelihood": 0.3 },
+    { "name": "Meniscus tear, partial resection", "recovery_weeks": "6-8", "likelihood": 0.35 },
+    { "name": "Meniscus tear, suture", "recovery_weeks": "12-24", "likelihood": 0.2 },
+    { "name": "ACL tear", "recovery_weeks": "24-40", "likelihood": 0.12 },
+    { "name": "Achilles tendon rupture", "recovery_weeks": "24-36", "likelihood": 0.05 },
+    { "name": "Patellar tendon rupture", "recovery_weeks": "16-24", "likelihood": 0.05 },
+    { "name": "Ankle fracture", "recovery_weeks": "8-16", "likelihood": 0.1 },
+    { "name": "Tibia/fibula fracture", "recovery_weeks": "12-24", "likelihood": 0.08 },
+    { "name": "Concussion", "recovery_weeks": "1-4", "likelihood": 0.25 }
+  ]
+}

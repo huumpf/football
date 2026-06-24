@@ -39,6 +39,11 @@ export function makePlayer() {
   // current condition) starts full and drains/recovers from here on.
   const stamina = HLP.rollStamina(age);
 
+  // Hidden injury susceptibility (0 = resistant .. 1 = glass-cannon). A skewed
+  // uniform draw biases most players low while leaving a rare few highly prone.
+  // Never shown in the UI; only the match engine's per-minute injury roll reads it.
+  const injuryProneness = Math.pow(Math.random(), CFG.INJURY_PRONENESS_SKEW);
+
   // Position & skills: the primary position is drawn from weighted chances
   // (base weight + formation-slot frequency), then the skill is split into a
   // stat profile fitting that position.
@@ -70,6 +75,11 @@ export function makePlayer() {
     // weekly toward stamina.
     stamina,
     fitness: CFG.STAMINA_MAX,
+    // Hidden injury susceptibility and the player's current injury (null = fit).
+    // An injury is { name, recovery_weeks:"X-Y", weeks (hidden exact), elapsed,
+    // injuredAtAbsWeek } once set by the match engine via the store.
+    injuryProneness,
+    injury: null,
     skill,
     // The exact (fractional) skill that continuous weekly development accumulates
     // into; `skill` is its rounded mirror, read everywhere else.

@@ -16,12 +16,60 @@ const flattenLineup = lineup =>
 const benchRows = players =>
   byPosition(players.map(player => ({ player, position: player.positions.position })));
 
+// Builds the own club's fielded side from its saved active sheet: the manager's
+// lineup with injured players dropped and every resulting empty slot backfilled
+// by the best available (non-injured) bench/reserve player, so a fixture is never
+// silently a man down. With no injuries this reproduces the saved lineup exactly.
+function fieldOwnSide(sheet) {
+  const placed = [];
+  const placedIds = new Set();
+  const holes = [];
+  for (const [pos, slots] of Object.entries(sheet.lineup)) {
+    const POS = pos.toUpperCase();
+    for (const player of slots) {
+      if (player && !HLP.isInjured(player)) {
+        placed.push({ player, position: POS });
+        placedIds.add(player.id);
+      } else {
+        holes.push(POS);
+      }
+    }
+  }
+  const available = [...sheet.bench, ...sheet.reserve]
+    .filter(p => p && !HLP.isInjured(p) && !placedIds.has(p.id));
+  for (const POS of holes) {
+    let best = null, bestSkill = 0, bestIdx = -1;
+    available.forEach((p, i) => {
+      const s = HLP.effectiveSkill(p, POS);
+      if (s > bestSkill) { bestSkill = s; best = p; bestIdx = i; }
+    });
+    if (best) {
+      placed.push({ player: best, position: POS });
+      placedIds.add(best.id);
+      available.splice(bestIdx, 1);
+    }
+  }
+  const bench = sheet.bench.filter(p => p && !HLP.isInjured(p) && !placedIds.has(p.id));
+  const strength = placed.reduce((sum, e) => sum + HLP.effectiveSkill(e.player, e.position), 0);
+  return { xi: byPosition(placed), bench: benchRows(bench), strength };
+}
+
+// Stamps a matchday's freshly-collected injuries (id -> { name, recovery_weeks,
+// weeks }) with the club's current week (the recovery clock) before they're
+// committed onto players. elapsed starts at 0; updateFitness counts it up.
+function stampInjuries(injuries, club) {
+  const abs = HLP.absoluteWeek(club.season, club.week);
+  for (const id in injuries) {
+    injuries[id] = { ...injuries[id], elapsed: 0, injuredAtAbsWeek: abs };
+  }
+}
+
 // Plays one fixture: the duel engine when both sides field a line-up (so per-
-// player ratings come out), falling back to the strength-only Poisson roll if a
-// side has no usable XI (no ratings then). Returns { homeGoals, awayGoals, ratings }.
+// player ratings and injuries come out), falling back to the strength-only Poisson
+// roll if a side has no usable XI. Returns { homeGoals, awayGoals, ratings, injuries }.
 function playFixture(home, away) {
   if (home.xi.length && away.xi.length) return simulateInstant(home, away);
-  return { ...simulateMatch(home.strength, away.strength), ratings: {} };
+  return { ...simulateMatch(home.strength, away.strength), ratings: {}, injuries: {} };
 }
 
 export const leagueModule = {
@@ -110,12 +158,8 @@ export const leagueModule = {
         const name = rootState.club.name;
         const sheet = rootState.team.formations[rootState.team.activeFormation];
         if (sheet) {
-          return {
-            id, name,
-            xi: byPosition(flattenLineup(sheet.lineup)),
-            bench: benchRows(sheet.bench),
-            strength: HLP.lineupSkill(sheet.lineup),
-          };
+          // Field the saved sheet with injured players dropped and holes backfilled.
+          return { id, name, ...fieldOwnSide(sheet) };
         }
         // Defensive fallback before the sheets are initialised: auto optimum.
         const formation = getters.recommendedFormation;
@@ -193,6 +237,14 @@ export const leagueModule = {
       for (const club of state.clubs) HLP.applySeasonRatings(club.players, ratings);
     },
 
+    // Stamps a matchday's injuries onto every AI club. The team module defines the
+    // same mutation for the own squad, so one commit('APPLY_INJURIES') covers the
+    // league. AI injured players are dropped from the XI on the next weekly
+    // REGENERATE_AI_FORMATIONS (aiSelectionSkill returns 0 for them).
+    APPLY_INJURIES(state, { injuries }) {
+      for (const club of state.clubs) HLP.applyInjuries(club.players, injuries);
+    },
+
     // One week of development for every AI club squad (full squad, not just the
     // XI). The team module defines the same mutation for the own squad, so a
     // single commit('DEVELOP_WEEK') develops the whole league identically.
@@ -230,7 +282,9 @@ export const leagueModule = {
         for (const player of club.players) {
           player.season = { games: 0, ratingSum: 0 };
           player.seasonStartSkill = player.skill;
-          player.fitness = CFG.STAMINA_MAX;
+          // An injured player keeps recovering across the rollover (the weekly
+          // tick keeps him pinned until the injury clears) — don't reset to full.
+          if (!player.injury) player.fitness = CFG.STAMINA_MAX;
         }
       }
     },
@@ -295,37 +349,51 @@ export const leagueModule = {
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return {};
 
       const ratings = {};
+      const injuries = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
         const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
         Object.assign(ratings, outcome.ratings);
+        Object.assign(injuries, outcome.injuries || {});
         return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
       });
+      stampInjuries(injuries, rootState.club);
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
       commit('DEVELOP_WEEK', { ratings });
+      // Injuries are stamped after development so the injuring week pins the
+      // player's fitness (overriding that week's match drain) and his recovery
+      // clock starts next week; injured players are then moved to the reserve.
+      commit('APPLY_INJURIES', { injuries });
+      commit('MOVE_INJURED_TO_RESERVE');
       return ratings;
     },
 
     // Records the matchday around the match the manager just watched: the
-    // player's fixture takes the live score and ratings, the other 8 are
+    // player's fixture takes the live score, ratings and injuries, the other 8 are
     // instant-simulated. Same guard as playMatchday so a replay is ignored.
     playPlayerMatchday({ commit, state, getters, rootState }, live) {
       const matchday = SCHED.matchdayForWeek(rootState.club.week);
       if (matchday === null || !state.fixtures[matchday] || state.results[matchday]) return {};
 
       const ratings = {};
+      const injuries = {};
       const results = state.fixtures[matchday].map(({ home, away }) => {
         if (home === null || away === null) {
           Object.assign(ratings, live.ratings || {});
+          Object.assign(injuries, live.injuries || {});
           return { home, away, homeGoals: live.homeGoals, awayGoals: live.awayGoals };
         }
         const outcome = playFixture(getters.matchSideById(home), getters.matchSideById(away));
         Object.assign(ratings, outcome.ratings);
+        Object.assign(injuries, outcome.injuries || {});
         return { home, away, homeGoals: outcome.homeGoals, awayGoals: outcome.awayGoals };
       });
+      stampInjuries(injuries, rootState.club);
       commit('RECORD_MATCHDAY', { matchday, results });
       commit('APPLY_RATINGS', { ratings });
       commit('DEVELOP_WEEK', { ratings });
+      commit('APPLY_INJURIES', { injuries });
+      commit('MOVE_INJURED_TO_RESERVE');
       return ratings;
     },
   },

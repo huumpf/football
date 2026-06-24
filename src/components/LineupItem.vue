@@ -14,7 +14,8 @@
     <template v-else>
       <div class="info">
         <p class="position">{{ position }}</p>
-        <p class="name"><template v-if="player"><span class="first-initial">{{ player.firstName.charAt(0) }}.&nbsp;</span>{{ player.lastName }}</template></p>
+        <p class="name" :class="{ injured: player && player.injury }"><template v-if="player"><span class="first-initial">{{ player.firstName.charAt(0) }}.&nbsp;</span>{{ player.lastName }}</template></p>
+        <InjuryIcon v-if="player && player.injury" :player="player" :size="12"/>
       </div>
       <FitnessRing v-if="player" class="fitness" :value="player.fitness" :size="14"/>
       <p class="skill">{{ player ? skillValue : '' }}</p>
@@ -35,6 +36,7 @@
 import { effectiveSkill, fieldSkill } from '../assets/js/Helpers.js';
 import DropdownMenu from '@/components/DropdownMenu.vue';
 import FitnessRing from '@/components/FitnessRing.vue';
+import InjuryIcon from '@/components/InjuryIcon.vue';
 
 export default {
   name: 'LineupItem',
@@ -92,7 +94,7 @@ export default {
     candidates() {
       if (!this.editable) return [];
       return this.squad
-        .filter(p => p !== this.player && effectiveSkill(p, this.position) > 0)
+        .filter(p => p !== this.player && !p.injury && effectiveSkill(p, this.position) > 0)
         .map(p => ({
           player: p,
           label: this.shortName(p),
@@ -126,6 +128,7 @@ export default {
   components: {
     DropdownMenu,
     FitnessRing,
+    InjuryIcon,
   },
 }
 </script>
@@ -159,6 +162,11 @@ export default {
   font-size: 15px;
   font-weight: 500;
   word-break: break-word;
+}
+
+// An injured player's name reads dimmed wherever the pill is shown.
+.name.injured {
+  opacity: 0.45;
 }
 
 .skill {

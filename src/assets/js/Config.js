@@ -1,4 +1,5 @@
 import formationData from '../data/formations.json';
+import injuryData from '../data/injuries.json';
 
 export const DRAFT_PLAYERS_PER_PICK = 3;
 export const DRAFT_COUNT = 25;
@@ -79,6 +80,42 @@ export const FITNESS_PERF_MIN = 0.6;
 // Ring colour tiers (fitness, 0..100): >= GOOD green, >= OK yellow, else red.
 export const FITNESS_TIER_GOOD = 85;
 export const FITNESS_TIER_OK = 40;
+
+// --- Injuries -----------------------------------------------------------
+// Every minute each on-pitch player rolls for an injury at probability
+//   p = INJURY_BASE_RATE * injuryProneness * (1 + INJURY_FATIGUE_WEIGHT * (1 - fitness/STAMINA_MAX))
+// so the base 0.05%/minute is personalised by the player's hidden
+// `injuryProneness` (0 = resistant .. 1 = glass-cannon, drawn biased-low) and
+// amplified as his current fitness drops (a tired player gets hurt more often).
+// On a hit an injury is drawn from the pool weighted by `likelihood`, with a
+// hidden exact duration rolled inside its recovery_weeks range, and the player
+// is substituted off (see the substitution block). While injured a player can't
+// play, sits pinned at INJURY_FITNESS_INJURED, and recovers each week; once the
+// drawn weeks elapse the injury clears and fitness is restored to
+// INJURY_FITNESS_RECOVERED (rest restores more than match play). Injury counts
+// are linear in INJURY_BASE_RATE — the single knob to dial the whole league's
+// injury frequency up or down.
+export const INJURY_BASE_RATE = 0.0005;   // base per-minute, per-player hazard
+export const INJURY_FATIGUE_WEIGHT = 1.5; // extra risk at zero fitness (1 + this = max multiplier)
+export const INJURY_PRONENESS_SKEW = 2;   // exponent on a uniform draw -> proneness biased toward 0
+export const INJURY_FITNESS_INJURED = 20; // fitness an injured player is pinned at each week
+export const INJURY_FITNESS_RECOVERED = 50; // fitness restored when the injury clears
+
+// The injury pool (src/assets/data/injuries.json) pre-parsed: the "X-Y"
+// recovery_weeks string is kept verbatim for the (vague) tooltip and also split
+// into the integer bounds the hidden duration is drawn within. The summed
+// likelihood is the denominator for the weighted pick.
+export const INJURIES = injuryData.injuries.map(entry => {
+  const [min, max] = entry.recovery_weeks.split('-').map(Number);
+  return {
+    name: entry.name,
+    recovery_weeks: entry.recovery_weeks,
+    minWeeks: min,
+    maxWeeks: max,
+    likelihood: entry.likelihood,
+  };
+});
+export const INJURY_LIKELIHOOD_TOTAL = INJURIES.reduce((sum, e) => sum + e.likelihood, 0);
 
 // Salary: SALARY_BASE is the pay of an average player (skill =
 // DRAFT_AVG_POTENTIAL), raised superlinearly so stars demand disproportionate
@@ -188,6 +225,41 @@ export const ATTACK_PROGRESSION_WEIGHT = 0.4;
 export const FOUL_CHANCE_PER_MINUTE = 1 / 45;
 export const YELLOW_TO_RED_FRACTION = 0.12;
 export const RED_CARD_STRENGTH_FACTOR = 0.8;
+
+// --- Substitutions ------------------------------------------------------
+// Each minute, after the duel and card rolls, every side may open a sub
+// window. The chance is ~0 in the first half and ramps up from minute
+// SUB_FIRST_HALF_CUTOFF: p(minute) = SUB_RAMP_BASE + SUB_RAMP_SLOPE * t^SUB_RAMP_CURVE
+// with t the second-half progress, so subs cluster in the closing stages. A
+// window is gated by a SUB_MIN_GAP cooldown, at most SUB_MAX_WINDOWS windows and
+// SUB_MAX_PLAYERS players per side. A window swaps out 1..N players (size drawn
+// from a geometric decay so one is likeliest, five rarest). The players taken
+// off are those with the highest "sub-off desirability": a weighted blend of low
+// fitness, low skill, a strong bench replacement waiting, and poor form so far
+// this match (a cheap running proxy from the duel contributions). Each is
+// replaced by the best positional fit left on the bench. Tuned for ~2-3 voluntary
+// subs per side per match. A forced injury substitution consumes a window and a
+// player from these same budgets (it is a real sub); when the budgets or the
+// bench are exhausted an injured player simply leaves (a man down, like a red).
+export const SUB_FIRST_HALF_CUTOFF = 45;  // no voluntary sub window at/before this minute
+export const SUB_RAMP_BASE = 0.016;       // window chance just after half-time
+export const SUB_RAMP_SLOPE = 0.065;      // additional chance scaled by second-half progress
+export const SUB_RAMP_CURVE = 1.5;        // >1 pushes voluntary subs toward the late game
+export const SUB_MIN_GAP = 5;             // minimum minutes between a side's windows
+export const SUB_MAX_WINDOWS = 3;         // max sub windows per side (incl. forced)
+export const SUB_MAX_PLAYERS = 5;         // max players subbed per side (incl. forced)
+export const SUB_SIZE_DECAY = 0.33;       // geometric decay for the per-window size (1 likeliest)
+// Sub-off desirability = weighted sum of four 0..1 deficits, each normalised by a
+// reference. A starter is only eligible to come off above SUB_MIN_SCORE, so a
+// fresh, well-performing XI is left alone even when a window opens.
+export const SUB_FIT_REF = 72;            // fitness at/above which the fitness deficit is 0 (= FITNESS_PERF_FULL)
+export const SUB_SKILL_REF = 70;          // skill scale normalising the skill / upgrade deficits
+export const SUB_PERF_SCALE = 1.5;        // running-form scale turning negative form into a 0..1 deficit
+export const SUB_W_FIT = 1.0;             // weight: low fitness
+export const SUB_W_UPGRADE = 0.8;         // weight: a clearly better bench replacement is ready
+export const SUB_W_PERF = 0.5;            // weight: poor form this match
+export const SUB_W_SKILL = 0.3;           // weight: low skill
+export const SUB_MIN_SCORE = 0.12;        // minimum desirability for a starter to be subbed off
 
 // --- Live player match ratings ------------------------------------------
 // Everyone on the pitch starts at MATCH_RATING_BASE. The duel outcomes, goals,

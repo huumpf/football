@@ -4,7 +4,7 @@ import { api } from '@/assets/js/api.js';
 const GAME_MODULES = ['club', 'team', 'draft', 'league', 'transferMarket'];
 // Bump when the saved game's shape changes incompatibly: a save stamped with a
 // different version is discarded (new game) instead of hydrated into garbage.
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 // Owns the save lifecycle: hydrate the store from the server on login, autosave
@@ -86,6 +86,12 @@ export function createPersistence(store) {
       const compatible = state && (state.__v ?? 1) === SAVE_VERSION;
       if (compatible) {
         replaceGame(state);
+        // The JSON round-trip splits team.players from the formation sheets into
+        // separate objects (shared ids only), so re-link them: per-player state
+        // (fitness, injuries) written to team.players must reach the line-up the
+        // match and squad screens field. Runs before `enabled`, so it never
+        // triggers an autosave.
+        store.commit('RECONCILE_FORMATIONS');
       } else {
         // No save, or a save from an incompatible version: start a fresh game.
         controller.reset();

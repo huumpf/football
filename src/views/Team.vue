@@ -258,6 +258,8 @@ export default {
       if (!origin) return;
 
       if (target.type === 'slot') {
+        // An injured player can't take the pitch — keep him in the bench/reserve.
+        if (player.injury) return;
         const occupant = this.lineup[target.pos][target.index];
         if (occupant && occupant.id === player.id) return; // dropped on itself
         this.lineup[target.pos][target.index] = player;

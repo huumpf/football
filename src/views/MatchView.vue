@@ -36,7 +36,7 @@
         <transition-group name="event" tag="div" class="timeline">
           <div
             v-for="ev in revealedReversed"
-            :key="`${ev.type}-${ev.side}-${ev.minute}-${ev.player.id}`"
+            :key="`${ev.type}-${ev.side}-${ev.minute}-${ev.player.id}-${ev.playerIn ? ev.playerIn.id : ''}`"
             class="event-row"
             :class="ev.side"
           >
@@ -68,7 +68,7 @@
 <script>
 import MatchLineupList from '@/components/MatchLineupList.vue';
 import ClubCrest from '@/components/ClubCrest.vue';
-import { simulateLiveMatch, computeRatings } from '@/assets/js/MatchSim.js';
+import { simulateLiveMatch, computeRatings, injuriesFromTimeline } from '@/assets/js/MatchSim.js';
 import * as CFG from '@/assets/js/Config.js';
 
 export default {
@@ -163,6 +163,36 @@ export default {
       return cards;
     },
 
+    // Ids of players injured / subbed off / subbed on by the running clock, folded
+    // from revealed events like cardByPlayer. They drive the per-row markers in
+    // the line-up lists (injury icon, sub-out, sub-in) as the match plays out.
+    injuredIds() {
+      const ids = new Set();
+      for (const ev of this.revealedEvents) if (ev.type === 'injury') ids.add(ev.player.id);
+      return ids;
+    },
+
+    subbedOutIds() {
+      const ids = new Set();
+      for (const ev of this.revealedEvents) if (ev.type === 'sub') ids.add(ev.player.id);
+      return ids;
+    },
+
+    subbedInIds() {
+      const ids = new Set();
+      for (const ev of this.revealedEvents) if (ev.type === 'sub') ids.add(ev.playerIn.id);
+      return ids;
+    },
+
+    // Player id -> the injury details from the revealed injury event. In-match the
+    // injury isn't yet on player.injury (it's committed afterwards), so the side
+    // lists feed these to the injury icon's tooltip.
+    injuryByPlayer() {
+      const map = {};
+      for (const ev of this.revealedEvents) if (ev.type === 'injury') map[ev.player.id] = ev.injury;
+      return map;
+    },
+
     homeStarters() {
       return this.starterRows(this.match.home.xi);
     },
@@ -172,11 +202,11 @@ export default {
     },
 
     homeBench() {
-      return this.match.home.bench;
+      return this.benchRows(this.match.home.bench);
     },
 
     awayBench() {
-      return this.match.away.bench;
+      return this.benchRows(this.match.away.bench);
     },
 
     progressPct() {
@@ -211,19 +241,43 @@ export default {
         scored: this.scoredIds.has(e.player.id),
         assisted: this.assistedIds.has(e.player.id),
         card: this.cardByPlayer[e.player.id] || null,
+        injured: this.injuredIds.has(e.player.id),
+        injuryData: this.injuryByPlayer[e.player.id] || null,
+        subbedOut: this.subbedOutIds.has(e.player.id),
       }));
     },
 
-    // Icon and one-line text for a timeline event (goal / yellow / red card).
+    // Bench rows for the side lists: a substitute who has come on shows the
+    // sub-in marker and his live rating; otherwise the dash, as before.
+    benchRows(bench) {
+      return bench.map(e => {
+        const subbedOn = this.subbedInIds.has(e.player.id);
+        return {
+          player: e.player,
+          position: e.position,
+          subbedOn,
+          rating: subbedOn ? this.ratingByPlayer[e.player.id] : null,
+          injured: this.injuredIds.has(e.player.id),
+          injuryData: this.injuryByPlayer[e.player.id] || null,
+        };
+      });
+    },
+
+    // Icon and one-line text for a timeline event (goal / card / injury / sub).
     eventIcon(ev) {
       if (ev.type === 'yellow') return new URL('../assets/img/icons/yellowCard.svg', import.meta.url).href;
       if (ev.type === 'red') return new URL('../assets/img/icons/redCard.svg', import.meta.url).href;
+      if (ev.type === 'injury') return new URL('../assets/img/icons/injury-white.svg', import.meta.url).href;
+      if (ev.type === 'sub') return new URL('../assets/img/icons/substitution-white.svg', import.meta.url).href;
       return new URL('../assets/img/icons/goal-white.svg', import.meta.url).href;
     },
 
     eventText(ev) {
       if (ev.type === 'yellow') return `${ev.player.lastName} booked`;
       if (ev.type === 'red') return `${ev.player.lastName} sent off`;
+      // Generic — the specific injury is never revealed in the stream.
+      if (ev.type === 'injury') return `${ev.player.lastName} injured`;
+      if (ev.type === 'sub') return `${ev.player.lastName} was subbed out for ${ev.playerIn.lastName}`;
       const base = `${ev.player.lastName} scored`;
       return ev.assist ? `${base} (assist by ${ev.assist.lastName})` : base;
     },
@@ -254,6 +308,7 @@ export default {
         homeGoals: this.timeline.homeGoals,
         awayGoals: this.timeline.awayGoals,
         ratings: computeRatings(this.timeline, this.match.home, this.match.away),
+        injuries: injuriesFromTimeline(this.timeline),
       });
       this.$router.push({ name: 'League' });
     },

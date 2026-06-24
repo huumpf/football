@@ -1,7 +1,12 @@
 <template>
   <span class="tooltip-host">
     <slot/>
-    <span v-if="text" class="tooltip-bubble" role="tooltip">{{ text }}</span>
+    <span
+      v-if="text || $slots.bubble"
+      class="tooltip-bubble"
+      :class="{ multiline }"
+      role="tooltip"
+    ><slot name="bubble">{{ text }}</slot></span>
   </span>
 </template>
 
@@ -13,8 +18,11 @@ export default {
   name: 'Tooltip',
 
   props: {
-    // The tooltip text. Empty renders no bubble.
+    // The tooltip text. Empty (and no `bubble` slot) renders no bubble.
     text: { type: String, default: '' },
+    // Allow a wider, wrapping, left-aligned bubble for rich multi-line content
+    // (e.g. the injury tooltip). Single-line plain-text tooltips leave this off.
+    multiline: { type: Boolean, default: false },
   },
 }
 </script>
@@ -43,6 +51,14 @@ export default {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease;
+}
+
+// Rich content: a wider bubble that wraps and reads left-aligned.
+.tooltip-bubble.multiline {
+  white-space: normal;
+  width: max-content;
+  max-width: 180px;
+  text-align: left;
 }
 
 .tooltip-host:hover .tooltip-bubble,

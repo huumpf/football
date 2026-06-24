@@ -71,7 +71,8 @@
         >{{ pos.label }}</span>
       </div>
       <div class="name">
-        <span class="name-text">{{ player.firstName }} {{ player.lastName }}</span>
+        <span class="name-text" :class="{ injured: player.injury }">{{ player.firstName }} {{ player.lastName }}</span>
+        <InjuryIcon v-if="player.injury" :player="player" class="row-injury"/>
         <img
           v-if="isListed(player)"
           class="listed-icon"
@@ -101,6 +102,7 @@
 <script>
 import ListRow from './ListRow.vue';
 import FitnessRing from './FitnessRing.vue';
+import InjuryIcon from './InjuryIcon.vue';
 import { moneyStr, marketValue, developmentDelta } from '../assets/js/Helpers.js';
 import { DEV_TIMEFRAMES } from '../assets/js/Config.js';
 
@@ -114,6 +116,7 @@ export default {
   components: {
     ListRow,
     FitnessRing,
+    InjuryIcon,
   },
 
   props: {
@@ -284,6 +287,15 @@ export default {
 .name-text {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// An injured player's name is dimmed wherever it appears.
+.name-text.injured {
+  opacity: 0.45;
+}
+
+.row-injury {
+  margin-left: 6px;
 }
 
 .listed-icon {

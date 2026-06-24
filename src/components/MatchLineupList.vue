@@ -10,7 +10,9 @@
         <img v-if="row.assisted" class="icon" src="../assets/img/icons/assist-white.svg" alt="Assist"/>
         <img v-if="row.card === 'yellow'" class="icon" src="../assets/img/icons/yellowCard.svg" alt="Yellow card"/>
         <img v-if="row.card === 'red'" class="icon" src="../assets/img/icons/redCard.svg" alt="Red card"/>
-        <span class="name">{{ row.player.lastName }}</span>
+        <InjuryIcon v-if="row.injured" :player="row.player" :injury="row.injuryData" :size="16"/>
+        <img v-else-if="row.subbedOut" class="icon" src="../assets/img/icons/substitutionOut-white.svg" alt="Subbed out"/>
+        <span class="name" :class="{ inactive: row.injured || row.subbedOut }">{{ row.player.lastName }}</span>
       </div>
       <FitnessRing class="fitness" :value="row.fitness" :size="14"/>
       <span class="rating">{{ formatRating(row.rating) }}</span>
@@ -24,10 +26,12 @@
         class="player"
       >
         <div class="name-group">
-          <span class="name">{{ row.player.lastName }}</span>
+          <InjuryIcon v-if="row.injured" :player="row.player" :injury="row.injuryData" :size="16"/>
+          <img v-else-if="row.subbedOn" class="icon" src="../assets/img/icons/substitutionIn-white.svg" alt="Subbed on"/>
+          <span class="name" :class="{ 'subbed-on': row.subbedOn }">{{ row.player.lastName }}</span>
         </div>
         <FitnessRing class="fitness" :value="row.player.fitness" :size="14"/>
-        <span class="rating">–</span>
+        <span class="rating">{{ row.subbedOn ? formatRating(row.rating) : '–' }}</span>
         <span class="position">{{ row.position }}</span>
       </div>
     </div>
@@ -36,21 +40,26 @@
 
 <script>
 import FitnessRing from '@/components/FitnessRing.vue';
+import InjuryIcon from '@/components/InjuryIcon.vue';
 
 export default {
   name: 'MatchLineupList',
 
-  components: { FitnessRing },
+  components: { FitnessRing, InjuryIcon },
 
   props: {
     // 'home' mirrors the row (name first, hugging the right edge toward the
     // pitch); 'away' reads position-first from the left edge.
     side: { type: String, required: true },
     // Starting XI rows: { player, position, rating:Number, fitness:Number,
-    // scored:Boolean, assisted:Boolean, card:'yellow'|'red'|null }.
+    // scored, assisted, card:'yellow'|'red'|null, injured:Boolean, injuryData,
+    // subbedOut:Boolean }. An injured player shows the injury icon (which wins
+    // over sub-out); a subbed-off player shows the sub-out icon and stays here.
+    // injuryData carries the in-match injury details for the icon's tooltip.
     starters: { type: Array, required: true },
-    // Bench rows: { player, position }. They don't take the pitch, so their
-    // rating shows as a dash. (Reserve players aren't passed to the match.)
+    // Bench rows: { player, position, subbedOn:Boolean, rating:Number|null,
+    // injured:Boolean, injuryData }. A substitute who came on shows the sub-in
+    // icon and his live rating; everyone else shows a dash. (Reserve not passed.)
     bench: { type: Array, default: () => [] },
   },
 
@@ -153,6 +162,11 @@ export default {
   text-align: left;
 }
 
+// An injured or subbed-off starter reads dimmed in the XI list.
+.name.inactive {
+  opacity: 0.45;
+}
+
 // The bench is pushed below the XI and dimmed — they didn't take the pitch.
 .bench {
   padding-top: 20px;
@@ -160,5 +174,10 @@ export default {
 
 .bench .name {
   opacity: 0.5;
+}
+
+// A substitute who came on is no longer a benchwarmer — show him at full weight.
+.bench .name.subbed-on {
+  opacity: 1;
 }
 </style>

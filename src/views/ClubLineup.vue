@@ -4,7 +4,7 @@
       <div class="club-header">
         <ClubCrest :crest="club.crest" :id="'club-' + club.id" :size="52"/>
         <h2 class="club-name">{{ club.name }}</h2>
-        <div class="formation-name">{{ club.formation.name }} · {{ club.formation.skillSum }}</div>
+        <div class="formation-name">{{ club.formation.name }} · {{ Math.round(club.formation.skillSum) }}</div>
       </div>
 
       <div class="field-wrapper">

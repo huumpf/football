@@ -30,7 +30,7 @@
           <span class="rank">{{ match.home.rank }}.</span>
           <ClubCrest :crest="crestFor(match.home.id)" :id="'md-' + match.home.id" :size="18"/>
           <span class="name">{{ match.home.name }}</span>
-          <span class="skill">{{ match.home.skill }}</span>
+          <span class="skill">{{ Math.round(match.home.skill) }}</span>
         </div>
         <span class="score" v-if="match.result">{{ match.result.homeGoals }}:{{ match.result.awayGoals }}</span>
         <span class="score dash" v-else></span>
@@ -38,7 +38,7 @@
           <span class="rank">{{ match.away.rank }}.</span>
           <ClubCrest :crest="crestFor(match.away.id)" :id="'md-' + match.away.id" :size="18"/>
           <span class="name">{{ match.away.name }}</span>
-          <span class="skill">{{ match.away.skill }}</span>
+          <span class="skill">{{ Math.round(match.away.skill) }}</span>
         </div>
       </div>
     </div>
